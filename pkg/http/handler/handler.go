@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
+
+	commonHttp "github.com/hibare/GoCommon/pkg/http"
 )
 
 func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	commonHttp.WriteJsonResponse(w, http.StatusOK, map[string]bool{"ok": true})
 }
