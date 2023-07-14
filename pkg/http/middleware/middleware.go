@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hibare/GoCommon/errors"
-	"github.com/hibare/GoCommon/slice"
+	"github.com/hibare/GoCommon/pkg/errors"
+	"github.com/hibare/GoCommon/pkg/slice"
 )
 
 const AuthHeaderName = "Authorization"
