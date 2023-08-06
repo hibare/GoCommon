@@ -3,13 +3,13 @@ package version
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckLatestRelease(t *testing.T) {
-	const expectedJSON = `{
+const expectedJSON = `{
 		"url": "https://api.github.com/repos/hibare/Sample/releases/61364471",
 		"assets_url": "https://api.github.com/repos/hibare/Sample/releases/61364471/assets",
 		"upload_url": "https://uploads.github.com/repos/hibare/Sample/releases/61364471/assets{?name,label}",
@@ -48,9 +48,11 @@ func TestCheckLatestRelease(t *testing.T) {
 		],
 		"tarball_url": "https://api.github.com/repos/hibare/Sample/tarball/v0.7.1",
 		"zipball_url": "https://api.github.com/repos/hibare/Sample/zipball/v0.7.1",
-		"body": "## Something juicy changed",
+		"body": "## Something juicy changes",
 		"mentions_count": 2
 	}`
+
+func TestMain(m *testing.M) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.github.v3+json")
 		w.Write([]byte(expectedJSON))
@@ -58,14 +60,76 @@ func TestCheckLatestRelease(t *testing.T) {
 	defer server.Close()
 
 	GithubEndpoint = server.URL + "#%s#%s"
-	CheckLatestRelease("hibare", "sample")
-	assert.Equal(t, "0.7.1", LatestVersion)
+
+	code := m.Run()
+	os.Exit(code)
 }
 
-func TestIsNewVersionAvailable(t *testing.T) {
-	assert.True(t, IsNewVersionAvailable())
+func TestCheckLatestVersion(t *testing.T) {
+	version := Version{
+		GithubOwner: "hibare",
+		GithubRepo:  "Sample",
+	}
+	err := version.GetLatestVersion()
+	assert.NoError(t, err)
+	assert.Equal(t, "v0.7.1", version.LatestVersion)
+}
+
+func TestLatestVersionMissingGitOwner(t *testing.T) {
+	version := Version{}
+	err := version.GetLatestVersion()
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, errMissingGithubOwner)
+}
+
+func TestLatestVersionMissingGitRepo(t *testing.T) {
+	version := Version{
+		GithubOwner: "hibare",
+	}
+	err := version.GetLatestVersion()
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, errMissingGithubRepo)
+}
+
+func TestIsNewVersionAvailableTrue(t *testing.T) {
+	version := Version{
+		GithubOwner:    "hibare",
+		GithubRepo:     "Sample",
+		CurrentVersion: "0.0.0",
+	}
+	version.CheckUpdate()
+	assert.True(t, version.NewVersionAvailable)
+	assert.Equal(t, "v0.7.1", version.LatestVersion)
+}
+
+func TestIsNewVersionAvailableFalse(t *testing.T) {
+	version := Version{
+		GithubOwner:    "hibare",
+		GithubRepo:     "Sample",
+		CurrentVersion: "v0.7.1",
+	}
+	version.CheckUpdate()
+	assert.False(t, version.NewVersionAvailable)
+	assert.Equal(t, "v0.7.1", version.LatestVersion)
+}
+
+func TestIsNewVersionAvailableFailure(t *testing.T) {
+	version := Version{}
+	version.CheckUpdate()
+	assert.False(t, version.NewVersionAvailable)
 }
 
 func TestGetUpdateNotification(t *testing.T) {
-	assert.Equal(t, "New update available: 0.7.1", GetUpdateNotification())
+	version := Version{
+		LatestVersion: "0.7.1",
+	}
+	version.CheckUpdate()
+	assert.Equal(t, "[!] New update available: 0.7.1", version.GetUpdateNotification())
+}
+
+func TestGetUpdateNotificationNoUpdate(t *testing.T) {
+	version := Version{
+		LatestVersion: "0.7.1",
+	}
+	assert.Empty(t, version.GetUpdateNotification())
 }
