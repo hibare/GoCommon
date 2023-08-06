@@ -2,55 +2,82 @@ package version
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var (
-	CurrentVersion            = "0.0.0"
-	LatestVersion             = CurrentVersion
-	UpdateNotificationMessage = "New update available: %s"
+	UpdateNotificationMessage = "[!] New update available: %s"
 	GithubEndpoint            = "https://api.github.com/repos/%s/%s/releases/latest"
+	errMissingGithubOwner     = errors.New("githubOwner is empty")
+	errMissingGithubRepo      = errors.New("githubRepo is empty")
 )
 
-type Release struct {
+type ReleaseResponse struct {
 	TagName string `json:"tag_name"`
 }
 
-func CheckLatestRelease(githubOwner, githubRepo string) {
-	url := fmt.Sprintf(GithubEndpoint, githubOwner, githubRepo)
+type Version struct {
+	GithubOwner         string
+	GithubRepo          string
+	LatestVersion       string
+	CurrentVersion      string
+	NewVersionAvailable bool
+}
+
+func (v *Version) GetUpdateNotification() string {
+	if v.NewVersionAvailable && v.LatestVersion != "" {
+		return fmt.Sprintf(UpdateNotificationMessage, v.LatestVersion)
+	}
+	return ""
+}
+
+func (v *Version) StripV() string {
+	return strings.TrimPrefix(v.LatestVersion, "v")
+}
+
+func (v *Version) GetLatestVersion() error {
+	if v.GithubOwner == "" {
+		return errMissingGithubOwner
+	}
+
+	if v.GithubRepo == "" {
+		return errMissingGithubRepo
+	}
+
+	url := fmt.Sprintf(GithubEndpoint, v.GithubOwner, v.GithubRepo)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return
+		return err
 	}
 
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 	resp, err := client.Do(req)
-
 	if err != nil {
-		return
+		return err
 	}
 
 	defer resp.Body.Close()
 
-	var release Release
+	var release ReleaseResponse
 	err = json.NewDecoder(resp.Body).Decode(&release)
 	if err != nil {
-		fmt.Print(err)
-		return
+		return err
 	}
 
-	LatestVersion = strings.TrimPrefix(release.TagName, "v")
+	v.LatestVersion = release.TagName
+	return nil
 }
 
-func IsNewVersionAvailable() bool {
-	return CurrentVersion != LatestVersion
-}
-
-func GetUpdateNotification() string {
-	return fmt.Sprintf(UpdateNotificationMessage, LatestVersion)
+func (v *Version) CheckUpdate() {
+	_ = v.GetLatestVersion()
+	v.NewVersionAvailable = v.CurrentVersion != v.LatestVersion
 }
