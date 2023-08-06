@@ -86,3 +86,27 @@ func ArchiveDir(dirPath string) (string, error) {
 	log.Printf("Created archive '%s' for directory '%s'", zipPath, dirPath)
 	return zipPath, err
 }
+
+func ReadFileBytes(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Get the file size
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	fileSize := fileInfo.Size()
+
+	// Read the file content into a buffer
+	data := make([]byte, fileSize)
+	_, err = file.Read(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
