@@ -6,6 +6,7 @@ var (
 	ErrUnauthorized        = errors.New("unauthorized")
 	ErrInternalServerError = errors.New("internal server error")
 	ErrNonOKError          = errors.New("non ok error")
+	ErrChecksumMismatch    = errors.New("checksum Mismatch")
 )
 
 type Error struct {
