@@ -45,8 +45,12 @@ func TestArchiveDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// archive tempDir
-	archivePath, err := ArchiveDir(tempDir)
+	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir)
 	defer os.Remove(archivePath)
+
+	assert.Equal(t, totalFiles, 1)
+	assert.Equal(t, totalDirs, 1)
+	assert.Equal(t, successFiles, 1)
 	assert.NoError(t, err)
 
 	// check archive path exists
@@ -59,8 +63,12 @@ func TestArchiveDirInvalidDir(t *testing.T) {
 	tempDir := "/tmp/does-not-exists"
 
 	// archive tempDir
-	archivePath, err := ArchiveDir(tempDir)
+	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir)
 	defer os.Remove(archivePath)
+
+	assert.Empty(t, totalDirs)
+	assert.Empty(t, totalFiles)
+	assert.Empty(t, successFiles)
 	assert.Error(t, err)
 
 }
