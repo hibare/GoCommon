@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/hibare/GoCommon/pkg/testhelper"
@@ -209,4 +210,46 @@ func TestExtractFileFromTarGzFail(t *testing.T) {
 
 	_, err := ExtractFileFromTarGz(archivePath, targetFilename)
 	assert.Error(t, err)
+}
+
+func TestListFilesDirs(t *testing.T) {
+	rootDir := "../testhelper"
+	expectedFiles := []string{
+		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
+		"../testhelper/testhelper.go/testhelper.go",
+	}
+	expectedDirs := []string{
+		"../testhelper/testhelper",
+		"../testhelper/test_data/test_data",
+	}
+	files, dirs := ListFilesDirs(rootDir, nil)
+	assert.Equal(t, expectedFiles, files)
+	assert.Equal(t, expectedDirs, dirs)
+}
+
+func TestListFilesDirsExcludeFiles(t *testing.T) {
+	rootDir := "../testhelper"
+	expectedFiles := []string{
+		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
+	}
+	expectedDirs := []string{
+		"../testhelper/testhelper",
+		"../testhelper/test_data/test_data",
+	}
+	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile(".*.go")})
+	assert.Equal(t, expectedFiles, files)
+	assert.Equal(t, expectedDirs, dirs)
+}
+
+func TestListFilesDirsExcludeDirs(t *testing.T) {
+	rootDir := "../testhelper"
+	expectedFiles := []string{
+		"../testhelper/testhelper.go/testhelper.go",
+	}
+	expectedDirs := []string{
+		"../testhelper/testhelper",
+	}
+	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile("test_data")})
+	assert.Equal(t, expectedFiles, files)
+	assert.Equal(t, expectedDirs, dirs)
 }

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"log"
@@ -255,4 +256,41 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 		}
 	}
 	return targetFilePath, nil
+}
+
+func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
+	var files []string
+	var dirs []string
+
+	readDir := func(dir string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			// Check if directory matches any of the exclude patterns
+			for _, e := range exclude {
+				if e.MatchString(d.Name()) {
+					return filepath.SkipDir
+				}
+			}
+
+			dirs = append(dirs, filepath.Join(dir, d.Name()))
+		} else {
+			// Check if file matches any of the exclude patterns
+			for _, e := range exclude {
+				if e.MatchString(d.Name()) {
+					return nil
+				}
+			}
+
+			files = append(files, filepath.Join(dir, d.Name()))
+		}
+
+		return nil
+	}
+
+	_ = filepath.WalkDir(root, readDir)
+
+	return files, dirs
 }
