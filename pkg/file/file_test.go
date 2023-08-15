@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/hibare/GoCommon/pkg/testhelper"
@@ -44,8 +45,12 @@ func TestArchiveDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// archive tempDir
-	archivePath, err := ArchiveDir(tempDir)
+	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir)
 	defer os.Remove(archivePath)
+
+	assert.Equal(t, totalFiles, 1)
+	assert.Equal(t, totalDirs, 1)
+	assert.Equal(t, successFiles, 1)
 	assert.NoError(t, err)
 
 	// check archive path exists
@@ -58,8 +63,12 @@ func TestArchiveDirInvalidDir(t *testing.T) {
 	tempDir := "/tmp/does-not-exists"
 
 	// archive tempDir
-	archivePath, err := ArchiveDir(tempDir)
+	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir)
 	defer os.Remove(archivePath)
+
+	assert.Empty(t, totalDirs)
+	assert.Empty(t, totalFiles)
+	assert.Empty(t, successFiles)
 	assert.Error(t, err)
 
 }
@@ -209,4 +218,46 @@ func TestExtractFileFromTarGzFail(t *testing.T) {
 
 	_, err := ExtractFileFromTarGz(archivePath, targetFilename)
 	assert.Error(t, err)
+}
+
+func TestListFilesDirs(t *testing.T) {
+	rootDir := "../testhelper"
+	expectedFiles := []string{
+		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
+		"../testhelper/testhelper.go/testhelper.go",
+	}
+	expectedDirs := []string{
+		"../testhelper/testhelper",
+		"../testhelper/test_data/test_data",
+	}
+	files, dirs := ListFilesDirs(rootDir, nil)
+	assert.Equal(t, expectedFiles, files)
+	assert.Equal(t, expectedDirs, dirs)
+}
+
+func TestListFilesDirsExcludeFiles(t *testing.T) {
+	rootDir := "../testhelper"
+	expectedFiles := []string{
+		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
+	}
+	expectedDirs := []string{
+		"../testhelper/testhelper",
+		"../testhelper/test_data/test_data",
+	}
+	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile(".*.go")})
+	assert.Equal(t, expectedFiles, files)
+	assert.Equal(t, expectedDirs, dirs)
+}
+
+func TestListFilesDirsExcludeDirs(t *testing.T) {
+	rootDir := "../testhelper"
+	expectedFiles := []string{
+		"../testhelper/testhelper.go/testhelper.go",
+	}
+	expectedDirs := []string{
+		"../testhelper/testhelper",
+	}
+	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile("test_data")})
+	assert.Equal(t, expectedFiles, files)
+	assert.Equal(t, expectedDirs, dirs)
 }

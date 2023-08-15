@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"log"
@@ -19,16 +20,17 @@ import (
 	"github.com/hibare/GoCommon/pkg/errors"
 )
 
-func ArchiveDir(dirPath string) (string, error) {
+func ArchiveDir(dirPath string) (string, int, int, int, error) {
 	dirPath = filepath.Clean(dirPath)
 	dirName := filepath.Base(dirPath)
 	zipName := fmt.Sprintf("%s.zip", dirName)
 	zipPath := filepath.Join(os.TempDir(), zipName)
+	totalFiles, totalDirs, successFiles := 0, 0, 0
 
 	// Create a temporary file to hold the zip archive
 	zipFile, err := os.Create(zipPath)
 	if err != nil {
-		return zipPath, err
+		return zipPath, totalFiles, totalDirs, successFiles, err
 	}
 	defer zipFile.Close()
 
@@ -42,8 +44,11 @@ func ArchiveDir(dirPath string) (string, error) {
 		}
 
 		if d.IsDir() {
+			totalDirs++
 			return nil
 		}
+
+		totalFiles++
 
 		info, err := d.Info()
 		if err != nil {
@@ -89,11 +94,13 @@ func ArchiveDir(dirPath string) (string, error) {
 		}
 		file.Close()
 
+		successFiles++
+
 		return nil
 	})
 
 	log.Printf("Created archive '%s' for directory '%s'", zipPath, dirPath)
-	return zipPath, err
+	return zipPath, totalFiles, totalDirs, successFiles, err
 }
 
 func ReadFileBytes(path string) ([]byte, error) {
@@ -255,4 +262,41 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 		}
 	}
 	return targetFilePath, nil
+}
+
+func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
+	var files []string
+	var dirs []string
+
+	readDir := func(dir string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			// Check if directory matches any of the exclude patterns
+			for _, e := range exclude {
+				if e.MatchString(d.Name()) {
+					return filepath.SkipDir
+				}
+			}
+
+			dirs = append(dirs, filepath.Join(dir, d.Name()))
+		} else {
+			// Check if file matches any of the exclude patterns
+			for _, e := range exclude {
+				if e.MatchString(d.Name()) {
+					return nil
+				}
+			}
+
+			files = append(files, filepath.Join(dir, d.Name()))
+		}
+
+		return nil
+	}
+
+	_ = filepath.WalkDir(root, readDir)
+
+	return files, dirs
 }
