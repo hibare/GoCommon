@@ -223,12 +223,12 @@ func TestExtractFileFromTarGzFail(t *testing.T) {
 func TestListFilesDirs(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
-		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
-		"../testhelper/testhelper.go/testhelper.go",
+		"../testhelper/test_data/sample.tar.gz",
+		"../testhelper/testhelper.go",
 	}
 	expectedDirs := []string{
-		"../testhelper/testhelper",
-		"../testhelper/test_data/test_data",
+		"../testhelper",
+		"../testhelper/test_data",
 	}
 	files, dirs := ListFilesDirs(rootDir, nil)
 	assert.Equal(t, expectedFiles, files)
@@ -238,11 +238,11 @@ func TestListFilesDirs(t *testing.T) {
 func TestListFilesDirsExcludeFiles(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
-		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
+		"../testhelper/test_data/sample.tar.gz",
 	}
 	expectedDirs := []string{
-		"../testhelper/testhelper",
-		"../testhelper/test_data/test_data",
+		"../testhelper",
+		"../testhelper/test_data",
 	}
 	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile(".*.go")})
 	assert.Equal(t, expectedFiles, files)
@@ -252,10 +252,10 @@ func TestListFilesDirsExcludeFiles(t *testing.T) {
 func TestListFilesDirsExcludeDirs(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
-		"../testhelper/testhelper.go/testhelper.go",
+		"../testhelper/testhelper.go",
 	}
 	expectedDirs := []string{
-		"../testhelper/testhelper",
+		"../testhelper",
 	}
 	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile("test_data")})
 	assert.Equal(t, expectedFiles, files)
