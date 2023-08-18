@@ -53,7 +53,7 @@ func TestArchiveDirInvalidDir(t *testing.T) {
 }
 
 func TestReadFileBytes(t *testing.T) {
-	content, path, err := testhelper.CreateTestFile()
+	content, path, err := testhelper.CreateTestFile("")
 	defer os.Remove(path)
 	assert.NoError(t, err)
 
@@ -68,7 +68,7 @@ func TestReadFileBytesNoFile(t *testing.T) {
 }
 
 func TestReadFilePass(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -85,7 +85,7 @@ func TestReadFileFail(t *testing.T) {
 }
 
 func TestCalculateFileSHA256Pass(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -99,7 +99,7 @@ func TestCalculateFileSHA256Pass(t *testing.T) {
 }
 
 func TestCalculateFileSHA256Fail(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -113,7 +113,7 @@ func TestCalculateFileSHA256Fail(t *testing.T) {
 }
 
 func TestValidateFileSHA256Pass(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -125,7 +125,7 @@ func TestValidateFileSHA256Pass(t *testing.T) {
 }
 
 func TestValidateFileSHA256Fail(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -138,7 +138,7 @@ func TestValidateFileSHA256Fail(t *testing.T) {
 
 func TestDownloadFilePass(t *testing.T) {
 	// Create a test file
-	_, absPath, err := testhelper.CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	assert.NoError(t, err)
 
 	// Create a mock HTTP server

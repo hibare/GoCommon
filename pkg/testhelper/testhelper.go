@@ -9,8 +9,8 @@ const (
 	TestDataDir = "../testhelper/test_data"
 )
 
-func CreateTestFile() ([]byte, string, error) {
-	file, err := os.CreateTemp("", "test-file-*.txt")
+func CreateTestFile(dir string) ([]byte, string, error) {
+	file, err := os.CreateTemp(dir, "test-file-*.txt")
 	if err != nil {
 		return []byte{}, "", err
 	}
