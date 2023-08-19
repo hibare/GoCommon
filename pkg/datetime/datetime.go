@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/hibare/GoCommon/pkg/constants"
+	"github.com/hibare/GoCommon/v2/pkg/constants"
 )
 
 func SortDateTimes(datetimes []string) []string {

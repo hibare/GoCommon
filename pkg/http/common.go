@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hibare/GoCommon/pkg/errors"
+	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
 func WriteJsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {

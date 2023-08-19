@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hibare/GoCommon/pkg/constants"
-	commonFiles "github.com/hibare/GoCommon/pkg/file"
+	"github.com/hibare/GoCommon/v2/pkg/constants"
+	commonFiles "github.com/hibare/GoCommon/v2/pkg/file"
 )
 
 type S3 struct {

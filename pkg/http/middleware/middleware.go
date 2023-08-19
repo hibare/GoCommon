@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hibare/GoCommon/pkg/errors"
-	commonHttp "github.com/hibare/GoCommon/pkg/http"
-	"github.com/hibare/GoCommon/pkg/slice"
+	"github.com/hibare/GoCommon/v2/pkg/errors"
+	commonHttp "github.com/hibare/GoCommon/v2/pkg/http"
+	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
 const AuthHeaderName = "Authorization"

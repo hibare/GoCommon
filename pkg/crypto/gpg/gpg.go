@@ -10,7 +10,7 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
-	"github.com/hibare/GoCommon/pkg/errors"
+	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
 type GPG struct {

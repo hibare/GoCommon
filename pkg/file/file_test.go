@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hibare/GoCommon/pkg/testhelper"
+	"github.com/hibare/GoCommon/v2/pkg/testhelper"
 	"github.com/stretchr/testify/assert"
 )
 
