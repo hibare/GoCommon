@@ -7,4 +7,5 @@ const (
 	ConfigRootDarwin      = "/Library/Application Support/"
 	ConfigFileName        = "config"
 	ConfigFileExtension   = "yaml"
+	S3PrefixSeparator     = "/"
 )

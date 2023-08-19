@@ -12,9 +12,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      minio:
+        image: minio/minio:RELEASE.2023-06-09T22-06-45Z
+        ports:
+          - 9000:9000
+          - 9001:9001
+        env:
+          MINIO_ACCESS_KEY: admin
+          MINIO_SECRET_KEY: 5ee4392a-cb32-4f9d-8c19-d91e19e30834
+        options: --name=minio --health-cmd "curl http://localhost:9000/minio/health/live"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Initialize MinIO Bucket
+        run: |
+          docker exec minio-server sh -c "mc mb test-bucket"
 
       - name: Set up Go
         uses: actions/setup-go@v4

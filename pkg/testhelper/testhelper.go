@@ -29,3 +29,14 @@ func CreateTestFile(dir string) ([]byte, string, error) {
 
 	return content, absPath, err
 }
+
+func CreateTestDir() (string, error) {
+	tempDir := os.TempDir()
+	randomDirName, err := os.MkdirTemp(tempDir, "test-dir-")
+	if err != nil {
+		return "", err
+	}
+
+	_, _, err = CreateTestFile(randomDirName)
+	return randomDirName, err
+}
