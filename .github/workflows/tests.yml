@@ -28,7 +28,7 @@ jobs:
 
       - name: Initialize MinIO Bucket
         run: |
-          docker exec minio-server sh -c "mc mb test-bucket"
+          docker exec minio sh -c "mc mb test-bucket"
 
       - name: Set up Go
         uses: actions/setup-go@v4
