@@ -33,4 +33,4 @@ jobs:
           go-version: "stable"
 
       - name: Go Test
-        run: go test -v -cover ./...
+        run: make test
