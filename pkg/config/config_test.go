@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hibare/GoCommon/pkg/constants"
-	"github.com/hibare/GoCommon/pkg/errors"
+	"github.com/hibare/GoCommon/v2/pkg/constants"
+	"github.com/hibare/GoCommon/v2/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 

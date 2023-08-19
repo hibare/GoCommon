@@ -1,4 +1,4 @@
-module github.com/hibare/GoCommon
+module github.com/hibare/GoCommon/v2
 
 go 1.20
 

@@ -17,7 +17,7 @@ import (
 
 	"log"
 
-	"github.com/hibare/GoCommon/pkg/errors"
+	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
 func ArchiveDir(dirPath string) (string, int, int, int, error) {

@@ -9,6 +9,12 @@ all: s3-up
 
 s3-up:
 	${DOCKER_COMPOSE_PREFIX} up -d minio
+	@echo "Waiting for Minio to become healthy..."
+	@until docker-compose exec -T minio sh -c "curl -f http://localhost:9000/minio/health/live > /dev/null 2>&1"; do \
+		sleep 1; \
+		echo "Minio is not healthy yet, retrying..."; \
+	done
+	@printf "Minio is now healthy!\n\n"
 
 s3-down:
 	${DOCKER_COMPOSE_PREFIX} rm -fsv minio

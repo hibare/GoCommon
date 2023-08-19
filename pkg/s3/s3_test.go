@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hibare/GoCommon/pkg/testhelper"
+	"github.com/hibare/GoCommon/v2/pkg/testhelper"
 	"github.com/stretchr/testify/assert"
 )
 

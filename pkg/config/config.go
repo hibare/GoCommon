@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hibare/GoCommon/pkg/constants"
-	"github.com/hibare/GoCommon/pkg/errors"
+	"github.com/hibare/GoCommon/v2/pkg/constants"
+	"github.com/hibare/GoCommon/v2/pkg/errors"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
