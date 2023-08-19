@@ -3,6 +3,7 @@ version: "3.9"
 services:
   minio:
     image: bitnami/minio:latest
+    container_name: minio
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
@@ -10,3 +11,9 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: 5ee4392a-cb32-4f9d-8c19-d91e19e30834
       MINIO_DEFAULT_BUCKETS: test-bucket
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
