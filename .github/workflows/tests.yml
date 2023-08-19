@@ -27,10 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Initialize MinIO Bucket
-        run: |
-          docker exec minio sh -c "mc mb test-bucket"
-
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
