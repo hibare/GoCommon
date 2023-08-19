@@ -21,7 +21,7 @@ jobs:
         env:
           MINIO_ACCESS_KEY: admin
           MINIO_SECRET_KEY: 5ee4392a-cb32-4f9d-8c19-d91e19e30834
-        options: --name=minio --health-cmd "curl http://localhost:9000/minio/health/live"
+        options: --name=minio --health-cmd="curl --silent --fail http://localhost:9000/minio/health/live || exit 1" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Checkout
         uses: actions/checkout@v3
