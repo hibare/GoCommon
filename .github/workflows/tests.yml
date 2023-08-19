@@ -14,14 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     services:
       minio:
-        image: minio/minio
+        image: bitnami/minio:latest
         ports:
           - 9000:9000
           - 9001:9001
         env:
-          MINIO_ACCESS_KEY: admin
-          MINIO_SECRET_KEY: 5ee4392a-cb32-4f9d-8c19-d91e19e30834
-        options: --name=minio --health-cmd="curl --silent --fail http://localhost:9000/minio/health/live || exit 1" --health-interval=10s --health-timeout=5s --health-retries=3 server --address 0.0.0.0:9001 /home/shared
+          MINIO_ROOT_USER: admin
+          MINIO_ROOT_PASSWORD: 5ee4392a-cb32-4f9d-8c19-d91e19e30834
+          MINIO_DEFAULT_BUCKETS: test-bucket
+        options: --name=minio --health-cmd="curl --silent --fail http://localhost:9000/minio/health/live || exit 1" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Checkout
         uses: actions/checkout@v3
