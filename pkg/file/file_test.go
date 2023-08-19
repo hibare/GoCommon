@@ -12,27 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CreateTestFile() ([]byte, string, error) {
-	file, err := os.CreateTemp("", "test-file-*.txt")
-	if err != nil {
-		return []byte{}, "", err
-	}
-	defer file.Close()
-
-	content := []byte("This is a test file.\nIt contains some sample content.")
-	_, err = file.Write(content)
-	if err != nil {
-		return []byte{}, "", err
-	}
-
-	absPath, err := filepath.Abs(file.Name())
-	if err != nil {
-		return []byte{}, "", err
-	}
-
-	return content, absPath, err
-}
-
 func TestArchiveDir(t *testing.T) {
 	// Create a sample dir in temp
 	tempDir, err := os.MkdirTemp("", "test")
@@ -74,7 +53,7 @@ func TestArchiveDirInvalidDir(t *testing.T) {
 }
 
 func TestReadFileBytes(t *testing.T) {
-	content, path, err := CreateTestFile()
+	content, path, err := testhelper.CreateTestFile("")
 	defer os.Remove(path)
 	assert.NoError(t, err)
 
@@ -89,7 +68,7 @@ func TestReadFileBytesNoFile(t *testing.T) {
 }
 
 func TestReadFilePass(t *testing.T) {
-	_, absPath, err := CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -106,7 +85,7 @@ func TestReadFileFail(t *testing.T) {
 }
 
 func TestCalculateFileSHA256Pass(t *testing.T) {
-	_, absPath, err := CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -120,7 +99,7 @@ func TestCalculateFileSHA256Pass(t *testing.T) {
 }
 
 func TestCalculateFileSHA256Fail(t *testing.T) {
-	_, absPath, err := CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -134,7 +113,7 @@ func TestCalculateFileSHA256Fail(t *testing.T) {
 }
 
 func TestValidateFileSHA256Pass(t *testing.T) {
-	_, absPath, err := CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -146,7 +125,7 @@ func TestValidateFileSHA256Pass(t *testing.T) {
 }
 
 func TestValidateFileSHA256Fail(t *testing.T) {
-	_, absPath, err := CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -159,7 +138,7 @@ func TestValidateFileSHA256Fail(t *testing.T) {
 
 func TestDownloadFilePass(t *testing.T) {
 	// Create a test file
-	_, absPath, err := CreateTestFile()
+	_, absPath, err := testhelper.CreateTestFile("")
 	assert.NoError(t, err)
 
 	// Create a mock HTTP server
@@ -223,12 +202,12 @@ func TestExtractFileFromTarGzFail(t *testing.T) {
 func TestListFilesDirs(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
-		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
-		"../testhelper/testhelper.go/testhelper.go",
+		"../testhelper/test_data/sample.tar.gz",
+		"../testhelper/testhelper.go",
 	}
 	expectedDirs := []string{
-		"../testhelper/testhelper",
-		"../testhelper/test_data/test_data",
+		"../testhelper",
+		"../testhelper/test_data",
 	}
 	files, dirs := ListFilesDirs(rootDir, nil)
 	assert.Equal(t, expectedFiles, files)
@@ -238,11 +217,11 @@ func TestListFilesDirs(t *testing.T) {
 func TestListFilesDirsExcludeFiles(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
-		"../testhelper/test_data/sample.tar.gz/sample.tar.gz",
+		"../testhelper/test_data/sample.tar.gz",
 	}
 	expectedDirs := []string{
-		"../testhelper/testhelper",
-		"../testhelper/test_data/test_data",
+		"../testhelper",
+		"../testhelper/test_data",
 	}
 	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile(".*.go")})
 	assert.Equal(t, expectedFiles, files)
@@ -252,10 +231,10 @@ func TestListFilesDirsExcludeFiles(t *testing.T) {
 func TestListFilesDirsExcludeDirs(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
-		"../testhelper/testhelper.go/testhelper.go",
+		"../testhelper/testhelper.go",
 	}
 	expectedDirs := []string{
-		"../testhelper/testhelper",
+		"../testhelper",
 	}
 	files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile("test_data")})
 	assert.Equal(t, expectedFiles, files)

@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  minio:
+    image: bitnami/minio:latest
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: 5ee4392a-cb32-4f9d-8c19-d91e19e30834
+      MINIO_DEFAULT_BUCKETS: test-bucket

@@ -268,7 +268,7 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 	var files []string
 	var dirs []string
 
-	readDir := func(dir string, d os.DirEntry, err error) error {
+	readDir := func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -281,7 +281,7 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 				}
 			}
 
-			dirs = append(dirs, filepath.Join(dir, d.Name()))
+			dirs = append(dirs, path)
 		} else {
 			// Check if file matches any of the exclude patterns
 			for _, e := range exclude {
@@ -290,7 +290,7 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 				}
 			}
 
-			files = append(files, filepath.Join(dir, d.Name()))
+			files = append(files, path)
 		}
 
 		return nil
