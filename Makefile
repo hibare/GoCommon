@@ -21,6 +21,6 @@ test:
 ifndef GITHUB_ACTIONS
 	$(MAKE) s3-up
 endif
-	go test ./... -coverb
+	go test ./... -cover
 
 .PHONY = all clean test s3-up s3-down
