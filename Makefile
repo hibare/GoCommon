@@ -27,6 +27,7 @@ test:
 ifndef GITHUB_ACTIONS
 	$(MAKE) s3-up
 endif
+	export IS_LOCAL=false; \
 	go test ./... -cover
 ifndef GITHUB_ACTIONS
 	$(MAKE) s3-down

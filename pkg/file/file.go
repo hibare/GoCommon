@@ -21,81 +21,79 @@ import (
 )
 
 func ArchiveDir(dirPath string) (string, int, int, int, error) {
+	// Clean the input directory path
 	dirPath = filepath.Clean(dirPath)
-	dirName := filepath.Base(dirPath)
-	zipName := fmt.Sprintf("%s.zip", dirName)
-	zipPath := filepath.Join(os.TempDir(), zipName)
-	totalFiles, totalDirs, successFiles := 0, 0, 0
 
-	// Create a temporary file to hold the zip archive
+	// Extract directory name from the path
+	dirName := filepath.Base(dirPath)
+
+	// Generate the zip file name
+	zipName := fmt.Sprintf("%s.zip", dirName)
+
+	// Create the full path for the zip file in the temporary directory
+	zipPath := filepath.Join(os.TempDir(), zipName)
+
+	// Create the zip file
 	zipFile, err := os.Create(zipPath)
 	if err != nil {
-		return zipPath, totalFiles, totalDirs, successFiles, err
+		return zipPath, 0, 0, 0, err
 	}
 	defer zipFile.Close()
 
-	// Create a new zip writer
+	// Create a zip writer for the zip file
 	zipWriter := zip.NewWriter(zipFile)
 	defer zipWriter.Close()
 
-	err = filepath.WalkDir(dirPath, func(path string, d os.DirEntry, err error) error {
+	// Initialize counters
+	totalFiles, totalDirs, successFiles := 0, 0, 0
+
+	// Recursively add files to the zip archive
+	err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if d.IsDir() {
+		// Skip directories
+		if info.IsDir() {
 			totalDirs++
 			return nil
 		}
 
 		totalFiles++
 
-		info, err := d.Info()
-		if err != nil {
-			log.Printf("Failed to get file info: %v", err)
-			return nil
-		}
-
+		// Check if the path is a regular file
 		if !info.Mode().IsRegular() {
-			log.Printf("%s is not a regular file", path)
 			return nil
 		}
 
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			log.Printf("Failed to create header: %v", err)
-			return nil
-		}
-
+		// Get the relative path of the file
 		relPath, err := filepath.Rel(dirPath, path)
 		if err != nil {
-			log.Printf("Failed to get relative path: %v", err)
-			return nil
+			return err
 		}
-		header.Name = filepath.ToSlash(filepath.Join(relPath))
 
-		writer, err := zipWriter.CreateHeader(header)
+		// Create a header for the file in the zip archive
+		zh, err := zipWriter.CreateHeader(&zip.FileHeader{
+			Name:   relPath,
+			Method: zip.Deflate,
+		})
 		if err != nil {
-			log.Printf("Failed to create header: %v", err)
-			return nil
+			return err
 		}
 
 		file, err := os.Open(path)
 		if err != nil {
-			log.Printf("Failed to open file: %v", err)
-			return nil
+			return err
 		}
 
-		_, err = io.Copy(writer, file)
+		// Copy the file content to the zip archive
+		_, err = io.Copy(zh, file)
 		if err != nil {
-			file.Close()
-			log.Printf("Failed to write file to archive: %v", err)
-			return nil
+			return err
 		}
+
 		file.Close()
-
 		successFiles++
-
 		return nil
 	})
 
