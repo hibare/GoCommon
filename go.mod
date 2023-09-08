@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/aws/aws-sdk-go v1.45.1
+	github.com/aws/aws-sdk-go v1.45.5
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
