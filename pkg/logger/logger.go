@@ -27,11 +27,18 @@ var (
 	LogModes  = []string{LogModePretty, LogModeJSON}
 )
 
+const (
+	DefaultLoggerLevel = LogLevelInfo
+	DefaultLoggerMode  = LogModePretty
+)
+
 func InitLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
 	stdlog.SetFlags(0)
 	stdlog.SetOutput(log.Logger)
+	SetLoggingLevel(DefaultLoggerLevel)
+	SetLoggingMode(DefaultLoggerMode)
 }
 
 func SetLoggingLevel(level string) {
