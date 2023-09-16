@@ -9,8 +9,12 @@ const (
 	TestDataDir = "../testhelper/test_data"
 )
 
-func CreateTestFile(dir string) ([]byte, string, error) {
-	file, err := os.CreateTemp(dir, "test-file-*.txt")
+func CreateTestFile(dir, pattern string) ([]byte, string, error) {
+	if pattern == "" {
+		pattern = "test-file-*.txt"
+	}
+
+	file, err := os.CreateTemp(dir, pattern)
 	if err != nil {
 		return []byte{}, "", err
 	}
@@ -30,13 +34,20 @@ func CreateTestFile(dir string) ([]byte, string, error) {
 	return content, absPath, err
 }
 
-func CreateTestDir() (string, error) {
-	tempDir := os.TempDir()
-	randomDirName, err := os.MkdirTemp(tempDir, "test-dir-")
+func CreateTestDir(dir, pattern string) (string, error) {
+	if dir == "" {
+		dir = os.TempDir()
+	}
+
+	if pattern == "" {
+		pattern = "test-dir-"
+	}
+
+	randomDirName, err := os.MkdirTemp(dir, pattern)
 	if err != nil {
 		return "", err
 	}
 
-	_, _, err = CreateTestFile(randomDirName)
+	_, _, err = CreateTestFile(randomDirName, "")
 	return randomDirName, err
 }

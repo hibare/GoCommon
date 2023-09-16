@@ -15,12 +15,20 @@ import (
 	"regexp"
 	"strings"
 
-	"log"
-
 	"github.com/hibare/GoCommon/v2/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
-func ArchiveDir(dirPath string) (string, int, int, int, error) {
+func shouldExclude(name string, exclude []*regexp.Regexp) bool {
+	for _, e := range exclude {
+		if e.MatchString(name) {
+			return true
+		}
+	}
+	return false
+}
+
+func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (string, int, int, int, error) {
 	// Clean the input directory path
 	dirPath = filepath.Clean(dirPath)
 
@@ -55,7 +63,16 @@ func ArchiveDir(dirPath string) (string, int, int, int, error) {
 
 		// Skip directories
 		if info.IsDir() {
+			if shouldExclude(info.Name(), exclude) {
+				log.Info().Msgf("Skipping dir %s, path %s", info.Name(), path)
+				return filepath.SkipDir
+			}
 			totalDirs++
+			return nil
+		}
+
+		if shouldExclude(info.Name(), exclude) {
+			log.Info().Msgf("Skipping file %s, path %s", info.Name(), path)
 			return nil
 		}
 
@@ -97,7 +114,6 @@ func ArchiveDir(dirPath string) (string, int, int, int, error) {
 		return nil
 	})
 
-	log.Printf("Created archive '%s' for directory '%s'", zipPath, dirPath)
 	return zipPath, totalFiles, totalDirs, successFiles, err
 }
 
@@ -273,19 +289,17 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 
 		if d.IsDir() {
 			// Check if directory matches any of the exclude patterns
-			for _, e := range exclude {
-				if e.MatchString(d.Name()) {
-					return filepath.SkipDir
-				}
+			if shouldExclude(d.Name(), exclude) {
+				log.Info().Msgf("Skipping dir %s, path %s", d.Name(), path)
+				return filepath.SkipDir
 			}
 
 			dirs = append(dirs, path)
 		} else {
 			// Check if file matches any of the exclude patterns
-			for _, e := range exclude {
-				if e.MatchString(d.Name()) {
-					return nil
-				}
+			if shouldExclude(d.Name(), exclude) {
+				log.Info().Msgf("Skipping file %s, path %s", d.Name(), path)
+				return nil
 			}
 
 			files = append(files, path)

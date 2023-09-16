@@ -70,7 +70,7 @@ func TestUploadFile(t *testing.T) {
 	err := s.NewSession()
 	assert.NoError(t, err)
 
-	_, filepath, err := testhelper.CreateTestFile("")
+	_, filepath, err := testhelper.CreateTestFile("", "")
 	assert.NoError(t, err)
 	defer os.Remove(filepath)
 
@@ -91,7 +91,7 @@ func TestUploadNoBucket(t *testing.T) {
 	err := s.NewSession()
 	assert.NoError(t, err)
 
-	_, filepath, err := testhelper.CreateTestFile("")
+	_, filepath, err := testhelper.CreateTestFile("", "")
 	assert.NoError(t, err)
 	defer os.Remove(filepath)
 
@@ -133,11 +133,11 @@ func TestUploadDir(t *testing.T) {
 	err := s.NewSession()
 	assert.NoError(t, err)
 
-	testDir, err := testhelper.CreateTestDir()
+	testDir, err := testhelper.CreateTestDir("", "")
 	assert.NoError(t, err)
 	defer os.RemoveAll(testDir)
 
-	key, totalFiles, totalDirs, successFiles := s.UploadDir(testDir)
+	key, totalFiles, totalDirs, successFiles := s.UploadDir(testDir, nil)
 	assert.Greater(t, totalFiles, 0)
 	assert.Greater(t, totalDirs, 0)
 	assert.Greater(t, successFiles, 0)
@@ -156,7 +156,7 @@ func TestUploadDirNoDir(t *testing.T) {
 	err := s.NewSession()
 	assert.NoError(t, err)
 
-	key, totalFiles, totalDirs, successFiles := s.UploadDir("does-not-exists")
+	key, totalFiles, totalDirs, successFiles := s.UploadDir("does-not-exists", nil)
 	assert.Equal(t, 0, totalFiles)
 	assert.Equal(t, 0, totalDirs)
 	assert.Equal(t, 0, successFiles)
@@ -175,7 +175,7 @@ func TestListObjectsAtPrefixRoot(t *testing.T) {
 	err := s.NewSession()
 	assert.NoError(t, err)
 
-	_, filepath, err := testhelper.CreateTestFile("")
+	_, filepath, err := testhelper.CreateTestFile("", "")
 	assert.NoError(t, err)
 	defer os.Remove(filepath)
 

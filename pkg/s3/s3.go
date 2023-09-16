@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -78,14 +79,14 @@ func (s *S3) NewSession() error {
 	return nil
 }
 
-func (s *S3) UploadDir(baseDir string) (string, int, int, int) {
+func (s *S3) UploadDir(baseDir string, exclude []*regexp.Regexp) (string, int, int, int) {
 	totalFiles, totalDirs, successFiles := 0, 0, 0
 	baseKey := ""
 
 	client := s3.New(s.Sess)
 	baseDirParentPath := filepath.Dir(baseDir)
 
-	files, dirs := commonFiles.ListFilesDirs(baseDir, nil)
+	files, dirs := commonFiles.ListFilesDirs(baseDir, exclude)
 
 	totalFiles = len(files)
 	totalDirs = len(dirs)

@@ -1,6 +1,7 @@
 package file
 
 import (
+	"archive/zip"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,6 +12,49 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/testhelper"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestShouldExclude(t *testing.T) {
+	tests := []struct {
+		name     string
+		patterns []*regexp.Regexp
+		input    string
+		expected bool
+	}{
+		{
+			name:     "Exact Match",
+			patterns: []*regexp.Regexp{regexp.MustCompile(`^file\.txt$`)},
+			input:    "file.txt",
+			expected: true,
+		},
+		{
+			name:     "Partial Match",
+			patterns: []*regexp.Regexp{regexp.MustCompile(`^.*\.tmp$`)},
+			input:    "document.tmp",
+			expected: true,
+		},
+		{
+			name:     "No Match",
+			patterns: []*regexp.Regexp{regexp.MustCompile(`^pattern1$`), regexp.MustCompile(`^pattern2$`)},
+			input:    "file.txt",
+			expected: false,
+		},
+		{
+			name:     "Invalid Pattern",
+			patterns: []*regexp.Regexp{regexp.MustCompile(`invalid`)},
+			input:    "file.txt",
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := shouldExclude(test.input, test.patterns)
+			if actual != test.expected {
+				t.Errorf("Expected shouldExclude('%s', patterns) to be %v, but got %v", test.input, test.expected, actual)
+			}
+		})
+	}
+}
 
 func TestArchiveDir(t *testing.T) {
 	// Create a sample dir in temp
@@ -24,7 +68,7 @@ func TestArchiveDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// archive tempDir
-	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir)
+	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir, nil)
 	defer os.Remove(archivePath)
 
 	assert.Equal(t, totalFiles, 1)
@@ -42,7 +86,7 @@ func TestArchiveDirInvalidDir(t *testing.T) {
 	tempDir := "/tmp/does-not-exists"
 
 	// archive tempDir
-	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir)
+	archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir, nil)
 	defer os.Remove(archivePath)
 
 	assert.Empty(t, totalDirs)
@@ -52,8 +96,56 @@ func TestArchiveDirInvalidDir(t *testing.T) {
 
 }
 
+func TestArchiveDirExclude(t *testing.T) {
+	// Create a temporary directory for testing
+	testDir, err := os.MkdirTemp("", "test-archive-dir")
+	assert.NoError(t, err)
+	defer os.RemoveAll(testDir)
+
+	// Create a few files and directories in the test directory
+	err = os.MkdirAll(filepath.Join(testDir, "subdir"), os.ModePerm)
+	assert.NoError(t, err)
+
+	_, _, err = testhelper.CreateTestFile(testDir, "")
+	assert.NoError(t, err)
+
+	_, _, err = testhelper.CreateTestFile(testDir, "file-*.log")
+	assert.NoError(t, err)
+
+	// Define exclusion patterns as regular expressions
+	excludePatterns := []*regexp.Regexp{
+		regexp.MustCompile(`\.log$`),   // Exclude files ending with .log
+		regexp.MustCompile(`^subdir$`), // Exclude the "subdir" directory
+	}
+
+	// Archive the directory while excluding files and directories based on patterns
+	zipPath, totalFiles, totalDirs, successFiles, err := ArchiveDir(testDir, excludePatterns)
+	assert.NoError(t, err)
+	defer os.Remove(zipPath)
+
+	// Check the contents of the created ZIP file
+	zipReader, err := zip.OpenReader(zipPath)
+	assert.NoError(t, err)
+	defer zipReader.Close()
+
+	// Verify that the ZIP file only contains the expected files
+	expectedFilePattern := regexp.MustCompile("^test-file.*.txt$")
+	for _, file := range zipReader.File {
+		assert.Regexp(t, expectedFilePattern, file.Name, "Unexpected file found in ZIP archive")
+	}
+
+	// Check the counts of total files, total directories, and successfully archived files
+	expectedTotalFiles := 1 // Only "file*.txt" is expected to be archived
+	expectedTotalDirs := 1  // The root directory itself and the "subdir" directory
+	expectedSuccessFiles := 1
+
+	assert.Equal(t, expectedTotalFiles, totalFiles, "Total files mismatch")
+	assert.Equal(t, expectedTotalDirs, totalDirs, "Total directories mismatch")
+	assert.Equal(t, expectedSuccessFiles, successFiles, "Successfully archived files mismatch")
+}
+
 func TestReadFileBytes(t *testing.T) {
-	content, path, err := testhelper.CreateTestFile("")
+	content, path, err := testhelper.CreateTestFile("", "")
 	defer os.Remove(path)
 	assert.NoError(t, err)
 
@@ -68,7 +160,7 @@ func TestReadFileBytesNoFile(t *testing.T) {
 }
 
 func TestReadFilePass(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile("")
+	_, absPath, err := testhelper.CreateTestFile("", "")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -85,7 +177,7 @@ func TestReadFileFail(t *testing.T) {
 }
 
 func TestCalculateFileSHA256Pass(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile("")
+	_, absPath, err := testhelper.CreateTestFile("", "")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -99,7 +191,7 @@ func TestCalculateFileSHA256Pass(t *testing.T) {
 }
 
 func TestCalculateFileSHA256Fail(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile("")
+	_, absPath, err := testhelper.CreateTestFile("", "")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -113,7 +205,7 @@ func TestCalculateFileSHA256Fail(t *testing.T) {
 }
 
 func TestValidateFileSHA256Pass(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile("")
+	_, absPath, err := testhelper.CreateTestFile("", "")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -125,7 +217,7 @@ func TestValidateFileSHA256Pass(t *testing.T) {
 }
 
 func TestValidateFileSHA256Fail(t *testing.T) {
-	_, absPath, err := testhelper.CreateTestFile("")
+	_, absPath, err := testhelper.CreateTestFile("", "")
 	defer os.Remove(absPath)
 
 	assert.NoError(t, err)
@@ -138,7 +230,7 @@ func TestValidateFileSHA256Fail(t *testing.T) {
 
 func TestDownloadFilePass(t *testing.T) {
 	// Create a test file
-	_, absPath, err := testhelper.CreateTestFile("")
+	_, absPath, err := testhelper.CreateTestFile("", "")
 	assert.NoError(t, err)
 
 	// Create a mock HTTP server
