@@ -65,13 +65,13 @@ func SetLoggingMode(mode string) {
 
 	switch mode {
 	case LogModePretty:
-		log.Logger = log.Output(zerolog.ConsoleWriter{
+		log.Logger = zerolog.New(zerolog.ConsoleWriter{
 			Out:        os.Stderr,
 			NoColor:    true,
 			TimeFormat: "2006/01/02 03:04PM",
-		})
+		}).With().Timestamp().Caller().Logger()
 	case LogModeJSON:
-		log.Logger = log.Output(os.Stderr)
+		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Caller().Logger()
 	}
 }
 
