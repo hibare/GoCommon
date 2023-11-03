@@ -266,7 +266,7 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 				return targetFilePath, err
 			}
 
-			if _, err := io.Copy(targetFile, tarReader); err != nil {
+			if _, err := io.CopyN(targetFile, tarReader, header.Size); err != nil {
 				targetFile.Close()
 				os.Remove(targetFilename)
 				return targetFilePath, err
