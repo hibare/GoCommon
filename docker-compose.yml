@@ -17,3 +17,5 @@ services:
       timeout: 10s
       start_period: 10s
       retries: 3
+    security_opt:
+      - "no-new-privileges:true"
