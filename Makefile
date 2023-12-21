@@ -5,9 +5,17 @@ GID := $(shell id -g)
 MAKEFLAGS += -s
 DOCKER_COMPOSE_PREFIX = HOST_UID=${UID} HOST_GID=${GID} docker-compose -f docker-compose.yml
 
-all: s3-up
+# Bold
+BCYAN=\033[1;36m
+BBLUE=\033[1;34m
 
-s3-up:
+# No color (Reset)
+NC=\033[0m
+
+.DEFAULT_GOAL := help
+
+.PHONY: s3-up
+s3-up: ## Start S3 service
 	${DOCKER_COMPOSE_PREFIX} up -d minio
 	@echo "Waiting for Minio to become healthy..."
 	@until docker-compose exec -T minio sh -c "curl -f http://localhost:9000/minio/health/live > /dev/null 2>&1"; do \
@@ -16,14 +24,17 @@ s3-up:
 	done
 	@printf "Minio is now healthy!\n\n"
 
-s3-down:
+.PHONY: s3-down
+s3-down: ## Stop S3 service
 	${DOCKER_COMPOSE_PREFIX} rm -fsv minio
-	
-clean: 
+
+.PHONY: clean	
+clean: ## Cleanup
 	${DOCKER_COMPOSE_PREFIX} down
 	go mod tidy
 
-test: 
+.PHONY: test
+test: ## Run tests
 ifndef GITHUB_ACTIONS
 	$(MAKE) s3-up
 endif
@@ -34,4 +45,6 @@ ifndef GITHUB_ACTIONS
 	$(MAKE) s3-down
 endif
 
-.PHONY = all clean test s3-up s3-down
+.PHONY: help
+help: ## Disply this help
+		@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BCYAN)%-18s$(NC)%s\n", $$1, $$2}'
