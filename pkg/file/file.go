@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 	"strings"
 
 	"github.com/hibare/GoCommon/v2/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 func shouldExclude(name string, exclude []*regexp.Regexp) bool {
@@ -64,7 +64,7 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (string, int, int, int
 		// Skip directories
 		if info.IsDir() {
 			if shouldExclude(info.Name(), exclude) {
-				log.Info().Msgf("Skipping dir %s, path %s", info.Name(), path)
+				slog.Info("Skipping dir", "name", info.Name(), "path", path)
 				return filepath.SkipDir
 			}
 			totalDirs++
@@ -72,7 +72,7 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (string, int, int, int
 		}
 
 		if shouldExclude(info.Name(), exclude) {
-			log.Info().Msgf("Skipping file %s, path %s", info.Name(), path)
+			slog.Info("Skipping file", "name", info.Name(), "path", path)
 			return nil
 		}
 
@@ -290,7 +290,7 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 		if d.IsDir() {
 			// Check if directory matches any of the exclude patterns
 			if shouldExclude(d.Name(), exclude) {
-				log.Info().Msgf("Skipping dir %s, path %s", d.Name(), path)
+				slog.Info("Skipping dir", "name", d.Name(), "path", path)
 				return filepath.SkipDir
 			}
 
@@ -298,7 +298,7 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 		} else {
 			// Check if file matches any of the exclude patterns
 			if shouldExclude(d.Name(), exclude) {
-				log.Info().Msgf("Skipping file %s, path %s", d.Name(), path)
+				slog.Info("Skipping file", "name", d.Name(), "path", path)
 				return nil
 			}
 

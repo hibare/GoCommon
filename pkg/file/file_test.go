@@ -296,6 +296,7 @@ func TestListFilesDirs(t *testing.T) {
 	expectedFiles := []string{
 		"../testhelper/test_data/sample.tar.gz",
 		"../testhelper/testhelper.go",
+		"../testhelper/testhelper_test.go",
 	}
 	expectedDirs := []string{
 		"../testhelper",
@@ -324,6 +325,7 @@ func TestListFilesDirsExcludeDirs(t *testing.T) {
 	rootDir := "../testhelper"
 	expectedFiles := []string{
 		"../testhelper/testhelper.go",
+		"../testhelper/testhelper_test.go",
 	}
 	expectedDirs := []string{
 		"../testhelper",
