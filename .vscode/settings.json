@@ -3,6 +3,8 @@
         "gomod",
         "hibare",
         "stdlog",
+        "stretchr",
+        "testhelper",
         "zerolog"
     ]
 }

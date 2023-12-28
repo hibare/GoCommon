@@ -51,3 +51,7 @@ func CreateTestDir(dir, pattern string) (string, error) {
 	_, _, err = CreateTestFile(randomDirName, "")
 	return randomDirName, err
 }
+
+func StringToPtr(s string) *string {
+	return &s
+}

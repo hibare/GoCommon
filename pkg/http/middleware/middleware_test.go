@@ -1,9 +1,13 @@
 package middleware
 
 import (
+	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -68,4 +72,96 @@ func TestTokenAuthWrongKeyFailure(t *testing.T) {
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
+}
+
+func TestRequestLogger(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer func() {
+			log.SetOutput(log.Writer())
+		}()
+
+		// Create a mock server
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Hello, world!"))
+		})
+
+		// Create a test server with the RequestLogger middleware
+		ts := httptest.NewServer(RequestLogger(handler))
+		defer ts.Close()
+
+		// Make a request to the test server to trigger logging
+		client := &http.Client{}
+		resp, err := client.Get(ts.URL)
+		if err != nil {
+			t.Fatalf("Error making request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		logString := buf.String()
+		assert.NotEmpty(t, logString)
+		assert.Contains(t, logString, "INFO request method=GET path=/ statusCode=200 duration")
+
+	})
+
+	t.Run("Warning", func(t *testing.T) {
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer func() {
+			log.SetOutput(log.Writer())
+		}()
+
+		// Create a mock server
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+		})
+
+		// Create a test server with the RequestLogger middleware
+		ts := httptest.NewServer(RequestLogger(handler))
+		defer ts.Close()
+
+		// Make a request to the test server to trigger logging
+		client := &http.Client{}
+		resp, err := client.Get(ts.URL)
+		if err != nil {
+			t.Fatalf("Error making request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		logString := buf.String()
+		assert.NotEmpty(t, logString)
+		assert.Contains(t, logString, "WARN request method=GET path=/ statusCode=400 duration=")
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer func() {
+			log.SetOutput(log.Writer())
+		}()
+
+		// Create a mock server
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		// Create a test server with the RequestLogger middleware
+		ts := httptest.NewServer(RequestLogger(handler))
+		defer ts.Close()
+
+		// Make a request to the test server to trigger logging
+		client := &http.Client{}
+		resp, err := client.Get(ts.URL)
+		if err != nil {
+			t.Fatalf("Error making request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		logString := buf.String()
+		assert.NotEmpty(t, logString)
+		assert.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
+	})
+
 }
