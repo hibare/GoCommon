@@ -3,8 +3,8 @@ module github.com/hibare/GoCommon/v2
 go 1.21
 
 require (
-	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/aws/aws-sdk-go v1.49.19
+	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
+	github.com/aws/aws-sdk-go v1.49.24
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
@@ -32,7 +32,7 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
