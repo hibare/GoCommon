@@ -3,8 +3,8 @@ module github.com/hibare/GoCommon/v2
 go 1.21
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
-	github.com/aws/aws-sdk-go v1.50.24
+	github.com/ProtonMail/go-crypto v1.1.0-alpha.1
+	github.com/aws/aws-sdk-go v1.50.29
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
