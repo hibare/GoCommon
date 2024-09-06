@@ -55,3 +55,61 @@ func TestMapValues(t *testing.T) {
 	sort.Ints(result3) // Sort the values
 	assert.Equal(t, expected3, result3, "MapValues(%v) = %v, expected %v", m3, result3, expected3)
 }
+func TestMapContains(t *testing.T) {
+	m := map[string]int{"a": 1, "b": 2, "c": 3}
+
+	// Test case 1: Key is present
+	assert.True(t, MapContains(m, "a"), "MapContains(%v, %v) = false, expected true", m, "a")
+
+	// Test case 2: Key is not present
+	assert.False(t, MapContains(m, "d"), "MapContains(%v, %v) = true, expected false", m, "d")
+
+	// Test case 3: Empty map
+	m2 := map[string]int{}
+	assert.False(t, MapContains(m2, "a"), "MapContains(%v, %v) = true, expected false", m2, "a")
+}
+
+func TestMapSortByKeys(t *testing.T) {
+	m := map[string]int{"c": 3, "a": 1, "b": 2}
+
+	// Test case 1: Sort by string keys in ascending order
+	expected1 := map[string]int{"a": 1, "b": 2, "c": 3}
+	result1 := MapSortByKeys(m, func(a, b string) bool { return a < b })
+	assert.Equal(t, expected1, result1, "MapSortByKeys(%v) = %v, expected %v", m, result1, expected1)
+
+	// Test case 2: Sort by string keys in descending order
+	expected2 := map[string]int{"c": 3, "b": 2, "a": 1}
+	result2 := MapSortByKeys(m, func(a, b string) bool { return a > b })
+	assert.Equal(t, expected2, result2, "MapSortByKeys(%v) = %v, expected %v", m, result2, expected2)
+
+	// Test case 3: Empty map
+	m3 := map[string]int{}
+	expected3 := map[string]int{}
+	result3 := MapSortByKeys(m3, func(a, b string) bool { return a < b })
+	assert.Equal(t, expected3, result3, "MapSortByKeys(%v) = %v, expected %v", m3, result3, expected3)
+}
+func TestMapSortByValues(t *testing.T) {
+	m := map[string]int{"a": 3, "b": 1, "c": 2}
+
+	// Test case 1: Sort by int values in ascending order
+	expected1 := map[string]int{"b": 1, "c": 2, "a": 3}
+	result1 := MapSortByValues(m, func(a, b int) bool { return a < b })
+	assert.Equal(t, expected1, result1, "MapSortByValues(%v) = %v, expected %v", m, result1, expected1)
+
+	// Test case 2: Sort by int values in descending order
+	expected2 := map[string]int{"a": 3, "c": 2, "b": 1}
+	result2 := MapSortByValues(m, func(a, b int) bool { return a > b })
+	assert.Equal(t, expected2, result2, "MapSortByValues(%v) = %v, expected %v", m, result2, expected2)
+
+	// Test case 3: Map with string values sorted in ascending order
+	m2 := map[int]string{1: "three", 2: "one", 3: "two"}
+	expected3 := map[int]string{2: "one", 3: "two", 1: "three"}
+	result3 := MapSortByValues(m2, func(a, b string) bool { return a < b })
+	assert.Equal(t, expected3, result3, "MapSortByValues(%v) = %v, expected %v", m2, result3, expected3)
+
+	// Test case 4: Empty map
+	m3 := map[string]int{}
+	expected4 := map[string]int{}
+	result4 := MapSortByValues(m3, func(a, b int) bool { return a < b })
+	assert.Equal(t, expected4, result4, "MapSortByValues(%v) = %v, expected %v", m3, result4, expected4)
+}
