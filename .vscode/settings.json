@@ -1,10 +1,11 @@
 {
-    "cSpell.words": [
-        "gomod",
-        "hibare",
-        "stdlog",
-        "stretchr",
-        "testhelper",
-        "zerolog"
-    ]
+  "cSpell.words": [
+    "gomod",
+    "hibare",
+    "stdlog",
+    "stretchr",
+    "testhelper",
+    "zerolog"
+  ],
+  "makefile.configureOnOpen": false
 }

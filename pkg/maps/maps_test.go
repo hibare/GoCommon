@@ -1,6 +1,7 @@
 package maps
 
 import (
+	"os"
 	"sort"
 	"testing"
 
@@ -88,6 +89,7 @@ func TestMapSortByKeys(t *testing.T) {
 	result3 := MapSortByKeys(m3, func(a, b string) bool { return a < b })
 	assert.Equal(t, expected3, result3, "MapSortByKeys(%v) = %v, expected %v", m3, result3, expected3)
 }
+
 func TestMapSortByValues(t *testing.T) {
 	m := map[string]int{"a": 3, "b": 1, "c": 2}
 
@@ -112,4 +114,37 @@ func TestMapSortByValues(t *testing.T) {
 	expected4 := map[string]int{}
 	result4 := MapSortByValues(m3, func(a, b int) bool { return a < b })
 	assert.Equal(t, expected4, result4, "MapSortByValues(%v) = %v, expected %v", m3, result4, expected4)
+}
+
+func TestMap2EnvFile(t *testing.T) {
+	// Test case 1: Non-empty map
+	m := map[string]int{"a": 1, "b": 2, "c": 3}
+	filePath := "/tmp/test_env_file_1.env"
+	err := Map2EnvFile(m, filePath)
+	assert.NoError(t, err, "Map2EnvFile(%v, %v) returned an error: %v", m, filePath, err)
+
+	// Check if the file exists
+	_, err = os.Stat(filePath)
+	assert.False(t, os.IsNotExist(err), "File %v does not exist", filePath)
+
+	// Test case 2: Empty map
+	m2 := map[string]int{}
+	filePath2 := "/tmp/test_env_file_2.env"
+	err = Map2EnvFile(m2, filePath2)
+	assert.NoError(t, err, "Map2EnvFile(%v, %v) returned an error: %v", m2, filePath2, err)
+
+	// Check if the file exists
+	_, err = os.Stat(filePath2)
+	assert.False(t, os.IsNotExist(err), "File %v does not exist", filePath2)
+
+	// Test case 3: Map with different types
+	m3 := map[int]string{1: "one", 2: "two", 3: "three"}
+	filePath3 := "/tmp/test_env_file_3.env"
+	err = Map2EnvFile(m3, filePath3)
+	assert.NoError(t, err, "Map2EnvFile(%v, %v) returned an error: %v", m3, filePath3, err)
+
+	// Check if the file exists
+	_, err = os.Stat(filePath3)
+	assert.False(t, os.IsNotExist(err), "File %v does not exist", filePath3)
+
 }
