@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
@@ -311,4 +312,43 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 	_ = filepath.WalkDir(root, readDir)
 
 	return files, dirs
+}
+
+// FileHash computes the SHA-256 hash of a file
+func FileHash(filePath string) ([]byte, error) {
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Create a new SHA-256 hash
+	hash := sha256.New()
+
+	// Copy the file contents into the hash
+	if _, err := io.Copy(hash, file); err != nil {
+		return nil, err
+	}
+
+	// Return the computed hash
+	return hash.Sum(nil), nil
+}
+
+// FilesSameContent checks if two files have the same content by comparing their hashes
+func FilesSameContent(file1, file2 string) (bool, error) {
+	// Compute the hash of the first file
+	hash1, err := FileHash(file1)
+	if err != nil {
+		return false, err
+	}
+
+	// Compute the hash of the second file
+	hash2, err := FileHash(file2)
+	if err != nil {
+		return false, err
+	}
+
+	// Compare the hashes
+	return bytes.Equal(hash1, hash2), nil
 }
