@@ -13,26 +13,40 @@ var (
 )
 
 type EmbedField struct {
-	Name   string `json:"name"`
-	Value  string `json:"value"`
+	Name   string `json:"name,omitempty"`
+	Value  string `json:"value,omitempty"`
 	Inline bool   `json:"inline,omitempty"`
 }
 
 type EmbedImage struct {
-	URL string `json:"url"`
+	URL string `json:"url,omitempty"`
 }
 
 type EmbedFooter struct {
-	Text string `json:"text"`
+	Text    string `json:"text,omitempty"`
+	IconURL string `json:"icon_url,omitempty"`
+}
+
+type EmbedThumbnail struct {
+	URL string `json:"url,omitempty"`
+}
+
+type EmbedAuthor struct {
+	Name    string `json:"name,omitempty"`
+	URL     string `json:"url,omitempty"`
+	IconURL string `json:"icon_url,omitempty"`
 }
 
 type Embed struct {
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Color       int          `json:"color"`
-	Footer      EmbedFooter  `json:"footer"`
-	Fields      []EmbedField `json:"fields"`
-	Image       EmbedImage   `json:"image"`
+	Title       string         `json:"title,omitempty"`
+	URL         string         `json:"url,omitempty"`
+	Description string         `json:"description,omitempty"`
+	Color       int            `json:"color,omitempty"`
+	Footer      EmbedFooter    `json:"footer,omitempty"`
+	Fields      []EmbedField   `json:"fields,omitempty"`
+	Image       EmbedImage     `json:"image,omitempty"`
+	Thumbnail   EmbedThumbnail `json:"thumbnail,omitempty"`
+	Author      EmbedAuthor    `json:"author,omitempty"`
 }
 
 type Component struct {
@@ -40,11 +54,11 @@ type Component struct {
 }
 
 type Message struct {
-	Embeds     []Embed     `json:"embeds"`
-	Components []Component `json:"components"`
-	Username   string      `json:"username"`
-	Content    string      `json:"content"`
-	AvatarURL  string      `json:"avatar_url"`
+	Embeds     []Embed     `json:"embeds,omitempty"`
+	Components []Component `json:"components,omitempty"`
+	Username   string      `json:"username,omitempty"`
+	Content    string      `json:"content,omitempty"`
+	AvatarURL  string      `json:"avatar_url,omitempty"`
 }
 
 func (d *Message) AddFooter(footerStr string) error {
