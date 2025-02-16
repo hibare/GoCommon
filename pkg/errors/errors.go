@@ -10,6 +10,7 @@ var (
 	ErrCreatingDir         = errors.New("creating dir")
 	ErrNotDir              = errors.New("not a directory")
 	ErrNotFile             = errors.New("not a file")
+	ErrRecordNotFound      = errors.New("record not found")
 )
 
 type Error struct {
