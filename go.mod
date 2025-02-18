@@ -1,8 +1,6 @@
 module github.com/hibare/GoCommon/v2
 
-go 1.22.0
-
-toolchain go1.22.2
+go 1.24.0
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.5
