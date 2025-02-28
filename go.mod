@@ -3,7 +3,7 @@ module github.com/hibare/GoCommon/v2
 go 1.24.0
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.5
+	github.com/ProtonMail/go-crypto v1.1.6
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a
