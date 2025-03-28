@@ -1,7 +1,6 @@
 module github.com/hibare/GoCommon/v2
 
 go 1.24.0
-
 require (
 	github.com/ProtonMail/go-crypto v1.1.6
 	github.com/aws/aws-sdk-go v1.55.6
@@ -9,7 +8,7 @@ require (
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a
 	github.com/joho/godotenv v1.5.1
 	github.com/orlangure/gnomock v0.31.0
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.5.11
