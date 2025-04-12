@@ -7,10 +7,10 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/constants"
 )
 
-func SortDateTimes(datetimes []string) []string {
+func SortDateTimes(dt []string) []string {
 	// Convert the strings to time.Time objects
 	var times []time.Time
-	for _, dt := range datetimes {
+	for _, dt := range dt {
 		t, _ := time.Parse(constants.DefaultDateTimeLayout, dt)
 		times = append(times, t)
 	}

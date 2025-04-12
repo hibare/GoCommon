@@ -16,7 +16,7 @@ func NewContext() *Context {
 	}
 }
 
-func (c *Context) WithValue(key, value interface{}) *Context {
+func (c *Context) WithValue(key, value any) *Context {
 	c.Context = context.WithValue(c.Context, key, value)
 	return c
 }
@@ -30,7 +30,7 @@ func (c *Context) WithContext(ctx context.Context) *Context {
 	return c
 }
 
-func (c *Context) Get(key interface{}) interface{} {
+func (c *Context) Get(key any) any {
 	return c.Context.Value(key)
 }
 
