@@ -68,3 +68,13 @@ func SliceUnion[T comparable](a, b []T) []T {
 	}
 	return union
 }
+
+// SliceIndexOf returns the index of the first occurrence of a in list, or -1 if not found
+func SliceIndexOf[T comparable](a T, list []T) int {
+	for i, b := range list {
+		if b == a {
+			return i
+		}
+	}
+	return -1
+}

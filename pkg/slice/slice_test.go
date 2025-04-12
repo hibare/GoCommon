@@ -50,3 +50,13 @@ func TestSliceUnion(t *testing.T) {
 	assert.ElementsMatch(t, []int{1, 2, 3}, SliceUnion([]int{}, []int{1, 2, 3}))
 	assert.ElementsMatch(t, []string{}, SliceUnion([]string{}, []string{}))
 }
+
+func TestSliceIndexOf(t *testing.T) {
+	assert.Equal(t, 0, SliceIndexOf("1", []string{"1", "2", "3"}))
+	assert.Equal(t, -1, SliceIndexOf("11", []string{"1", "2", "3"}))
+	assert.Equal(t, 1, SliceIndexOf(2, []int{1, 2, 3}))
+	assert.Equal(t, -1, SliceIndexOf(22, []int{1, 2, 3}))
+	assert.Equal(t, 2, SliceIndexOf(3.3, []float64{1.1, 2.2, 3.3}))
+	assert.Equal(t, -1, SliceIndexOf(33.3, []float64{1.1, 2.2, 3.3}))
+	assert.Equal(t, -1, SliceIndexOf("1", []string{}))
+}
