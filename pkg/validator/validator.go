@@ -10,9 +10,11 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
-const tagJson = "json"
-const tagValidateErrMsgs = "validate_errs"
-const tagValidate = "validate"
+const (
+	tagJson            = "json"
+	tagValidateErrMsgs = "validate_errs"
+	tagValidate        = "validate"
+)
 
 func extractTagAsSlice(field reflect.StructField, tagName string) []string {
 	var tagSlice []string
