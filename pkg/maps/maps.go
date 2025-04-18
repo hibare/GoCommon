@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"sync"
 )
 
 // MapContains checks if a key is present in map
@@ -85,4 +86,13 @@ func Map2EnvFile[K comparable, V any](m map[K]V, filePath string) error {
 	}
 
 	return nil
+}
+
+func MapFromSyncMap[K comparable, V any](m *sync.Map) map[K]V {
+	result := make(map[K]V)
+	m.Range(func(key, value any) bool {
+		result[key.(K)] = value.(V)
+		return true
+	})
+	return result
 }
