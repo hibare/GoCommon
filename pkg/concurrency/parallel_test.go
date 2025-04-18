@@ -31,8 +31,8 @@ func TestRunParallelTasks(t *testing.T) {
 			name: "failing tasks",
 			opts: ParallelOptions{WorkerCount: 2},
 			tasks: []ParallelTask{
-				{Name: "task1", Task: func(ctx context.Context) error { return errors.New("error1") }},
-				{Name: "task2", Task: func(ctx context.Context) error { return errors.New("error2") }},
+				{Name: "task1", Task: func(ctx context.Context) error { return errors.New("failed task: error1") }},
+				{Name: "task2", Task: func(ctx context.Context) error { return errors.New("failed task: error2") }},
 			},
 			wantErrCnt:  2,
 			wantErrText: "failed",
@@ -73,13 +73,13 @@ func TestRunParallelTasks(t *testing.T) {
 				time.Sleep(50 * time.Millisecond) // Give some time for tasks to start
 			}
 
-			errs := RunParallelTasks(ctx, tt.opts, tt.tasks...)
+			errsMap := RunParallelTasks(ctx, tt.opts, tt.tasks...)
 
-			assert.Len(t, errs, tt.wantErrCnt)
-
-			if tt.wantErrText != "" {
-				for _, err := range errs {
-					assert.Contains(t, err.Error(), tt.wantErrText)
+			if assert.Len(t, errsMap, tt.wantErrCnt) {
+				if tt.wantErrText != "" {
+					for _, err := range errsMap {
+						assert.Contains(t, err.Error(), tt.wantErrText)
+					}
 				}
 			}
 		})

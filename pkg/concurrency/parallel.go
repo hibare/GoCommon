@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
+	"github.com/hibare/GoCommon/v2/pkg/maps"
 )
 
 const DefaultWorkerCount = 5
@@ -19,22 +21,24 @@ type ParallelOptions struct {
 	WorkerCount int // Number of concurrent workers
 }
 
-// RunParallelTasks executes the given tasks in parallel and returns all errors encountered
+type ErrorMap map[string]error
+
+// RunParallelTasks executes the given tasks in parallel and returns a map of task names to errors
 // Context cancellation will stop all running tasks
-func RunParallelTasks(ctx context.Context, opts ParallelOptions, tasks ...ParallelTask) []error {
+func RunParallelTasks(ctx context.Context, opts ParallelOptions, tasks ...ParallelTask) ErrorMap {
 	workerCount := opts.WorkerCount
 	if workerCount <= 0 {
-		workerCount = DefaultWorkerCount // Default worker count
+		workerCount = DefaultWorkerCount
 	}
 
 	var (
 		wg       sync.WaitGroup
-		errChan  = make(chan error, len(tasks)) // Buffered channel for errors
-		taskChan = make(chan ParallelTask)      // Channel for distributing tasks to workers
+		errorMap sync.Map
+		taskChan = make(chan ParallelTask)
 	)
 
 	// Start worker goroutines
-	for i := 0; i < workerCount; i++ {
+	for range workerCount {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -42,14 +46,14 @@ func RunParallelTasks(ctx context.Context, opts ParallelOptions, tasks ...Parall
 				// Check for context cancellation
 				select {
 				case <-ctx.Done():
-					errChan <- fmt.Errorf("task %q canceled: %w", task.Name, ctx.Err())
+					errorMap.Store(task.Name, fmt.Errorf("task canceled: %w", ctx.Err()))
 					continue
 				default:
 				}
 
 				// Run task with context and collect error
 				if err := task.Task(ctx); err != nil {
-					errChan <- fmt.Errorf("task %q failed: %w", task.Name, err)
+					errorMap.Store(task.Name, err)
 				}
 			}
 		}()
@@ -65,13 +69,9 @@ func RunParallelTasks(ctx context.Context, opts ParallelOptions, tasks ...Parall
 
 	// Wait for all workers to complete
 	wg.Wait()
-	close(errChan)
 
-	// Collect errors from the channel
-	var errors []error
-	for err := range errChan {
-		errors = append(errors, err)
-	}
+	// Convert sync.Map to regular map
+	result := maps.MapFromSyncMap[string, error](&errorMap)
 
-	return errors
+	return result
 }

@@ -3,6 +3,7 @@ package maps
 import (
 	"os"
 	"sort"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -147,4 +148,31 @@ func TestMap2EnvFile(t *testing.T) {
 	_, err = os.Stat(filePath3)
 	assert.False(t, os.IsNotExist(err), "File %v does not exist", filePath3)
 
+}
+func TestMapFromSyncMap(t *testing.T) {
+	// Test case 1: SyncMap with string keys and int values
+	sm1 := &sync.Map{}
+	sm1.Store("a", 1)
+	sm1.Store("b", 2)
+	sm1.Store("c", 3)
+
+	expected1 := map[string]int{"a": 1, "b": 2, "c": 3}
+	result1 := MapFromSyncMap[string, int](sm1)
+	assert.Equal(t, expected1, result1, "MapFromSyncMap(%v) = %v, expected %v", sm1, result1, expected1)
+
+	// Test case 2: SyncMap with int keys and string values
+	sm2 := &sync.Map{}
+	sm2.Store(1, "one")
+	sm2.Store(2, "two")
+	sm2.Store(3, "three")
+
+	expected2 := map[int]string{1: "one", 2: "two", 3: "three"}
+	result2 := MapFromSyncMap[int, string](sm2)
+	assert.Equal(t, expected2, result2, "MapFromSyncMap(%v) = %v, expected %v", sm2, result2, expected2)
+
+	// Test case 3: Empty SyncMap
+	sm3 := &sync.Map{}
+	expected3 := map[string]int{}
+	result3 := MapFromSyncMap[string, int](sm3)
+	assert.Equal(t, expected3, result3, "MapFromSyncMap(%v) = %v, expected %v", sm3, result3, expected3)
 }
