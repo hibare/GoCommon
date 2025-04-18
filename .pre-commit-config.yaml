@@ -19,7 +19,6 @@ repos:
       - id: go-fmt
       # - id: go-vet
       # - id: golangci-lint
-      - id: go-build
   - repo: local
     hooks:
       - id: run-go-tests
