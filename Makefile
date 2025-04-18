@@ -28,10 +28,26 @@ s3-up: ## Start S3 service
 s3-down: ## Stop S3 service
 	${DOCKER_COMPOSE_PREFIX} rm -fsv minio
 
-.PHONY: clean	
+.PHONY: clean
 clean: ## Cleanup
 	${DOCKER_COMPOSE_PREFIX} down
 	go mod tidy
+
+.PHONY: init
+init: ## Initialize the project
+	$(MAKE) install-golangci-lint
+	$(MAKE) install-pre-commit
+
+.PHONY: install-golangci-lint
+install-golangci-lint: ## Install golangci-lint
+ifeq (, $(shell which golangci-lint))
+	@echo "Installing golangci-lint..."
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin
+endif
+
+.PHONY: install-pre-commit
+install-pre-commit: ## Install pre-commit
+	pre-commit install
 
 .PHONY: test
 test: ## Run tests
