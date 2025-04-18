@@ -32,5 +32,11 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Run Tests
-        run: make test
+      - name: Set up Python
+        uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+
+      - name: Install GolangCI-Lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/2b224c2cf4c9f261c22a16af7f8ca6408467f338/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.0.2
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
