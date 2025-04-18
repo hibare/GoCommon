@@ -3,7 +3,7 @@ module github.com/hibare/GoCommon/v2
 go 1.24.0
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.6
+	github.com/ProtonMail/go-crypto v1.2.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-migrate/migrate/v4 v4.18.2
@@ -20,7 +20,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/cloudflare/circl v1.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v27.2.0+incompatible // indirect
