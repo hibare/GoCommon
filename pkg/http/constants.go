@@ -19,7 +19,7 @@ const (
 	DefaultServerTimeout = 60 * time.Second
 
 	// DefaultServerMaxHeaderBytes is the maximum size of request headers.
-	HTTPDefaultRequestSize = 1024 * 1024 * 5 // 5MB
+	DefaultHTTPRequestSize = 1024 * 1024 * 5 // 5MB
 )
 
 // API endpoint paths.
