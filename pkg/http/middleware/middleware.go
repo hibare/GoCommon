@@ -63,11 +63,8 @@ func RequestLogger(next http.Handler) http.Handler {
 	})
 }
 
-// DefaultServerRequestSizeLimit is the maximum size of a request.
-const DefaultServerRequestSizeLimit = 5 * 1024 * 1024 // 5MB
-
 // BasicSecurity adds basic security middleware.
-func BasicSecurity(next http.Handler) http.Handler {
+func BasicSecurity(next http.Handler, sizeBytes int64) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Security headers
 		w.Header().Set("X-Frame-Options", "DENY")
@@ -79,7 +76,7 @@ func BasicSecurity(next http.Handler) http.Handler {
 		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 
 		// Request size limit
-		r.Body = http.MaxBytesReader(w, r.Body, DefaultServerRequestSizeLimit)
+		r.Body = http.MaxBytesReader(w, r.Body, sizeBytes)
 
 		next.ServeHTTP(w, r)
 	})
