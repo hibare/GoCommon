@@ -21,3 +21,9 @@ const (
 	// DefaultServerMaxHeaderBytes is the maximum size of request headers.
 	HTTPDefaultRequestSize = 1024 * 1024 * 5 // 5MB
 )
+
+// API endpoint paths.
+const (
+	// PingPath is the endpoint for health check pings.
+	DefaultPingPath = "/ping"
+)
