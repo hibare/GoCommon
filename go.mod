@@ -4,9 +4,9 @@ go 1.24.0
 
 require (
 	github.com/ProtonMail/go-crypto v1.2.0
-	github.com/aws/aws-sdk-go v1.55.6
+	github.com/aws/aws-sdk-go v1.55.7
 	github.com/go-playground/validator/v10 v10.26.0
-	github.com/golang-migrate/migrate/v4 v4.18.2
+	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a
 	github.com/joho/godotenv v1.5.1
 	github.com/orlangure/gnomock v0.31.0
