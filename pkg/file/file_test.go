@@ -12,6 +12,7 @@ import (
 
 	"github.com/hibare/GoCommon/v2/pkg/testhelper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestShouldExclude(t *testing.T) {
@@ -60,26 +61,23 @@ func TestShouldExclude(t *testing.T) {
 func TestArchiveDir(t *testing.T) {
 	t.Run("Valid Directory", func(t *testing.T) {
 		// Create a sample dir in temp
-		tempDir, err := os.MkdirTemp("", "test")
-		defer os.RemoveAll(tempDir)
-
-		assert.NoError(t, err)
+		tempDir := t.TempDir()
 
 		// create a sample file in temp dir
-		_, err = os.CreateTemp(tempDir, "test")
-		assert.NoError(t, err)
+		err := os.WriteFile(filepath.Join(tempDir, "test"), []byte("test"), 0644)
+		require.NoError(t, err)
 
 		// archive tempDir
-		archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir, nil)
-		defer os.Remove(archivePath)
+		resp, err := ArchiveDir(tempDir, nil)
+		defer os.Remove(resp.ArchivePath)
 
-		assert.Equal(t, totalFiles, 1)
-		assert.Equal(t, totalDirs, 1)
-		assert.Equal(t, successFiles, 1)
+		assert.Equal(t, resp.TotalFiles, 1)
+		assert.Equal(t, resp.TotalDirs, 1)
+		assert.Equal(t, resp.SuccessFiles, 1)
 		assert.NoError(t, err)
 
 		// check archive path exists
-		_, err = os.Stat(archivePath)
+		_, err = os.Stat(resp.ArchivePath)
 		assert.NoError(t, err)
 	})
 
@@ -88,30 +86,28 @@ func TestArchiveDir(t *testing.T) {
 		tempDir := "/tmp/does-not-exists"
 
 		// archive tempDir
-		archivePath, totalFiles, totalDirs, successFiles, err := ArchiveDir(tempDir, nil)
-		defer os.Remove(archivePath)
+		resp, err := ArchiveDir(tempDir, nil)
+		defer os.Remove(resp.ArchivePath)
 
-		assert.Empty(t, totalDirs)
-		assert.Empty(t, totalFiles)
-		assert.Empty(t, successFiles)
+		assert.Empty(t, resp.TotalDirs)
+		assert.Empty(t, resp.TotalFiles)
+		assert.Empty(t, resp.SuccessFiles)
 		assert.Error(t, err)
 	})
 
 	t.Run("Exclude Patterns", func(t *testing.T) {
 		// Create a temporary directory for testing
-		testDir, err := os.MkdirTemp("", "test-archive-dir")
-		assert.NoError(t, err)
-		defer os.RemoveAll(testDir)
+		testDir := t.TempDir()
 
 		// Create a few files and directories in the test directory
-		err = os.MkdirAll(filepath.Join(testDir, "subdir"), os.ModePerm)
-		assert.NoError(t, err)
+		err := os.MkdirAll(filepath.Join(testDir, "subdir"), os.ModePerm)
+		require.NoError(t, err)
 
 		_, _, err = testhelper.CreateTestFile(testDir, "")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		_, _, err = testhelper.CreateTestFile(testDir, "file-*.log")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Define exclusion patterns as regular expressions
 		excludePatterns := []*regexp.Regexp{
@@ -120,13 +116,13 @@ func TestArchiveDir(t *testing.T) {
 		}
 
 		// Archive the directory while excluding files and directories based on patterns
-		zipPath, totalFiles, totalDirs, successFiles, err := ArchiveDir(testDir, excludePatterns)
-		assert.NoError(t, err)
-		defer os.Remove(zipPath)
+		resp, err := ArchiveDir(testDir, excludePatterns)
+		require.NoError(t, err)
+		defer os.Remove(resp.ArchivePath)
 
 		// Check the contents of the created ZIP file
-		zipReader, err := zip.OpenReader(zipPath)
-		assert.NoError(t, err)
+		zipReader, err := zip.OpenReader(resp.ArchivePath)
+		require.NoError(t, err)
 		defer zipReader.Close()
 
 		// Verify that the ZIP file only contains the expected files
@@ -140,9 +136,9 @@ func TestArchiveDir(t *testing.T) {
 		expectedTotalDirs := 1  // The root directory itself and the "subdir" directory
 		expectedSuccessFiles := 1
 
-		assert.Equal(t, expectedTotalFiles, totalFiles, "Total files mismatch")
-		assert.Equal(t, expectedTotalDirs, totalDirs, "Total directories mismatch")
-		assert.Equal(t, expectedSuccessFiles, successFiles, "Successfully archived files mismatch")
+		assert.Equal(t, expectedTotalFiles, resp.TotalFiles, "Total files mismatch")
+		assert.Equal(t, expectedTotalDirs, resp.TotalDirs, "Total directories mismatch")
+		assert.Equal(t, expectedSuccessFiles, resp.SuccessFiles, "Successfully archived files mismatch")
 	})
 }
 

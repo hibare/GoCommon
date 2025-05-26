@@ -1,6 +1,8 @@
+// Package s3 provides a client for the S3 service.
 package s3
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,37 +10,49 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hibare/GoCommon/v2/pkg/constants"
 	commonFiles "github.com/hibare/GoCommon/v2/pkg/file"
 )
 
-type S3 struct {
-	Endpoint  string
-	Region    string
-	AccessKey string
-	SecretKey string
-	Bucket    string
-	Prefix    string
-	Sess      *session.Session
+// --- SDK Interfaces ---
+// S3ServiceAPI is the interface for the S3 service.
+type S3ServiceAPI interface {
+	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
+	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+	ListObjects(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
 }
 
-func (s *S3) SetPrefix(prefix, hostname string, timestamped bool) {
-	prefixSlice := []string{}
+// S3Interface is the interface for the S3 service.
+type S3Interface interface {
+	GetPrefix(prefixes ...string) string
+	GetTimestampedPrefix(prefixes ...string) string
+	TrimPrefix(keys []string, prefix string) []string
+	UploadDir(ctx context.Context, bucket, prefix, baseDir string, exclude []*regexp.Regexp) (UploadDirResponse, error)
+	UploadFile(ctx context.Context, bucket, prefix, filePath string) (string, error)
+	ListObjectsAtPrefixRoot(ctx context.Context, bucket, prefix string) ([]string, error)
+}
 
-	if prefix != "" {
-		prefixSlice = append(prefixSlice, prefix)
+// S3 is the implementation of the S3 service.
+type S3 struct {
+	Client S3ServiceAPI
+}
+
+// getPrefix sets the prefix for the S3 service.
+func (s *S3) getPrefix(timestamped bool, parts ...string) string {
+	partsSlice := []string{}
+
+	for _, p := range parts {
+		if p != "" {
+			partsSlice = append(partsSlice, p)
+		}
 	}
 
-	if hostname != "" {
-		prefixSlice = append(prefixSlice, hostname)
-	}
-
-	generatedPrefix := filepath.Join(prefixSlice...)
+	generatedPrefix := filepath.Join(partsSlice...)
 
 	if timestamped {
 		timePrefix := time.Now().Format(constants.DefaultDateTimeLayout)
@@ -49,118 +63,116 @@ func (s *S3) SetPrefix(prefix, hostname string, timestamped bool) {
 		generatedPrefix = fmt.Sprintf("%s%s", generatedPrefix, constants.S3PrefixSeparator)
 	}
 
-	s.Prefix = generatedPrefix
+	return generatedPrefix
 }
 
-func (s *S3) TrimPrefix(keys []string) []string {
+// GetTimestampedPrefix sets the timestamped prefix for the S3 service.
+func (s *S3) GetTimestampedPrefix(parts ...string) string {
+	return s.getPrefix(true, parts...)
+}
+
+// GetPrefix sets the prefix for the S3 service.
+func (s *S3) GetPrefix(parts ...string) string {
+	return s.getPrefix(false, parts...)
+}
+
+// TrimPrefix trims the prefix from the keys.
+func (s *S3) TrimPrefix(keys []string, prefix string) []string {
 	var trimmedKeys []string
 	for _, key := range keys {
-		trimmedKey := strings.TrimPrefix(key, s.Prefix)
+		trimmedKey := strings.TrimPrefix(key, prefix)
 		trimmedKey = strings.TrimSuffix(trimmedKey, "/")
 		trimmedKeys = append(trimmedKeys, trimmedKey)
 	}
 	return trimmedKeys
 }
 
-func (s *S3) NewSession() error {
-	sess, err := session.NewSession(&aws.Config{
-		Region:           &s.Region,
-		Endpoint:         &s.Endpoint,
-		Credentials:      credentials.NewStaticCredentials(s.AccessKey, s.SecretKey, ""),
-		S3ForcePathStyle: aws.Bool(true),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	s.Sess = sess
-
-	return nil
+// UploadDirResponse holds the result of an UploadDir operation.
+type UploadDirResponse struct {
+	BaseKey      string
+	TotalFiles   int
+	TotalDirs    int
+	SuccessFiles int
+	FailedFiles  map[string]error
 }
 
-func (s *S3) UploadDir(baseDir string, exclude []*regexp.Regexp) (string, int, int, int) {
-	totalFiles, totalDirs, successFiles := 0, 0, 0
-	baseKey := ""
+// UploadDir uploads a directory to the S3 service.
+func (s *S3) UploadDir(ctx context.Context, bucket, prefix, baseDir string, exclude []*regexp.Regexp) (UploadDirResponse, error) {
+	resp := UploadDirResponse{
+		FailedFiles: make(map[string]error), // Initialize the map
+	}
 
-	client := s3.New(s.Sess)
 	baseDirParentPath := filepath.Dir(baseDir)
-
 	files, dirs := commonFiles.ListFilesDirs(baseDir, exclude)
 
-	totalFiles = len(files)
-	totalDirs = len(dirs)
+	resp.TotalFiles = len(files)
+	resp.TotalDirs = len(dirs)
 
 	for _, file := range files {
 		fp, err := os.Open(file)
 		if err != nil {
-			//ToDo: Add logs
+			resp.FailedFiles[file] = err
 			continue
 		}
 		defer fp.Close()
 
-		key := filepath.Join(s.Prefix, strings.TrimPrefix(file, baseDirParentPath))
-		_, err = client.PutObject(&s3.PutObjectInput{
-			Bucket: aws.String(s.Bucket),
-			Key:    aws.String(key),
+		key := filepath.Join(prefix, strings.TrimPrefix(file, baseDirParentPath))
+		_, err = s.Client.PutObject(ctx, &s3.PutObjectInput{
+			Bucket: &bucket,
+			Key:    &key,
 			Body:   fp,
 		})
 		if err != nil {
-			//ToDo: Add logs
+			resp.FailedFiles[file] = err
 			continue
 		}
-		successFiles += 1
-		//ToDo: Add logs
+		resp.SuccessFiles += 1
 	}
 
-	if successFiles > 0 {
-		baseKey = filepath.Join(s.Prefix, filepath.Base(baseDir))
+	if resp.SuccessFiles > 0 {
+		resp.BaseKey = filepath.Join(prefix, filepath.Base(baseDir))
 	}
 
-	return baseKey, totalFiles, totalDirs, successFiles
+	return resp, nil
 }
 
-func (s *S3) UploadFile(filePath string) (string, error) {
-	uploader := s3manager.NewUploader(s.Sess)
-
-	f, err := os.Open(filePath)
+// UploadFile uploads a file to the S3 service.
+func (s *S3) UploadFile(ctx context.Context, bucket, prefix, filePath string) (string, error) {
+	fp, err := os.Open(filePath)
 	if err != nil {
-		//ToDo: Add logs
 		return "", err
 	}
-	defer f.Close()
+	defer fp.Close()
 
-	// Upload the file to S3
-	key := filepath.Join(s.Prefix, filepath.Base(filePath))
-	if _, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(key),
-		Body:   f,
-	}); err != nil {
-		//ToDo: Add logs
+	key := filepath.Join(prefix, filepath.Base(filePath))
+	_, err = s.Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+		Body:   fp,
+	})
+	if err != nil {
 		return "", err
 	}
 
 	return key, nil
 }
 
-func (s *S3) ListObjectsAtPrefixRoot() ([]string, error) {
-	client := s3.New(s.Sess)
-
+// ListObjectsAtPrefixRoot lists the objects at the prefix root.
+func (s *S3) ListObjectsAtPrefixRoot(ctx context.Context, bucket, prefix string) ([]string, error) {
 	var keys []string
 	input := &s3.ListObjectsV2Input{
-		Bucket:    aws.String(s.Bucket),
-		Prefix:    aws.String(s.Prefix),
+		Bucket:    &bucket,
+		Prefix:    &prefix,
 		Delimiter: aws.String("/"),
 	}
 
-	resp, err := client.ListObjectsV2(input)
+	resp, err := s.Client.ListObjectsV2(ctx, input)
 	if err != nil {
 		return keys, err
 	}
 
 	for _, obj := range resp.Contents {
-		if *obj.Key == s.Prefix {
+		if *obj.Key == prefix {
 			continue
 		}
 		keys = append(keys, *obj.Key)
@@ -177,38 +189,87 @@ func (s *S3) ListObjectsAtPrefixRoot() ([]string, error) {
 	return keys, nil
 }
 
-func (s *S3) DeleteObjects(key string, recursive bool) error {
-	client := s3.New(s.Sess)
-
+// DeleteObjects deletes the objects from the S3 service.
+func (s *S3) DeleteObjects(ctx context.Context, bucket, key string, recursive bool) error {
 	// Delete all child object recursively
 	if recursive {
-		// List all objects in the bucket with the given key
-		resp, err := client.ListObjects(&s3.ListObjectsInput{
-			Bucket: aws.String(s.Bucket),
-			Prefix: aws.String(key),
+		resp, err := s.Client.ListObjects(ctx, &s3.ListObjectsInput{
+			Bucket: &bucket,
+			Prefix: &key,
 		})
 		if err != nil {
 			return err
 		}
 
-		// Delete all objects with the given key
 		for _, obj := range resp.Contents {
-			if _, err = client.DeleteObject(&s3.DeleteObjectInput{
-				Bucket: aws.String(s.Bucket),
+			_, err = s.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+				Bucket: &bucket,
 				Key:    obj.Key,
-			}); err != nil {
+			})
+			if err != nil {
 				return err
 			}
 		}
 	}
 
-	// Delete the prefix
-	if _, err := client.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(key),
-	}); err != nil {
+	_, err := s.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// S3Options is the options for the S3 service.
+type S3Options struct {
+	Endpoint  string
+	Region    string
+	AccessKey string
+	SecretKey string
+	Bucket    string
+	Prefix    string
+}
+
+// NewS3WithDeps returns a new S3 instance with injected dependencies (for testing/mocking).
+func NewS3WithDeps(client S3ServiceAPI) S3Interface {
+	return &S3{
+		Client: client,
+	}
+}
+
+// NewS3 returns a new instance of S3 with the provided configuration (for production use).
+func NewS3(opts S3Options) (S3Interface, error) {
+	// Build config options slice based on provided input
+	var cfgOptions []func(*config.LoadOptions) error
+
+	if opts.Region != "" {
+		cfgOptions = append(cfgOptions, config.WithRegion(opts.Region))
+	}
+	if opts.AccessKey != "" && opts.SecretKey != "" {
+		cfgOptions = append(cfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(opts.AccessKey, opts.SecretKey, "")))
+	}
+	if opts.Endpoint != "" {
+		cfgOptions = append(cfgOptions, config.WithEndpointResolverWithOptions(
+			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				return aws.Endpoint{
+					URL:               opts.Endpoint,
+					HostnameImmutable: true,
+				}, nil
+			}),
+		))
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.Background(), cfgOptions...)
+	if err != nil {
+		return nil, err
+	}
+
+	s3Client := s3.NewFromConfig(cfg)
+
+	return &S3{
+		Client: s3Client,
+	}, nil
 }

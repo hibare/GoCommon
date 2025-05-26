@@ -29,7 +29,15 @@ func shouldExclude(name string, exclude []*regexp.Regexp) bool {
 	return false
 }
 
-func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (string, int, int, int, error) {
+type ArchiveDirResponse struct {
+	ArchivePath  string
+	TotalFiles   int
+	TotalDirs    int
+	SuccessFiles int
+	FailedFiles  map[string]error
+}
+
+func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, error) {
 	// Clean the input directory path
 	dirPath = filepath.Clean(dirPath)
 
@@ -45,7 +53,7 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (string, int, int, int
 	// Create the zip file
 	zipFile, err := os.Create(zipPath)
 	if err != nil {
-		return zipPath, 0, 0, 0, err
+		return ArchiveDirResponse{}, err
 	}
 	defer zipFile.Close()
 
@@ -115,7 +123,13 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (string, int, int, int
 		return nil
 	})
 
-	return zipPath, totalFiles, totalDirs, successFiles, err
+	return ArchiveDirResponse{
+		ArchivePath:  zipPath,
+		TotalFiles:   totalFiles,
+		TotalDirs:    totalDirs,
+		SuccessFiles: successFiles,
+		FailedFiles:  nil,
+	}, err
 }
 
 func ReadFileBytes(path string) ([]byte, error) {
