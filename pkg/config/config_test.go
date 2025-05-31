@@ -107,7 +107,7 @@ func TestGetConfigFilePath(t *testing.T) {
 }
 
 func TestEnsureConfigRootDir(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -119,7 +119,7 @@ func TestEnsureConfigRootDir(t *testing.T) {
 }
 
 func TestEnsureConfigRootDirFail(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -135,7 +135,7 @@ func TestEnsureConfigRootDirFail(t *testing.T) {
 }
 
 func TestEnsureConfigFile(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -147,7 +147,7 @@ func TestEnsureConfigFile(t *testing.T) {
 }
 
 func TestEnsureConfigFileFail(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -163,7 +163,7 @@ func TestEnsureConfigFileFail(t *testing.T) {
 }
 
 func TestInitBC(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -176,7 +176,7 @@ func TestInitBC(t *testing.T) {
 }
 
 func TestInitBCFailRootDir(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -192,7 +192,7 @@ func TestInitBCFailRootDir(t *testing.T) {
 }
 
 func TestInitBCFailConfigFile(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -208,7 +208,7 @@ func TestInitBCFailConfigFile(t *testing.T) {
 }
 
 func TestWriteReadYAMLConfig(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
