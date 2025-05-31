@@ -4,9 +4,8 @@ package logger
 import (
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
-
-	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
 const (
@@ -100,10 +99,10 @@ func getSlogLevelFromString(level *string) slog.Level {
 
 // IsValidLogLevel checks if the provided log level is valid.
 func IsValidLogLevel(level string) bool {
-	return slice.Contains(strings.ToUpper(level), LogLevels)
+	return slices.Contains(LogLevels, strings.ToUpper(level))
 }
 
 // IsValidLogMode checks if the provided log mode is valid.
 func IsValidLogMode(mode string) bool {
-	return slice.Contains(strings.ToUpper(mode), LogModes)
+	return slices.Contains(LogModes, strings.ToUpper(mode))
 }

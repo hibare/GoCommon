@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
 const (
@@ -66,7 +66,7 @@ func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJSONT
 				continue
 			}
 
-			validateTagIndex := slice.IndexOf(e.Tag(), validateTags)
+			validateTagIndex := slices.Index(validateTags, e.Tag())
 			if validateTagIndex == -1 {
 				errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, strings.Join(errMsgs, ", "), e.Tag()))
 			} else {

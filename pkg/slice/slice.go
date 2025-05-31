@@ -1,16 +1,6 @@
 // Package slice provides utilities for working with slices.
 package slice
 
-// Contains checks if a string is present in slice.
-func Contains[T comparable](a T, list []T) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 // Unique returns a slice with unique elements.
 func Unique[T comparable](list []T) []T {
 	keys := make(map[T]bool)
@@ -68,14 +58,4 @@ func Union[T comparable](a, b []T) []T {
 		union = append(union, x)
 	}
 	return union
-}
-
-// IndexOf returns the index of the first occurrence of a in list, or -1 if not found.
-func IndexOf[T comparable](a T, list []T) int {
-	for i, b := range list {
-		if b == a {
-			return i
-		}
-	}
-	return -1
 }

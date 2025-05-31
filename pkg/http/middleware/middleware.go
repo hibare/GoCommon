@@ -4,11 +4,11 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 	commonHttp "github.com/hibare/GoCommon/v2/pkg/http"
-	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
 // AuthHeaderName is the name of the authorization header.
@@ -19,7 +19,7 @@ func TokenAuth(next http.Handler, tokens []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Header.Get(AuthHeaderName)
 
-		if apiKey == "" || !slice.Contains(apiKey, tokens) {
+		if apiKey == "" || !slices.Contains(tokens, apiKey) {
 			commonHttp.WriteErrorResponse(w, http.StatusUnauthorized, errors.ErrUnauthorized)
 			return
 		}

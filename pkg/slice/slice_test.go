@@ -6,15 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStringInSlice(t *testing.T) {
-	require.True(t, Contains("1", []string{"1", "2", "3"}))
-	require.False(t, Contains("11", []string{"1", "2", "3"}))
-	require.True(t, Contains(2, []int{1, 2, 3}))
-	require.False(t, Contains(22, []int{1, 2, 3}))
-	require.True(t, Contains(3.3, []float64{1.1, 2.2, 3.3}))
-	require.False(t, Contains(33.3, []float64{1.1, 2.2, 3.3}))
-}
-
 func TestSliceUnique(t *testing.T) {
 	require.ElementsMatch(t, []string{"1", "2", "3"}, Unique([]string{"1", "2", "3", "1", "2"}))
 	require.ElementsMatch(t, []int{1, 2, 3}, Unique([]int{1, 2, 3, 1, 2}))
@@ -49,14 +40,4 @@ func TestSliceUnion(t *testing.T) {
 	require.ElementsMatch(t, []int{1, 2, 3}, Union([]int{1, 2, 3}, []int{}))
 	require.ElementsMatch(t, []int{1, 2, 3}, Union([]int{}, []int{1, 2, 3}))
 	require.ElementsMatch(t, []string{}, Union([]string{}, []string{}))
-}
-
-func TestSliceIndexOf(t *testing.T) {
-	require.Equal(t, 0, IndexOf("1", []string{"1", "2", "3"}))
-	require.Equal(t, -1, IndexOf("11", []string{"1", "2", "3"}))
-	require.Equal(t, 1, IndexOf(2, []int{1, 2, 3}))
-	require.Equal(t, -1, IndexOf(22, []int{1, 2, 3}))
-	require.Equal(t, 2, IndexOf(3.3, []float64{1.1, 2.2, 3.3}))
-	require.Equal(t, -1, IndexOf(33.3, []float64{1.1, 2.2, 3.3}))
-	require.Equal(t, -1, IndexOf("1", []string{}))
 }
