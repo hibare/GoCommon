@@ -144,8 +144,7 @@ func TestArchiveDir(t *testing.T) {
 
 func TestReadFileBytes(t *testing.T) {
 	t.Run("Valid File", func(t *testing.T) {
-		content, path, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(path)
+		content, path, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
 		readBytes, err := ReadFileBytes(path)
@@ -161,8 +160,7 @@ func TestReadFileBytes(t *testing.T) {
 
 func TestReadFileLines(t *testing.T) {
 	t.Run("Valid File", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(absPath)
+		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
 
 		assert.NoError(t, err)
 
@@ -180,8 +178,7 @@ func TestReadFileLines(t *testing.T) {
 
 func TestCalculateFileSHA256(t *testing.T) {
 	t.Run("Valid File", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(absPath)
+		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
 
 		assert.NoError(t, err)
 
@@ -194,8 +191,7 @@ func TestCalculateFileSHA256(t *testing.T) {
 	})
 
 	t.Run("Invalid File", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(absPath)
+		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
 
 		assert.NoError(t, err)
 
@@ -210,26 +206,24 @@ func TestCalculateFileSHA256(t *testing.T) {
 
 func TestValidateFileSHA256(t *testing.T) {
 	t.Run("Valid SHA256", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(absPath)
+		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
 
 		assert.NoError(t, err)
 
 		expectedSHA256 := "2172154e8979de165445a17dd2bdcba6408df06de67d042a6ae6781a1461e076"
 
-		err = ValidateFileSha256(absPath, expectedSHA256)
+		err = ValidateFileSHA256(absPath, expectedSHA256)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Invalid SHA256", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(absPath)
+		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
 
 		assert.NoError(t, err)
 
 		expectedSHA256 := "daed58c831385cdebbb45785b1d5e2c5b2d0769a83896affa720bb32a325b5c6"
 
-		err = ValidateFileSha256(absPath, expectedSHA256)
+		err = ValidateFileSHA256(absPath, expectedSHA256)
 		assert.Error(t, err)
 	})
 }
@@ -237,7 +231,7 @@ func TestValidateFileSHA256(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	t.Run("Valid Download", func(t *testing.T) {
 		// Create a test file
-		_, absPath, err := testhelper.CreateTestFile("", "")
+		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
 		// Create a mock HTTP server
@@ -349,8 +343,7 @@ func TestListFilesDirs(t *testing.T) {
 func TestFileHash(t *testing.T) {
 	t.Run("Valid File", func(t *testing.T) {
 		// Create a test file with known content
-		content, filePath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(filePath)
+		content, filePath, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
 		// Calculate the expected hash using the same content
@@ -392,8 +385,7 @@ func TestFileHash(t *testing.T) {
 func TestFilesSameContent(t *testing.T) {
 	t.Run("Same Content", func(t *testing.T) {
 		// Create two test files with the same content
-		content, filePath1, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(filePath1)
+		content, filePath1, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
 		filePath2, err := os.CreateTemp("", "test-file")
@@ -412,12 +404,10 @@ func TestFilesSameContent(t *testing.T) {
 
 	t.Run("Different Content", func(t *testing.T) {
 		// Create two test files with different content
-		_, filePath1, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(filePath1)
+		_, filePath1, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
-		_, filePath2, err := testhelper.CreateTestFile("", "different-content")
-		defer os.Remove(filePath2)
+		_, filePath2, err := testhelper.CreateTestFile(t.TempDir(), "different-content")
 		assert.NoError(t, err)
 
 		// write random data to the second file
@@ -434,8 +424,7 @@ func TestFilesSameContent(t *testing.T) {
 
 	t.Run("Non-existent File", func(t *testing.T) {
 		// Create a test file
-		_, filePath, err := testhelper.CreateTestFile("", "")
-		defer os.Remove(filePath)
+		_, filePath, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
 		// Call the FilesSameContent function with a non-existent file path

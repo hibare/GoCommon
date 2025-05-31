@@ -29,6 +29,7 @@ func shouldExclude(name string, exclude []*regexp.Regexp) bool {
 	return false
 }
 
+// ArchiveDirResponse represents the result of archiving a directory.
 type ArchiveDirResponse struct {
 	ArchivePath  string
 	TotalFiles   int
@@ -37,40 +38,30 @@ type ArchiveDirResponse struct {
 	FailedFiles  map[string]error
 }
 
+// ArchiveDir creates a zip archive of the specified directory, excluding files/dirs matching the exclude patterns.
 func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, error) {
-	// Clean the input directory path
 	dirPath = filepath.Clean(dirPath)
-
-	// Extract directory name from the path
 	dirName := filepath.Base(dirPath)
-
-	// Generate the zip file name
 	zipName := fmt.Sprintf("%s.zip", dirName)
-
-	// Create the full path for the zip file in the temporary directory
 	zipPath := filepath.Join(os.TempDir(), zipName)
 
-	// Create the zip file
 	zipFile, err := os.Create(zipPath)
 	if err != nil {
-		return ArchiveDirResponse{}, err
+		return ArchiveDirResponse{}, fmt.Errorf("failed to create zip file: %w", err)
 	}
 	defer zipFile.Close()
 
-	// Create a zip writer for the zip file
 	zipWriter := zip.NewWriter(zipFile)
 	defer zipWriter.Close()
 
-	// Initialize counters
 	totalFiles, totalDirs, successFiles := 0, 0, 0
+	failedFiles := make(map[string]error)
 
-	// Recursively add files to the zip archive
 	err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("walk error at %s: %w", path, err)
 		}
 
-		// Skip directories
 		if info.IsDir() {
 			if shouldExclude(info.Name(), exclude) {
 				slog.Info("Skipping dir", "name", info.Name(), "path", path)
@@ -87,38 +78,38 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, e
 
 		totalFiles++
 
-		// Check if the path is a regular file
 		if !info.Mode().IsRegular() {
 			return nil
 		}
 
-		// Get the relative path of the file
 		relPath, err := filepath.Rel(dirPath, path)
 		if err != nil {
-			return err
+			failedFiles[path] = fmt.Errorf("failed to get relative path: %w", err)
+			return nil
 		}
 
-		// Create a header for the file in the zip archive
 		zh, err := zipWriter.CreateHeader(&zip.FileHeader{
 			Name:   relPath,
 			Method: zip.Deflate,
 		})
 		if err != nil {
-			return err
+			failedFiles[path] = fmt.Errorf("failed to create zip header: %w", err)
+			return nil
 		}
 
 		file, err := os.Open(path)
 		if err != nil {
-			return err
+			failedFiles[path] = fmt.Errorf("failed to open file: %w", err)
+			return nil
 		}
 
-		// Copy the file content to the zip archive
 		_, err = io.Copy(zh, file)
+		file.Close()
 		if err != nil {
-			return err
+			failedFiles[path] = fmt.Errorf("failed to copy file to zip: %w", err)
+			return nil
 		}
 
-		file.Close()
 		successFiles++
 		return nil
 	})
@@ -128,77 +119,67 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, e
 		TotalFiles:   totalFiles,
 		TotalDirs:    totalDirs,
 		SuccessFiles: successFiles,
-		FailedFiles:  nil,
+		FailedFiles:  failedFiles,
 	}, err
 }
 
+// ReadFileBytes reads the entire content of a file and returns it as a byte slice.
 func ReadFileBytes(path string) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
-	// Get the file size
-	fileInfo, err := file.Stat()
+	data, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
-	}
-	fileSize := fileInfo.Size()
-
-	// Read the file content into a buffer
-	data := make([]byte, fileSize)
-	_, err = file.Read(data)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	return data, nil
 }
 
+// ReadFileLines reads a file and returns its contents as a slice of strings, one per line.
 func ReadFileLines(path string) ([]string, error) {
 	file, err := os.Open(path)
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-
 	defer file.Close()
 
 	var lines []string
-
 	scanner := bufio.NewScanner(file)
-
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
 
-	return lines, scanner.Err()
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed to scan file: %w", err)
+	}
+	return lines, nil
 }
 
+// CalculateFileSHA256 calculates the SHA-256 checksum of a file and returns it as a hex string.
 func CalculateFileSHA256(path string) (string, error) {
 	file, err := os.Open(path)
-
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-
 	defer file.Close()
 
 	h := sha256.New()
-
 	if _, err := io.Copy(h, file); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to hash file: %w", err)
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func ValidateFileSha256(path string, sha256Str string) error {
+// ValidateFileSHA256 checks if the SHA-256 checksum of a file matches the provided checksum string.
+func ValidateFileSHA256(path string, sha256Str string) error {
 	calculatedSha256, err := CalculateFileSHA256(path)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to calculate file SHA256: %w", err)
 	}
 
 	if calculatedSha256 != sha256Str {
@@ -207,13 +188,12 @@ func ValidateFileSha256(path string, sha256Str string) error {
 	return nil
 }
 
+// DownloadFile downloads a file from the given URL to the specified destination path.
 func DownloadFile(url string, destination string) error {
 	response, err := http.Get(url)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get url: %w", err)
 	}
-
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
@@ -221,42 +201,36 @@ func DownloadFile(url string, destination string) error {
 	}
 
 	out, err := os.Create(destination)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-
-	_, err = io.Copy(out, response.Body)
-
 	defer out.Close()
 
+	_, err = io.Copy(out, response.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to copy response body: %w", err)
 	}
 
 	return nil
 }
 
+// ExtractFileFromTarGz extracts a specific file from a .tar.gz archive and returns the path to the extracted file.
 func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 	var targetFilePath string
 
 	file, err := os.Open(archivePath)
 	if err != nil {
-		return targetFilePath, err
+		return targetFilePath, fmt.Errorf("failed to open archive: %w", err)
 	}
 	defer file.Close()
 
-	// Create a gzip reader for the file
 	gzipReader, err := gzip.NewReader(file)
 	if err != nil {
-		return targetFilePath, err
+		return targetFilePath, fmt.Errorf("failed to create gzip reader: %w", err)
 	}
 	defer gzipReader.Close()
 
-	// Create a tar reader for the gzip reader
 	tarReader := tar.NewReader(gzipReader)
-
-	// Find the target file in the archive
 
 	for {
 		header, err := tarReader.Next()
@@ -264,23 +238,20 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 			return targetFilePath, os.ErrNotExist
 		}
 		if err != nil {
-			return targetFilePath, err
+			return targetFilePath, fmt.Errorf("failed to read tar header: %w", err)
 		}
 
 		if strings.HasSuffix(header.Name, targetFilename) {
-
 			targetFilePath = filepath.Join(os.TempDir(), targetFilename)
-
-			// Create the target file and copy the content of the file from the archive
 			targetFile, err := os.OpenFile(targetFilePath, os.O_CREATE|os.O_WRONLY, header.FileInfo().Mode())
 			if err != nil {
-				return targetFilePath, err
+				return targetFilePath, fmt.Errorf("failed to create target file: %w", err)
 			}
 
 			if _, err := io.CopyN(targetFile, tarReader, header.Size); err != nil {
 				targetFile.Close()
-				os.Remove(targetFilename)
-				return targetFilePath, err
+				os.Remove(targetFilePath)
+				return targetFilePath, fmt.Errorf("failed to copy file from archive: %w", err)
 			}
 			targetFile.Close()
 			break
@@ -289,33 +260,29 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 	return targetFilePath, nil
 }
 
+// ListFilesDirs returns slices of file and directory paths under root, excluding those matching the exclude patterns.
 func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 	var files []string
 	var dirs []string
 
 	readDir := func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("walkdir error at %s: %w", path, err)
 		}
 
 		if d.IsDir() {
-			// Check if directory matches any of the exclude patterns
 			if shouldExclude(d.Name(), exclude) {
 				slog.Info("Skipping dir", "name", d.Name(), "path", path)
 				return filepath.SkipDir
 			}
-
 			dirs = append(dirs, path)
 		} else {
-			// Check if file matches any of the exclude patterns
 			if shouldExclude(d.Name(), exclude) {
 				slog.Info("Skipping file", "name", d.Name(), "path", path)
 				return nil
 			}
-
 			files = append(files, path)
 		}
-
 		return nil
 	}
 
@@ -324,41 +291,33 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 	return files, dirs
 }
 
-// FileHash computes the SHA-256 hash of a file
+// FileHash computes the SHA-256 hash of a file and returns the raw bytes.
 func FileHash(filePath string) ([]byte, error) {
-	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
-	// Create a new SHA-256 hash
 	hash := sha256.New()
-
-	// Copy the file contents into the hash
 	if _, err := io.Copy(hash, file); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hash file: %w", err)
 	}
 
-	// Return the computed hash
 	return hash.Sum(nil), nil
 }
 
-// FilesSameContent checks if two files have the same content by comparing their hashes
+// FilesSameContent checks if two files have the same content by comparing their SHA-256 hashes.
 func FilesSameContent(file1, file2 string) (bool, error) {
-	// Compute the hash of the first file
 	hash1, err := FileHash(file1)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to hash file1: %w", err)
 	}
 
-	// Compute the hash of the second file
 	hash2, err := FileHash(file2)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to hash file2: %w", err)
 	}
 
-	// Compare the hashes
 	return bytes.Equal(hash1, hash2), nil
 }
