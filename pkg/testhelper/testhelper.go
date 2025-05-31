@@ -1,3 +1,4 @@
+// Package testhelper provides utilities for test setup and teardown.
 package testhelper
 
 import (
@@ -9,6 +10,7 @@ const (
 	TestDataDir = "../testhelper/test_data"
 )
 
+// CreateTestFile creates a test file with the given content and returns its path.
 func CreateTestFile(dir, pattern string) ([]byte, string, error) {
 	if pattern == "" {
 		pattern = "test-file-*.txt"
@@ -34,6 +36,7 @@ func CreateTestFile(dir, pattern string) ([]byte, string, error) {
 	return content, absPath, err
 }
 
+// CreateTestDir creates a test directory and returns its path.
 func CreateTestDir(dir, pattern string) (string, error) {
 	if dir == "" {
 		dir = os.TempDir()
@@ -52,6 +55,7 @@ func CreateTestDir(dir, pattern string) (string, error) {
 	return randomDirName, err
 }
 
+// StringToPtr converts a string to a pointer.
 func StringToPtr(s string) *string {
 	return &s
 }

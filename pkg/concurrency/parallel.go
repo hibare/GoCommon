@@ -1,3 +1,4 @@
+// Package concurrency provides utilities for running tasks in parallel.
 package concurrency
 
 import (

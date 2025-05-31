@@ -1,3 +1,4 @@
+// Package slice provides utilities for working with slices.
 package slice
 
 // StringInSlice checks if a string is present in slice

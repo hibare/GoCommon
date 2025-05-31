@@ -1,3 +1,4 @@
+// Package logger provides logging utilities for the application.
 package logger
 
 import (
@@ -9,15 +10,25 @@ import (
 )
 
 const (
+	// LogLevelError is the error log level.
 	LogLevelError = "ERROR"
-	LogLevelWarn  = "WARN"
-	LogLevelInfo  = "INFO"
+
+	// LogLevelWarn is the warn log level.
+	LogLevelWarn = "WARN"
+
+	// LogLevelInfo is the info log level.
+	LogLevelInfo = "INFO"
+
+	// LogLevelDebug is the debug log level.
 	LogLevelDebug = "DEBUG"
 )
 
 const (
+	// LogModePretty is the pretty log mode.
 	LogModePretty = "PRETTY"
-	LogModeJSON   = "JSON"
+
+	// LogModeJSON is the JSON log mode.
+	LogModeJSON = "JSON"
 )
 
 var (
@@ -27,10 +38,12 @@ var (
 	DefaultLoggerMode  = LogModePretty
 )
 
+// InitDefaultLogger initializes the default logger.
 func InitDefaultLogger() {
 	InitLogger(nil, nil)
 }
 
+// InitLogger initializes the logger with the given log level and mode.
 func InitLogger(logLevel, logMode *string) {
 	handler := getHandler(logLevel, logMode)
 	logger := slog.New(handler)
@@ -78,10 +91,12 @@ func getSlogLevelFromString(level *string) slog.Level {
 	}
 }
 
+// IsValidLogLevel checks if the provided log level is valid.
 func IsValidLogLevel(level string) bool {
 	return slice.SliceContains(strings.ToUpper(level), LogLevels)
 }
 
+// IsValidLogMode checks if the provided log mode is valid.
 func IsValidLogMode(mode string) bool {
 	return slice.SliceContains(strings.ToUpper(mode), LogModes)
 }

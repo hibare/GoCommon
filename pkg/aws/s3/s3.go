@@ -1,4 +1,4 @@
-// Package s3 provides a client for the S3 service.
+// Package s3 provides utilities for working with AWS S3.
 package s3
 
 import (

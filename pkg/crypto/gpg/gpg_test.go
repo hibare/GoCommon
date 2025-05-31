@@ -26,7 +26,7 @@ func setupTestFile(t *testing.T) string {
 	_, err = tempFile.WriteString(testFileContent)
 	require.NoError(t, err)
 	require.NoError(t, tempFile.Close())
-	t.Cleanup(func() { os.Remove(tempFile.Name()) })
+	t.Cleanup(func() { _ = os.Remove(tempFile.Name()) })
 	return tempFile.Name()
 }
 
@@ -50,7 +50,7 @@ func TestDownloadGPGPubKey(t *testing.T) {
 
 	_, err = os.Stat(gpgPubKey.PublicKeyPath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(gpgPubKey.PublicKeyPath) })
+	t.Cleanup(func() { _ = os.Remove(gpgPubKey.PublicKeyPath) })
 
 	downloadedData, err := os.ReadFile(gpgPubKey.PublicKeyPath)
 	require.NoError(t, err)
@@ -84,7 +84,7 @@ func TestGPGEncrypt(t *testing.T) {
 	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 }
 
 func TestGPGEncryptInvalidPubKey(t *testing.T) {
@@ -117,13 +117,13 @@ func TestGPGDecrypt(t *testing.T) {
 	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	require.NoError(t, err)
 	_, err = os.Stat(decryptedFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(decryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(decryptedFilePath) })
 
 	decryptedData, err := os.ReadFile(decryptedFilePath)
 	require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestGPGDecryptInvalidPass(t *testing.T) {
 	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	assert.Error(t, err)
@@ -191,7 +191,7 @@ func TestGPGDecryptEmptyPrivateKey(t *testing.T) {
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
 	require.NoError(t, err)
-	defer os.Remove(encryptedFilePath)
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	assert.Error(t, err)
@@ -203,7 +203,7 @@ func TestGPGEncryptEmptyInputFile(t *testing.T) {
 	require.NoError(t, err)
 	tempFilePath := tempFile.Name()
 	require.NoError(t, tempFile.Close())
-	t.Cleanup(func() { os.Remove(tempFilePath) })
+	t.Cleanup(func() { _ = os.Remove(tempFilePath) })
 
 	gpgPubkey := GPG{PublicKey: testPublicKey}
 
@@ -211,7 +211,7 @@ func TestGPGEncryptEmptyInputFile(t *testing.T) {
 	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 }
 
 func TestGPGDecryptNotPGPFile(t *testing.T) {
@@ -235,7 +235,7 @@ func TestGPGDecryptEmptyPassphrase(t *testing.T) {
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
 	require.NoError(t, err)
-	defer os.Remove(encryptedFilePath)
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	assert.Error(t, err)
@@ -252,7 +252,7 @@ func TestGPGDecryptCorruptedEncryptedFile(t *testing.T) {
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	f, err := os.OpenFile(encryptedFilePath, os.O_WRONLY, 0)
 	require.NoError(t, err)
@@ -275,11 +275,11 @@ func TestGPGDecryptFilePermissions(t *testing.T) {
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	require.NoError(t, err)
-	t.Cleanup(func() { os.Remove(decryptedFilePath) })
+	t.Cleanup(func() { _ = os.Remove(decryptedFilePath) })
 
 	info, err := os.Stat(decryptedFilePath)
 	require.NoError(t, err)

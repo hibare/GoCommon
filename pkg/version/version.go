@@ -1,3 +1,4 @@
+// Package version provides utilities for checking and managing application versions.
 package version
 
 import (
@@ -9,17 +10,23 @@ import (
 	"time"
 )
 
+// UpdateNotificationMessage is the template for update notifications.
+var UpdateNotificationMessage = "[!] New update available: %s"
+
+// GithubEndpoint is the GitHub API endpoint for latest releases.
+var GithubEndpoint = "https://api.github.com/repos/%s/%s/releases/latest"
+
 var (
-	UpdateNotificationMessage = "[!] New update available: %s"
-	GithubEndpoint            = "https://api.github.com/repos/%s/%s/releases/latest"
-	errMissingGithubOwner     = errors.New("githubOwner is empty")
-	errMissingGithubRepo      = errors.New("githubRepo is empty")
+	errMissingGithubOwner = errors.New("githubOwner is empty")
+	errMissingGithubRepo  = errors.New("githubRepo is empty")
 )
 
+// ReleaseResponse represents the response from the GitHub releases API.
 type ReleaseResponse struct {
 	TagName string `json:"tag_name"`
 }
 
+// Version holds version information for the application.
 type Version struct {
 	GithubOwner         string
 	GithubRepo          string
@@ -28,6 +35,7 @@ type Version struct {
 	NewVersionAvailable bool
 }
 
+// GetUpdateNotification returns a notification string if a new version is available.
 func (v *Version) GetUpdateNotification() string {
 	if v.NewVersionAvailable && v.LatestVersion != "" {
 		return fmt.Sprintf(UpdateNotificationMessage, v.LatestVersion)
@@ -35,10 +43,12 @@ func (v *Version) GetUpdateNotification() string {
 	return ""
 }
 
+// StripV removes the leading 'v' from the latest version string.
 func (v *Version) StripV() string {
 	return strings.TrimPrefix(v.LatestVersion, "v")
 }
 
+// GetLatestVersion fetches the latest version from GitHub.
 func (v *Version) GetLatestVersion() error {
 	if v.GithubOwner == "" {
 		return errMissingGithubOwner
@@ -79,6 +89,7 @@ func (v *Version) GetLatestVersion() error {
 	return nil
 }
 
+// CheckUpdate checks if a new version is available.
 func (v *Version) CheckUpdate() {
 	_ = v.GetLatestVersion()
 	v.NewVersionAvailable = v.CurrentVersion != v.LatestVersion

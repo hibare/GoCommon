@@ -1,3 +1,4 @@
+// Package db provides database configuration utilities.
 package db
 
 import (
@@ -5,7 +6,7 @@ import (
 	"errors"
 )
 
-// DatabaseConfig holds the configuration for the database connection
+// DatabaseConfig holds the configuration for the database connection.
 type DatabaseConfig struct {
 	DSN            string
 	MigrationsPath string
@@ -13,6 +14,7 @@ type DatabaseConfig struct {
 	DBType         Database
 }
 
+// Validate validates the database configuration.
 func (c DatabaseConfig) Validate() error {
 	if c.DSN == "" {
 		return errors.New("dsn is required")

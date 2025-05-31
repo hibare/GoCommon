@@ -14,7 +14,7 @@ func TestCreateTestFile(t *testing.T) {
 	// Test case 1: When pattern is empty
 	t.Run("PatternEmpty", func(t *testing.T) {
 		content, absPath, err := CreateTestFile(dir, "")
-		defer os.Remove(absPath)
+		t.Cleanup(func() { _ = os.Remove(absPath) })
 
 		assert.NoError(t, err)
 		assert.Equal(t, []byte("This is a test file.\nIt contains some sample content."), content)
@@ -24,7 +24,7 @@ func TestCreateTestFile(t *testing.T) {
 	// Test case 2: When pattern is not empty
 	t.Run("PatternNotEmpty", func(t *testing.T) {
 		content, absPath, err := CreateTestFile(dir, pattern)
-		defer os.Remove(absPath)
+		t.Cleanup(func() { _ = os.Remove(absPath) })
 
 		assert.NoError(t, err)
 		assert.Equal(t, []byte("This is a test file.\nIt contains some sample content."), content)
@@ -46,7 +46,7 @@ func TestCreateTestDir(t *testing.T) {
 	dir1, err1 := CreateTestDir("", "")
 	assert.NoError(t, err1)
 	assert.NotEmpty(t, dir1)
-	defer os.RemoveAll(dir1)
+	t.Cleanup(func() { _ = os.RemoveAll(dir1) })
 
 	// Test case 2: Testing when dir is empty and pattern is not empty
 	// Expect the function to create a temporary directory with the provided pattern and return the directory path without error
@@ -54,14 +54,14 @@ func TestCreateTestDir(t *testing.T) {
 	assert.NoError(t, err2)
 	assert.NotEmpty(t, dir2)
 	assert.Contains(t, dir2, "custom-pattern-")
-	defer os.RemoveAll(dir2)
+	t.Cleanup(func() { _ = os.RemoveAll(dir2) })
 
 	// Test case 3: Testing when dir is not empty and pattern is empty
 	// Expect the function to create a temporary directory with the default pattern inside the provided directory and return the directory path without error
 	dir3, err3 := CreateTestDir(tempDir, "")
 	assert.NoError(t, err3)
 	assert.NotEmpty(t, dir3)
-	defer os.RemoveAll(dir3)
+	t.Cleanup(func() { _ = os.RemoveAll(dir3) })
 
 	// Test case 4: Testing when dir and pattern are not empty
 	// Expect the function to create a temporary directory with the provided pattern inside the provided directory and return the directory path without error
@@ -69,7 +69,7 @@ func TestCreateTestDir(t *testing.T) {
 	assert.NoError(t, err4)
 	assert.NotEmpty(t, dir4)
 	assert.Contains(t, dir4, "custom-pattern-")
-	defer os.RemoveAll(dir4)
+	t.Cleanup(func() { _ = os.RemoveAll(dir4) })
 }
 
 func TestStringToPtr(t *testing.T) {
