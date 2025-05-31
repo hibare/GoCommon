@@ -1,7 +1,6 @@
 package env
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -10,13 +9,13 @@ import (
 
 func TestEnv(t *testing.T) {
 	// Set Sample environment variables
-	os.Setenv("STRING_ENV", "test_string")
-	os.Setenv("BOOL_ENV", "true")
-	os.Setenv("INT_ENV", "100")
-	os.Setenv("DURATION_ENV", "24h")
-	os.Setenv("SLICE_ENV", "1,2,3")
-	os.Setenv("PREFIXED_ENV_1", "value1")
-	os.Setenv("PREFIXED_ENV_2", "value2")
+	t.Setenv("STRING_ENV", "test_string")
+	t.Setenv("BOOL_ENV", "true")
+	t.Setenv("INT_ENV", "100")
+	t.Setenv("DURATION_ENV", "24h")
+	t.Setenv("SLICE_ENV", "1,2,3")
+	t.Setenv("PREFIXED_ENV_1", "value1")
+	t.Setenv("PREFIXED_ENV_2", "value2")
 
 	Load()
 
@@ -37,13 +36,27 @@ func TestEnv(t *testing.T) {
 		"PREFIXED_ENV_1": "value1",
 		"PREFIXED_ENV_2": "value2",
 	}, prefixed)
+}
 
-	// Unset Sample environment variables
-	os.Unsetenv("STRING_ENV")
-	os.Unsetenv("BOOL_ENV")
-	os.Unsetenv("INT_ENV")
-	os.Unsetenv("DURATION_ENV")
-	os.Unsetenv("SLICE_ENV")
-	os.Unsetenv("PREFIXED_ENV_1")
-	os.Unsetenv("PREFIXED_ENV_2")
+func TestEnv_EdgeCases(t *testing.T) {
+	// Invalid bool, int, duration
+	t.Setenv("INVALID_BOOL_ENV", "notabool")
+	t.Setenv("INVALID_INT_ENV", "notanint")
+	t.Setenv("INVALID_DURATION_ENV", "notaduration")
+
+	assert.Equal(t, false, MustBool("INVALID_BOOL_ENV", false))
+	assert.Equal(t, 42, MustInt("INVALID_INT_ENV", 42))
+	assert.Equal(t, 5*time.Second, MustDuration("INVALID_DURATION_ENV", 5*time.Second))
+
+	// Empty string slice
+	t.Setenv("EMPTY_SLICE_ENV", "")
+	assert.Equal(t, []string{"fallback"}, MustStringSlice("EMPTY_SLICE_ENV", []string{"fallback"}))
+
+	// Malformed slice (should just split as usual)
+	t.Setenv("MALFORMED_SLICE_ENV", ",,a,,b,,")
+	assert.Equal(t, []string{"", "", "a", "", "b", "", ""}, MustStringSlice("MALFORMED_SLICE_ENV", []string{"fallback"}))
+
+	// GetPrefixed with no matches
+	unsetPrefix := "UNSET_PREFIX_"
+	assert.Equal(t, map[string]string{}, GetPrefixed(unsetPrefix))
 }

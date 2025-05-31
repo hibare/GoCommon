@@ -25,19 +25,28 @@ func MustString(key, fallback string) string {
 
 // MustBool uses MustString and parses it into a boolean
 func MustBool(key string, fallback bool) bool {
-	parsed, _ := strconv.ParseBool(MustString(key, strconv.FormatBool(fallback)))
+	parsed, err := strconv.ParseBool(MustString(key, strconv.FormatBool(fallback)))
+	if err != nil {
+		return fallback
+	}
 	return parsed
 }
 
 // MustInt uses MustString and parses it into an integer
 func MustInt(key string, fallback int) int {
-	parsed, _ := strconv.Atoi(MustString(key, strconv.Itoa(fallback)))
+	parsed, err := strconv.Atoi(MustString(key, strconv.Itoa(fallback)))
+	if err != nil {
+		return fallback
+	}
 	return parsed
 }
 
 // MustDuration uses MustString and parses it into a duration
 func MustDuration(key string, fallback time.Duration) time.Duration {
-	parsed, _ := time.ParseDuration(MustString(key, fallback.String()))
+	parsed, err := time.ParseDuration(MustString(key, fallback.String()))
+	if err != nil {
+		return fallback
+	}
 	return parsed
 }
 
