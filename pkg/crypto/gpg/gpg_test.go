@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 func TestDownloadGPGPubKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, testPublicKey)
+		_, _ = fmt.Fprint(w, testPublicKey)
 	}))
 	t.Cleanup(server.Close)
 

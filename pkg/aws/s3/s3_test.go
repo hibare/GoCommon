@@ -53,8 +53,10 @@ func TestS3(t *testing.T) {
 	temp := t.TempDir()
 
 	// create  two files in the temp dir
-	os.WriteFile(filepath.Join(temp, "file1"), []byte("file1"), 0644)
-	os.WriteFile(filepath.Join(temp, "file2"), []byte("file2"), 0644)
+	err := os.WriteFile(filepath.Join(temp, "file1"), []byte("file1"), 0644)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(temp, "file2"), []byte("file2"), 0644)
+	require.NoError(t, err)
 
 	t.Run("GetPrefix and GetTimestampedPrefix", func(t *testing.T) {
 		s3 := &S3{}

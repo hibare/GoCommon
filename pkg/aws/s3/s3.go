@@ -114,7 +114,9 @@ func (s *S3) UploadDir(ctx context.Context, bucket, prefix, baseDir string, excl
 			resp.FailedFiles[file] = err
 			continue
 		}
-		defer fp.Close()
+		defer func() {
+			_ = fp.Close()
+		}()
 
 		key := filepath.Join(prefix, strings.TrimPrefix(file, baseDirParentPath))
 		_, err = s.Client.PutObject(ctx, &s3.PutObjectInput{
@@ -142,7 +144,9 @@ func (s *S3) UploadFile(ctx context.Context, bucket, prefix, filePath string) (s
 	if err != nil {
 		return "", err
 	}
-	defer fp.Close()
+	defer func() {
+		_ = fp.Close()
+	}()
 
 	key := filepath.Join(prefix, filepath.Base(filePath))
 	_, err = s.Client.PutObject(ctx, &s3.PutObjectInput{

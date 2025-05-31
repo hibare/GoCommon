@@ -20,7 +20,9 @@ func CreateTestFile(dir, pattern string) ([]byte, string, error) {
 	if err != nil {
 		return []byte{}, "", err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	content := []byte("This is a test file.\nIt contains some sample content.")
 	_, err = file.Write(content)

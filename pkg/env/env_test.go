@@ -17,8 +17,6 @@ func TestEnv(t *testing.T) {
 	t.Setenv("PREFIXED_ENV_1", "value1")
 	t.Setenv("PREFIXED_ENV_2", "value2")
 
-	Load()
-
 	assert.Equal(t, "test_string", MustString("STRING_ENV", ""))
 	assert.True(t, MustBool("BOOL_ENV", false))
 	assert.Equal(t, 100, MustInt("INT_ENV", 0))

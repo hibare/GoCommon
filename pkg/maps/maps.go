@@ -95,7 +95,15 @@ func Map2EnvFile[K comparable, V any](m map[K]V, filePath string) error {
 func MapFromSyncMap[K comparable, V any](m *sync.Map) map[K]V {
 	result := make(map[K]V)
 	m.Range(func(key, value any) bool {
-		result[key.(K)] = value.(V)
+		k, ok := key.(K)
+		if !ok {
+			return true
+		}
+		v, ok := value.(V)
+		if !ok {
+			return true
+		}
+		result[k] = v
 		return true
 	})
 	return result

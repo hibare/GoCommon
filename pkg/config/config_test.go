@@ -8,6 +8,7 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/constants"
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockOS struct {
@@ -229,7 +230,8 @@ func TestWriteReadYAMLConfig(t *testing.T) {
 
 	var readConfig *config
 	rConfig, err := bc.ReadYAMLConfig(readConfig)
-	readConfig = rConfig.(*config)
+	readConfig, ok := rConfig.(*config)
+	require.True(t, ok)
 	assert.NoError(t, err)
 	assert.Equal(t, writeConfig, *readConfig)
 

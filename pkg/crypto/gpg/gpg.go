@@ -39,7 +39,9 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	if err != nil {
 		return gpgPubKey, fmt.Errorf("failed to download GPG key: %w", err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	if response.StatusCode != http.StatusOK {
 		return gpgPubKey, fmt.Errorf("key-server returned non-OK status: %w", errors.ErrNonOKError)
