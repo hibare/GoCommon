@@ -11,21 +11,21 @@ import (
 
 const DefaultWorkerCount = 5
 
-// ParallelTask represents a named task that accepts context and returns an error
+// ParallelTask represents a named task that accepts context and returns an error.
 type ParallelTask struct {
 	Name string
 	Task func(context.Context) error
 }
 
-// ParallelOptions defines options for running parallel tasks
+// ParallelOptions defines options for running parallel tasks.
 type ParallelOptions struct {
 	WorkerCount int // Number of concurrent workers
 }
 
 type ErrorMap map[string]error
 
-// RunParallelTasks executes the given tasks in parallel and returns a map of task names to errors
-// Context cancellation will stop all running tasks
+// RunParallelTasks executes the given tasks in parallel and returns a map of task names to errors.
+// Context cancellation will stop all running tasks.
 func RunParallelTasks(ctx context.Context, opts ParallelOptions, tasks ...ParallelTask) ErrorMap {
 	workerCount := opts.WorkerCount
 	if workerCount <= 0 {

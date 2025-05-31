@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// SQLiteDatabase implements the Database interface for SQLite
+// SQLiteDatabase implements the Database interface for SQLite.
 type SQLiteDatabase struct{}
 
 func (s *SQLiteDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {

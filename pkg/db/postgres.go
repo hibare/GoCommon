@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PostgresDatabase implements the Database interface for PostgreSQL
+// PostgresDatabase implements the Database interface for PostgreSQL.
 type PostgresDatabase struct{}
 
 func (p *PostgresDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {
