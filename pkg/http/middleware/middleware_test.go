@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -105,8 +105,8 @@ func TestRequestLogger(t *testing.T) {
 		})
 
 		logString := buf.String()
-		assert.NotEmpty(t, logString)
-		assert.Contains(t, logString, "INFO request method=GET path=/ statusCode=200 duration")
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "INFO request method=GET path=/ statusCode=200 duration")
 	})
 
 	t.Run("Warning", func(t *testing.T) {
@@ -136,8 +136,8 @@ func TestRequestLogger(t *testing.T) {
 		})
 
 		logString := buf.String()
-		assert.NotEmpty(t, logString)
-		assert.Contains(t, logString, "WARN request method=GET path=/ statusCode=400 duration=")
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "WARN request method=GET path=/ statusCode=400 duration=")
 	})
 
 	t.Run("Error", func(t *testing.T) {
@@ -167,8 +167,8 @@ func TestRequestLogger(t *testing.T) {
 		})
 
 		logString := buf.String()
-		assert.NotEmpty(t, logString)
-		assert.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
 	})
 }
 

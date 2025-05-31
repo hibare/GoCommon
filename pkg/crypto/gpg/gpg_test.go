@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,9 +51,9 @@ func TestDownloadGPGPubKey(t *testing.T) {
 
 	downloadedData, err := os.ReadFile(gpgPubKey.PublicKeyPath)
 	require.NoError(t, err)
-	assert.NotEmpty(t, string(downloadedData))
-	assert.Equal(t, testPublicKey, string(downloadedData))
-	assert.Equal(t, testPublicKey, gpgPubKey.PublicKey)
+	require.NotEmpty(t, string(downloadedData))
+	require.Equal(t, testPublicKey, string(downloadedData))
+	require.Equal(t, testPublicKey, gpgPubKey.PublicKey)
 }
 
 func TestDownloadGPGPubKeyNoKey(t *testing.T) {
@@ -67,10 +66,10 @@ func TestDownloadGPGPubKeyNoKey(t *testing.T) {
 	keyID := "dummy_key_id"
 
 	gpgPubKey, err := DownloadGPGPubKey(keyID, keyServerURL)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "key-server returned non-OK status")
-	assert.Empty(t, gpgPubKey.PublicKey)
-	assert.Empty(t, gpgPubKey.PublicKeyPath)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "key-server returned non-OK status")
+	require.Empty(t, gpgPubKey.PublicKey)
+	require.Empty(t, gpgPubKey.PublicKeyPath)
 }
 
 func TestGPGEncrypt(t *testing.T) {
@@ -89,8 +88,8 @@ func TestGPGEncryptInvalidPubKey(t *testing.T) {
 	gpgPubkey := GPG{PublicKey: "invalid key"}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, encryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, encryptedFilePath)
 }
 
 func TestGPGEncryptInvalidFile(t *testing.T) {
@@ -98,8 +97,8 @@ func TestGPGEncryptInvalidFile(t *testing.T) {
 	gpgPubkey := GPG{PublicKey: testPublicKey}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, encryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, encryptedFilePath)
 }
 
 func TestGPGDecrypt(t *testing.T) {
@@ -124,7 +123,7 @@ func TestGPGDecrypt(t *testing.T) {
 
 	decryptedData, err := os.ReadFile(decryptedFilePath)
 	require.NoError(t, err)
-	assert.Equal(t, testFileContent, string(decryptedData))
+	require.Equal(t, testFileContent, string(decryptedData))
 }
 
 func TestGPGDecryptInvalidPass(t *testing.T) {
@@ -142,8 +141,8 @@ func TestGPGDecryptInvalidPass(t *testing.T) {
 	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptInvalidFile(t *testing.T) {
@@ -154,8 +153,8 @@ func TestGPGDecryptInvalidFile(t *testing.T) {
 		Passphrase: "invalid",
 	}
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptInvalidPrivKey(t *testing.T) {
@@ -165,8 +164,8 @@ func TestGPGDecryptInvalidPrivKey(t *testing.T) {
 		Passphrase: "invalid",
 	}
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGEncryptEmptyPublicKey(t *testing.T) {
@@ -174,8 +173,8 @@ func TestGPGEncryptEmptyPublicKey(t *testing.T) {
 	gpgPubkey := GPG{PublicKey: ""}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, encryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, encryptedFilePath)
 }
 
 func TestGPGDecryptEmptyPrivateKey(t *testing.T) {
@@ -191,8 +190,8 @@ func TestGPGDecryptEmptyPrivateKey(t *testing.T) {
 	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGEncryptEmptyInputFile(t *testing.T) {
@@ -217,8 +216,8 @@ func TestGPGDecryptNotPGPFile(t *testing.T) {
 		Passphrase: testPassphrase,
 	}
 	decryptedFilePath, err := gpgPubkey.DecryptFile(tempFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptEmptyPassphrase(t *testing.T) {
@@ -234,8 +233,8 @@ func TestGPGDecryptEmptyPassphrase(t *testing.T) {
 	t.Cleanup(func() { _ = os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptCorruptedEncryptedFile(t *testing.T) {
@@ -257,8 +256,8 @@ func TestGPGDecryptCorruptedEncryptedFile(t *testing.T) {
 	require.NoError(t, err)
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.Error(t, err)
-	assert.Empty(t, decryptedFilePath)
+	require.Error(t, err)
+	require.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptFilePermissions(t *testing.T) {
@@ -280,5 +279,5 @@ func TestGPGDecryptFilePermissions(t *testing.T) {
 	info, err := os.Stat(decryptedFilePath)
 	require.NoError(t, err)
 	mode := info.Mode().Perm()
-	assert.Equal(t, os.FileMode(0600), mode)
+	require.Equal(t, os.FileMode(0600), mode)
 }

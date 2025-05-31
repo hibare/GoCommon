@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEnv(t *testing.T) {
@@ -17,20 +17,20 @@ func TestEnv(t *testing.T) {
 	t.Setenv("PREFIXED_ENV_1", "value1")
 	t.Setenv("PREFIXED_ENV_2", "value2")
 
-	assert.Equal(t, "test_string", MustString("STRING_ENV", ""))
-	assert.True(t, MustBool("BOOL_ENV", false))
-	assert.Equal(t, 100, MustInt("INT_ENV", 0))
-	assert.Equal(t, 24*time.Hour, MustDuration("DURATION_ENV", time.Duration(0)))
-	assert.Equal(t, []string{"1", "2", "3"}, MustStringSlice("SLICE_ENV", []string{}))
+	require.Equal(t, "test_string", MustString("STRING_ENV", ""))
+	require.True(t, MustBool("BOOL_ENV", false))
+	require.Equal(t, 100, MustInt("INT_ENV", 0))
+	require.Equal(t, 24*time.Hour, MustDuration("DURATION_ENV", time.Duration(0)))
+	require.Equal(t, []string{"1", "2", "3"}, MustStringSlice("SLICE_ENV", []string{}))
 
-	assert.Equal(t, "default_string", MustString("DEFAULT_STRING_ENV", "default_string"))
-	assert.Equal(t, false, MustBool("DEFAULT_BOOL_ENV", false))
-	assert.Equal(t, 1, MustInt("DEFAULT_INT_ENV", 1))
-	assert.Equal(t, time.Duration(1), MustDuration("DEFAULT_DURATION_ENV", time.Duration(1)))
-	assert.Equal(t, []string{"1"}, MustStringSlice("DEFAULT_SLICE_ENV", []string{"1"}))
+	require.Equal(t, "default_string", MustString("DEFAULT_STRING_ENV", "default_string"))
+	require.False(t, MustBool("DEFAULT_BOOL_ENV", false))
+	require.Equal(t, 1, MustInt("DEFAULT_INT_ENV", 1))
+	require.Equal(t, time.Duration(1), MustDuration("DEFAULT_DURATION_ENV", time.Duration(1)))
+	require.Equal(t, []string{"1"}, MustStringSlice("DEFAULT_SLICE_ENV", []string{"1"}))
 
 	prefixed := GetPrefixed("PREFIXED_ENV_")
-	assert.Equal(t, map[string]string{
+	require.Equal(t, map[string]string{
 		"PREFIXED_ENV_1": "value1",
 		"PREFIXED_ENV_2": "value2",
 	}, prefixed)
@@ -42,19 +42,19 @@ func TestEnv_EdgeCases(t *testing.T) {
 	t.Setenv("INVALID_INT_ENV", "notanint")
 	t.Setenv("INVALID_DURATION_ENV", "notaduration")
 
-	assert.Equal(t, false, MustBool("INVALID_BOOL_ENV", false))
-	assert.Equal(t, 42, MustInt("INVALID_INT_ENV", 42))
-	assert.Equal(t, 5*time.Second, MustDuration("INVALID_DURATION_ENV", 5*time.Second))
+	require.False(t, MustBool("INVALID_BOOL_ENV", false))
+	require.Equal(t, 42, MustInt("INVALID_INT_ENV", 42))
+	require.Equal(t, 5*time.Second, MustDuration("INVALID_DURATION_ENV", 5*time.Second))
 
 	// Empty string slice
 	t.Setenv("EMPTY_SLICE_ENV", "")
-	assert.Equal(t, []string{"fallback"}, MustStringSlice("EMPTY_SLICE_ENV", []string{"fallback"}))
+	require.Equal(t, []string{"fallback"}, MustStringSlice("EMPTY_SLICE_ENV", []string{"fallback"}))
 
 	// Malformed slice (should just split as usual)
 	t.Setenv("MALFORMED_SLICE_ENV", ",,a,,b,,")
-	assert.Equal(t, []string{"", "", "a", "", "b", "", ""}, MustStringSlice("MALFORMED_SLICE_ENV", []string{"fallback"}))
+	require.Equal(t, []string{"", "", "a", "", "b", "", ""}, MustStringSlice("MALFORMED_SLICE_ENV", []string{"fallback"}))
 
 	// GetPrefixed with no matches
 	unsetPrefix := "UNSET_PREFIX_"
-	assert.Equal(t, map[string]string{}, GetPrefixed(unsetPrefix))
+	require.Equal(t, map[string]string{}, GetPrefixed(unsetPrefix))
 }

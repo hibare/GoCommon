@@ -4,12 +4,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetHostname(t *testing.T) {
 	hostname := GetHostname()
-	assert.NotEmpty(t, hostname)
+	require.NotEmpty(t, hostname)
 }
 
 func TestSyncMapLength(t *testing.T) {
@@ -44,26 +44,26 @@ func TestToPtr(t *testing.T) {
 	// int
 	intVal := 42
 	intPtr := ToPtr(intVal)
-	assert.NotNil(t, intPtr)
-	assert.Equal(t, intVal, *intPtr)
+	require.NotNil(t, intPtr)
+	require.Equal(t, intVal, *intPtr)
 
 	// string
 	strVal := "hello"
 	strPtr := ToPtr(strVal)
-	assert.NotNil(t, strPtr)
-	assert.Equal(t, strVal, *strPtr)
+	require.NotNil(t, strPtr)
+	require.Equal(t, strVal, *strPtr)
 
 	// bool
 	boolVal := true
 	boolPtr := ToPtr(boolVal)
-	assert.NotNil(t, boolPtr)
-	assert.Equal(t, boolVal, *boolPtr)
+	require.NotNil(t, boolPtr)
+	require.Equal(t, boolVal, *boolPtr)
 
 	// float64
 	floatVal := 3.14
 	floatPtr := ToPtr(floatVal)
-	assert.NotNil(t, floatPtr)
-	assert.Equal(t, floatVal, *floatPtr)
+	require.NotNil(t, floatPtr)
+	require.InEpsilon(t, floatVal, *floatPtr, 1e-9)
 
 	// struct
 	type sampleStruct struct {
@@ -72,36 +72,36 @@ func TestToPtr(t *testing.T) {
 	}
 	structVal := sampleStruct{A: 1, B: "test"}
 	structPtr := ToPtr(structVal)
-	assert.NotNil(t, structPtr)
-	assert.Equal(t, structVal, *structPtr)
+	require.NotNil(t, structPtr)
+	require.Equal(t, structVal, *structPtr)
 
 	// array
 	arrVal := [2]int{1, 2}
 	arrPtr := ToPtr(arrVal)
-	assert.NotNil(t, arrPtr)
-	assert.Equal(t, arrVal, *arrPtr)
+	require.NotNil(t, arrPtr)
+	require.Equal(t, arrVal, *arrPtr)
 
 	// slice
 	sliceVal := []string{"a", "b"}
 	slicePtr := ToPtr(sliceVal)
-	assert.NotNil(t, slicePtr)
-	assert.Equal(t, sliceVal, *slicePtr)
+	require.NotNil(t, slicePtr)
+	require.Equal(t, sliceVal, *slicePtr)
 
 	// map
 	mapVal := map[string]int{"a": 1, "b": 2}
 	mapPtr := ToPtr(mapVal)
-	assert.NotNil(t, mapPtr)
-	assert.Equal(t, mapVal, *mapPtr)
+	require.NotNil(t, mapPtr)
+	require.Equal(t, mapVal, *mapPtr)
 
 	// pointer
 	origPtr := func() *int { v := 99; return &v }()
 	ptrPtr := ToPtr(origPtr)
-	assert.NotNil(t, ptrPtr)
-	assert.Equal(t, *origPtr, **ptrPtr)
+	require.NotNil(t, ptrPtr)
+	require.Equal(t, *origPtr, **ptrPtr)
 
 	// interface
 	ifaceVal := interface{}("iface")
 	ifacePtr := ToPtr(ifaceVal)
-	assert.NotNil(t, ifacePtr)
-	assert.Equal(t, ifaceVal, *ifacePtr)
+	require.NotNil(t, ifacePtr)
+	require.Equal(t, ifaceVal, *ifacePtr)
 }

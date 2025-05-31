@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hibare/GoCommon/v2/pkg/utils"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -70,14 +69,14 @@ func TestS3(t *testing.T) {
 		require.Equal(t, "foo/bar/", prefix)
 		tsPrefix := s3.GetTimestampedPrefix("foo", "bar")
 		require.Contains(t, tsPrefix, "foo/bar/")
-		require.True(t, len(tsPrefix) > len("foo/bar/"))
+		require.Greater(t, len(tsPrefix), len("foo/bar/"))
 	})
 
 	t.Run("TrimPrefix", func(t *testing.T) {
 		s3 := &S3{}
 		keys := []string{"prefix/1", "prefix/2", "prefix/3/"}
 		trimmed := s3.TrimPrefix(keys, "prefix/")
-		assert.Equal(t, []string{"1", "2", "3"}, trimmed)
+		require.Equal(t, []string{"1", "2", "3"}, trimmed)
 	})
 
 	t.Run("UploadDir", func(t *testing.T) {
@@ -88,11 +87,11 @@ func TestS3(t *testing.T) {
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(&s3.PutObjectOutput{}, nil).Twice()
 
 			resp, err := s3Client.UploadDir(t.Context(), "bucket", "prefix", temp, nil)
-			assert.NoError(t, err)
-			assert.Equal(t, 2, resp.SuccessFiles)
-			assert.Equal(t, 2, resp.TotalFiles)
-			assert.Equal(t, 1, resp.TotalDirs)
-			assert.Empty(t, resp.FailedFiles)
+			require.NoError(t, err)
+			require.Equal(t, 2, resp.SuccessFiles)
+			require.Equal(t, 2, resp.TotalFiles)
+			require.Equal(t, 1, resp.TotalDirs)
+			require.Empty(t, resp.FailedFiles)
 		})
 		t.Run("error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
@@ -101,13 +100,12 @@ func TestS3(t *testing.T) {
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(nil, errors.New("fail")).Twice()
 
 			resp, err := s3Client.UploadDir(t.Context(), "bucket", "prefix", temp, nil)
-			assert.NoError(t, err)
-			assert.Equal(t, 0, resp.SuccessFiles)
-			assert.Equal(t, 2, resp.TotalFiles)
-			assert.Equal(t, 1, resp.TotalDirs)
-			assert.Equal(t, 2, len(resp.FailedFiles))
-			assert.Contains(t, resp.FailedFiles, filepath.Join(temp, "file1"))
-			assert.Contains(t, resp.FailedFiles[filepath.Join(temp, "file1")].Error(), "fail")
+			require.NoError(t, err)
+			require.Equal(t, 0, resp.SuccessFiles)
+			require.Equal(t, 2, resp.TotalFiles)
+			require.Equal(t, 1, resp.TotalDirs)
+			require.Len(t, resp.FailedFiles, 2)
+			require.Contains(t, resp.FailedFiles[filepath.Join(temp, "file1")].Error(), "fail")
 		})
 	})
 
@@ -117,8 +115,8 @@ func TestS3(t *testing.T) {
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(&s3.PutObjectOutput{}, nil)
 			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
-			assert.NoError(t, err)
-			assert.Contains(t, key, "file1")
+			require.NoError(t, err)
+			require.Contains(t, key, "file1")
 		})
 
 		t.Run("upload error", func(t *testing.T) {
@@ -126,9 +124,9 @@ func TestS3(t *testing.T) {
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
 			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
-			assert.Error(t, err)
-			assert.Contains(t, err.Error(), "fail")
-			assert.Empty(t, key)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "fail")
+			require.Empty(t, key)
 		})
 	})
 
@@ -141,25 +139,25 @@ func TestS3(t *testing.T) {
 				CommonPrefixes: []types.CommonPrefix{{Prefix: utils.ToPtr("prefix/")}},
 			}, nil)
 			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
-			assert.NoError(t, err)
-			assert.Contains(t, keys, "prefix/file1")
-			assert.Contains(t, keys, "prefix/")
+			require.NoError(t, err)
+			require.Contains(t, keys, "prefix/file1")
+			require.Contains(t, keys, "prefix/")
 		})
 		t.Run("no results", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(&s3.ListObjectsV2Output{}, nil)
 			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
-			assert.NoError(t, err)
-			assert.Empty(t, keys)
+			require.NoError(t, err)
+			require.Empty(t, keys)
 		})
 		t.Run("error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
 			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
-			assert.Error(t, err)
-			assert.Empty(t, keys)
+			require.Error(t, err)
+			require.Empty(t, keys)
 		})
 	})
 
@@ -169,7 +167,7 @@ func TestS3(t *testing.T) {
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("DeleteObject", t.Context(), mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
 			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", false)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		})
 		t.Run("recursive success", func(t *testing.T) {
 			mockClient := new(MockS3Client)
@@ -182,14 +180,14 @@ func TestS3(t *testing.T) {
 			})).Return(&s3.DeleteObjectOutput{}, nil).Twice()
 			mockClient.On("DeleteObject", t.Context(), mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
 			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		})
 		t.Run("list error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
 			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
-			assert.Error(t, err)
+			require.Error(t, err)
 		})
 		t.Run("delete error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
@@ -203,9 +201,9 @@ func TestS3(t *testing.T) {
 				return input.Key != nil && *input.Key == objectKey
 			})).Return(nil, errors.New("delete failed"))
 			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
-			assert.Error(t, err)
+			require.Error(t, err)
 			// Optionally, check the error message if DeleteObjects wraps or returns the specific error
-			assert.Contains(t, err.Error(), "delete failed")
+			require.Contains(t, err.Error(), "delete failed")
 		})
 	})
 }

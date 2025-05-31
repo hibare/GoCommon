@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type TestStruct struct {
@@ -55,7 +55,7 @@ func Test_extractTagAsSlice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := extractTagAsSlice(tt.args.field, tt.args.tagName)
-			assert.Equal(t, got, tt.want)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -100,7 +100,7 @@ func Test_getFieldOrTag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := getFieldOrTag(tt.args.field, tt.args.useJSON)
-			assert.Equal(t, got, tt.want)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -146,9 +146,9 @@ func TestValidateStructErrors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateStructErrors[TestStruct](tt.obj, validate, tt.useJSON)
 			if tt.wantError {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

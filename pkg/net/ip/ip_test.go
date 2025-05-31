@@ -3,7 +3,7 @@ package ip
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsPublicIP(t *testing.T) {
@@ -61,7 +61,7 @@ func TestIsPublicIP(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			assert.Equal(t, tc.Expected, IsPublicIP(tc.IP))
+			require.Equal(t, tc.Expected, IsPublicIP(tc.IP))
 		})
 	}
 }

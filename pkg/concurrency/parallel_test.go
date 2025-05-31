@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRunParallelTasks(t *testing.T) {
@@ -75,11 +75,10 @@ func TestRunParallelTasks(t *testing.T) {
 
 			errsMap := RunParallelTasks(ctx, tt.opts, tt.tasks...)
 
-			if assert.Len(t, errsMap, tt.wantErrCnt) {
-				if tt.wantErrText != "" {
-					for _, err := range errsMap {
-						assert.Contains(t, err.Error(), tt.wantErrText)
-					}
+			require.Len(t, errsMap, tt.wantErrCnt)
+			if tt.wantErrText != "" {
+				for _, err := range errsMap {
+					require.Contains(t, err.Error(), tt.wantErrText)
 				}
 			}
 		})

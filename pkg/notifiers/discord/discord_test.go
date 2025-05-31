@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAddFooter(t *testing.T) {
@@ -23,18 +23,18 @@ func TestAddFooter(t *testing.T) {
 	}
 
 	err := message.AddFooter("Test Footer")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	lastEmbed := message.Embeds[len(message.Embeds)-1]
-	assert.Equal(t, "Test Footer", lastEmbed.Footer.Text)
+	require.Equal(t, "Test Footer", lastEmbed.Footer.Text)
 }
 
 func TestAddFooterNoEmbeds(t *testing.T) {
 	message := Message{}
 
 	err := message.AddFooter("Test Footer")
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, ErrNoEmbeds)
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrNoEmbeds)
 }
 
 func TestSend(t *testing.T) {
@@ -54,7 +54,7 @@ func TestSend(t *testing.T) {
 	}
 
 	err := message.Send(webhook)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestSendErrorStatusCode(t *testing.T) {
@@ -74,7 +74,7 @@ func TestSendErrorStatusCode(t *testing.T) {
 	}
 
 	err := message.Send(webhook)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestSendRequestError(t *testing.T) {
@@ -87,7 +87,7 @@ func TestSendRequestError(t *testing.T) {
 	}
 
 	err := message.Send("invalid-url")
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestSendMarshalError(t *testing.T) {
@@ -102,5 +102,5 @@ func TestSendMarshalError(t *testing.T) {
 	message.Embeds[0].Color = -1
 
 	err := message.Send("https://example.com")
-	assert.Error(t, err)
+	require.Error(t, err)
 }

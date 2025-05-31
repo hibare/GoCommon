@@ -3,7 +3,7 @@ package datetime
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSortDateTimes(t *testing.T) {
@@ -11,5 +11,5 @@ func TestSortDateTimes(t *testing.T) {
 	dateTimeStr := []string{"20230721053000", "20230720053000", "20230722053000"}
 
 	sorted := SortDateTimes(dateTimeStr)
-	assert.Equal(t, expectedStr, sorted)
+	require.Equal(t, expectedStr, sorted)
 }

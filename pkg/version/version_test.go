@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const expectedJSON = `{
@@ -71,15 +71,15 @@ func TestCheckLatestVersion(t *testing.T) {
 		GithubRepo:  "Sample",
 	}
 	err := version.GetLatestVersion()
-	assert.NoError(t, err)
-	assert.Equal(t, "v0.7.1", version.LatestVersion)
+	require.NoError(t, err)
+	require.Equal(t, "v0.7.1", version.LatestVersion)
 }
 
 func TestLatestVersionMissingGitOwner(t *testing.T) {
 	version := Version{}
 	err := version.GetLatestVersion()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errMissingGithubOwner)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errMissingGithubOwner)
 }
 
 func TestLatestVersionMissingGitRepo(t *testing.T) {
@@ -87,8 +87,8 @@ func TestLatestVersionMissingGitRepo(t *testing.T) {
 		GithubOwner: "hibare",
 	}
 	err := version.GetLatestVersion()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errMissingGithubRepo)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errMissingGithubRepo)
 }
 
 func TestIsNewVersionAvailableTrue(t *testing.T) {
@@ -98,8 +98,8 @@ func TestIsNewVersionAvailableTrue(t *testing.T) {
 		CurrentVersion: "0.0.0",
 	}
 	version.CheckUpdate()
-	assert.True(t, version.NewVersionAvailable)
-	assert.Equal(t, "v0.7.1", version.LatestVersion)
+	require.True(t, version.NewVersionAvailable)
+	require.Equal(t, "v0.7.1", version.LatestVersion)
 }
 
 func TestIsNewVersionAvailableFalse(t *testing.T) {
@@ -109,14 +109,14 @@ func TestIsNewVersionAvailableFalse(t *testing.T) {
 		CurrentVersion: "v0.7.1",
 	}
 	version.CheckUpdate()
-	assert.False(t, version.NewVersionAvailable)
-	assert.Equal(t, "v0.7.1", version.LatestVersion)
+	require.False(t, version.NewVersionAvailable)
+	require.Equal(t, "v0.7.1", version.LatestVersion)
 }
 
 func TestIsNewVersionAvailableFailure(t *testing.T) {
 	version := Version{}
 	version.CheckUpdate()
-	assert.False(t, version.NewVersionAvailable)
+	require.False(t, version.NewVersionAvailable)
 }
 
 func TestGetUpdateNotification(t *testing.T) {
@@ -124,12 +124,12 @@ func TestGetUpdateNotification(t *testing.T) {
 		LatestVersion: "0.7.1",
 	}
 	version.CheckUpdate()
-	assert.Equal(t, "[!] New update available: 0.7.1", version.GetUpdateNotification())
+	require.Equal(t, "[!] New update available: 0.7.1", version.GetUpdateNotification())
 }
 
 func TestGetUpdateNotificationNoUpdate(t *testing.T) {
 	version := Version{
 		LatestVersion: "0.7.1",
 	}
-	assert.Empty(t, version.GetUpdateNotification())
+	require.Empty(t, version.GetUpdateNotification())
 }
