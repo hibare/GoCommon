@@ -82,5 +82,4 @@ func TestStringToPtr(t *testing.T) {
 	str2 := ""
 	ptr2 := StringToPtr(str2)
 	assert.Empty(t, *ptr2, "Expected empty string, but got %s", *ptr2)
-
 }

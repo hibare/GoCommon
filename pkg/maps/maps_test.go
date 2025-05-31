@@ -147,8 +147,8 @@ func TestMap2EnvFile(t *testing.T) {
 	// Check if the file exists
 	_, err = os.Stat(filePath3)
 	assert.False(t, os.IsNotExist(err), "File %v does not exist", filePath3)
-
 }
+
 func TestMapFromSyncMap(t *testing.T) {
 	// Test case 1: SyncMap with string keys and int values
 	sm1 := &sync.Map{}

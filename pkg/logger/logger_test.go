@@ -83,7 +83,6 @@ func TestGetSlogLevelFromString(t *testing.T) {
 	result = getSlogLevelFromString(&level)
 	expected = slog.LevelInfo
 	assert.Equal(t, expected, result)
-
 }
 
 func TestIsValidLogLevel(t *testing.T) {

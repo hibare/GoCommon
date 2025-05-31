@@ -62,7 +62,6 @@ func RequestLogger(next http.Handler) http.Handler {
 			default:
 				slog.Error("request", "method", method, "path", path, "statusCode", statusCode, "duration", duration)
 			}
-
 		}()
 		// Call the next handler
 		next.ServeHTTP(recorder, r)

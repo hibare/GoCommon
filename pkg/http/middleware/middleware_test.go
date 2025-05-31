@@ -107,7 +107,6 @@ func TestRequestLogger(t *testing.T) {
 		logString := buf.String()
 		assert.NotEmpty(t, logString)
 		assert.Contains(t, logString, "INFO request method=GET path=/ statusCode=200 duration")
-
 	})
 
 	t.Run("Warning", func(t *testing.T) {
@@ -171,7 +170,6 @@ func TestRequestLogger(t *testing.T) {
 		assert.NotEmpty(t, logString)
 		assert.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
 	})
-
 }
 
 func TestBasicSecurity(t *testing.T) {
