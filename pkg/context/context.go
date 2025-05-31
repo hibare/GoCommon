@@ -49,5 +49,5 @@ func (c *Context) GetContext() context.Context {
 
 // GetRequestID returns the request ID from the Context.
 func (c *Context) GetRequestID() string {
-	return c.Context.Value("request_id").(string)
+	return c.Context.Value("request_id").(string) //nolint:errcheck // reason: no error possible/needed
 }

@@ -63,11 +63,13 @@ func MustStringSlice(key string, fallback []string) []string {
 	return strings.Split(value, ",")
 }
 
+const envSplitIndex = 2
+
 // GetPrefixed returns a map of environment variables with the given prefix.
 func GetPrefixed(prefix string) map[string]string {
 	prefixed := make(map[string]string)
 	for _, e := range os.Environ() {
-		pair := strings.SplitN(e, "=", 2)
+		pair := strings.SplitN(e, "=", envSplitIndex)
 		if len(pair) == 2 && strings.HasPrefix(pair[0], prefix) {
 			prefixed[pair[0]] = pair[1]
 		}

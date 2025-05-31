@@ -60,7 +60,7 @@ func NewClient(ctx context.Context, config DatabaseConfig) (*DB, error) {
 			return instance, nil
 		}
 		// Connection is not alive, close it and create a new one
-		sqlDB.Close()
+		_ = sqlDB.Close()
 		instance = nil
 	}
 

@@ -15,7 +15,7 @@ const (
 )
 
 func TestTokenAuthSuccess(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestTokenAuthSuccess(t *testing.T) {
 }
 
 func TestTokenAuthNoKeyFailure(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestTokenAuthNoKeyFailure(t *testing.T) {
 }
 
 func TestTokenAuthWrongKeyFailure(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

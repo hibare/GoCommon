@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -39,7 +40,7 @@ func (s *SQLiteDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
 		return fmt.Errorf("could not create migrate instance: %w", err)
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("could not run migrations: %w", err)
 	}
 

@@ -429,7 +429,7 @@ func TestFilesSameContent(t *testing.T) {
 		// write random data to the second file
 		file, err := os.OpenFile(filePath2, os.O_WRONLY, os.ModePerm)
 		assert.NoError(t, err)
-		_, err = file.Write([]byte("random data"))
+		_, err = file.WriteString("random data")
 		assert.NoError(t, err)
 		_ = file.Close()
 

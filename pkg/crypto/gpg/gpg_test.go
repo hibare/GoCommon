@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hibare/GoCommon/v2/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +69,6 @@ func TestDownloadGPGPubKeyNoKey(t *testing.T) {
 
 	gpgPubKey, err := DownloadGPGPubKey(keyID, keyServerURL)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrNonOKError)
 	assert.Contains(t, err.Error(), "key-server returned non-OK status")
 	assert.Empty(t, gpgPubKey.PublicKey)
 	assert.Empty(t, gpgPubKey.PublicKeyPath)

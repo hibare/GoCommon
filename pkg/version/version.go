@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
+
+	commonHTTP "github.com/hibare/GoCommon/v2/pkg/http"
 )
 
 // UpdateNotificationMessage is the template for update notifications.
@@ -68,7 +69,7 @@ func (v *Version) GetLatestVersion() error {
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: commonHTTP.DefaultHTTPClientTimeout,
 	}
 	resp, err := client.Do(req)
 	if err != nil {

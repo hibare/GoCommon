@@ -27,7 +27,13 @@ func SetupMockPostgresDB() (*gnomock.Container, DatabaseConfig, error) {
 	}
 
 	return container, DatabaseConfig{
-		DSN: fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", container.Host, container.DefaultPort(), PGTestUser, PGTestPass, PGTestDB),
+		DSN: fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			container.Host,
+			container.DefaultPort(),
+			PGTestUser,
+			PGTestPass,
+			PGTestDB,
+		),
 	}, nil
 }
 

@@ -46,7 +46,8 @@ func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJsonT
 
 	err := validate.Struct(obj)
 	if err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
 			for _, e := range validationErrors {
 				if field, found := reflect.TypeOf(obj).FieldByName(e.Field()); found {
 					fieldTag := getFieldOrTag(field, useJsonTag)

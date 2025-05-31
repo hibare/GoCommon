@@ -57,11 +57,11 @@ func TestMain(m *testing.M) {
 		w.Header().Set("Content-Type", "application/vnd.github.v3+json")
 		_, _ = w.Write([]byte(expectedJSON))
 	}))
-	defer server.Close()
-
 	GithubEndpoint = server.URL + "#%s#%s"
 
 	code := m.Run()
+
+	server.Close()
 	os.Exit(code)
 }
 

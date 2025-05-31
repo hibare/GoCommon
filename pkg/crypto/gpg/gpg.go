@@ -2,6 +2,7 @@
 package gpg
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
-	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
 // GPG holds configuration and key data for GPG operations.
@@ -37,19 +37,19 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	keyURL := fmt.Sprintf("%s/pks/lookup?op=get&search=%s", keyServerURL, keyID)
 	response, err := http.Get(keyURL)
 	if err != nil {
-		return gpgPubKey, fmt.Errorf("failed to download GPG key: %w", err)
+		return gpgPubKey, errors.Join(errors.New("failed to download GPG key"), err)
 	}
 	defer func() {
 		_ = response.Body.Close()
 	}()
 
 	if response.StatusCode != http.StatusOK {
-		return gpgPubKey, fmt.Errorf("key-server returned non-OK status: %w", errors.ErrNonOKError)
+		return gpgPubKey, errors.New("key-server returned non-OK status")
 	}
 
 	keyData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return gpgPubKey, fmt.Errorf("failed to read key data: %w", err)
+		return gpgPubKey, errors.Join(errors.New("failed to read key data"), err)
 	}
 
 	outputFileName := fmt.Sprintf("gpg_pub_key_%s.asc", keyID)
@@ -57,7 +57,7 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 
 	file, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return gpgPubKey, fmt.Errorf("failed to create key file: %w", err)
+		return gpgPubKey, errors.Join(errors.New("failed to create key file"), err)
 	}
 	defer func() {
 		if cErr := file.Close(); cErr != nil && err == nil {
@@ -66,7 +66,7 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	}()
 
 	if _, err = file.Write(keyData); err != nil {
-		return gpgPubKey, fmt.Errorf("failed to write key data: %w", err)
+		return gpgPubKey, errors.Join(errors.New("failed to write key data"), err)
 	}
 
 	gpgPubKey.PublicKeyPath = outputFilePath
@@ -84,15 +84,15 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 
 	entityList, err := openpgp.ReadArmoredKeyRing(strings.NewReader(g.PublicKey))
 	if err != nil {
-		return "", fmt.Errorf("failed to read armored key ring: %w", err)
+		return "", errors.Join(errors.New("failed to read armored key ring"), err)
 	}
 	if len(entityList) == 0 {
-		return "", fmt.Errorf("no entities found in public key")
+		return "", errors.New("no entities found in public key")
 	}
 
 	plaintext, err := os.Open(inputFilePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to open input file %q: %w", inputFilePath, err)
+		return "", errors.Join(errors.New("failed to open input file"), err)
 	}
 	defer func() {
 		_ = plaintext.Close()
@@ -100,7 +100,7 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 
 	output, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return "", fmt.Errorf("failed to create output file: %w", err)
+		return "", errors.Join(errors.New("failed to create output file"), err)
 	}
 	defer func() {
 		_ = output.Close()
@@ -108,7 +108,7 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 
 	encrypted, err := armor.Encode(output, "PGP MESSAGE", nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to create armored output: %w", err)
+		return "", errors.Join(errors.New("failed to create armored output"), err)
 	}
 	defer func() {
 		_ = encrypted.Close()
@@ -116,14 +116,14 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 
 	encryptionWriter, err := openpgp.Encrypt(encrypted, entityList, nil, nil, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to initialize encryption: %w", err)
+		return "", errors.Join(errors.New("failed to initialize encryption"), err)
 	}
 	defer func() {
 		_ = encryptionWriter.Close()
 	}()
 
 	if _, err = io.Copy(encryptionWriter, plaintext); err != nil {
-		return "", fmt.Errorf("failed to encrypt file contents: %w", err)
+		return "", errors.Join(errors.New("failed to encrypt file contents"), err)
 	}
 
 	return outputFilePath, nil
@@ -138,15 +138,15 @@ func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
 
 	entityList, err := openpgp.ReadArmoredKeyRing(strings.NewReader(g.PrivateKey))
 	if err != nil {
-		return "", fmt.Errorf("failed to read armored key ring: %w", err)
+		return "", errors.Join(errors.New("failed to read armored key ring"), err)
 	}
 	if len(entityList) == 0 {
-		return "", fmt.Errorf("no entities found in private key")
+		return "", errors.New("no entities found in private key")
 	}
 
 	entity := entityList[0]
 	if entity.PrivateKey == nil {
-		return "", fmt.Errorf("no private key found in entity")
+		return "", errors.New("no private key found in entity")
 	}
 
 	passphraseByte := []byte(g.Passphrase)
@@ -157,19 +157,19 @@ func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
 	}()
 
 	if err := entity.PrivateKey.Decrypt(passphraseByte); err != nil {
-		return "", fmt.Errorf("failed to decrypt private key: %w", err)
+		return "", errors.Join(errors.New("failed to decrypt private key"), err)
 	}
 	for _, subkey := range entity.Subkeys {
 		if subkey.PrivateKey != nil {
 			if err := subkey.PrivateKey.Decrypt(passphraseByte); err != nil {
-				return "", fmt.Errorf("failed to decrypt subkey: %w", err)
+				return "", errors.Join(errors.New("failed to decrypt subkey"), err)
 			}
 		}
 	}
 
 	encryptedFile, err := os.Open(inputFilePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to open input file %q: %w", inputFilePath, err)
+		return "", errors.Join(errors.New("failed to open input file"), err)
 	}
 	defer func() {
 		_ = encryptedFile.Close()
@@ -177,24 +177,24 @@ func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
 
 	decoded, err := armor.Decode(encryptedFile)
 	if err != nil {
-		return "", fmt.Errorf("failed to decode armored input: %w", err)
+		return "", errors.Join(errors.New("failed to decode armored input"), err)
 	}
 
 	md, err := openpgp.ReadMessage(decoded.Body, entityList, nil, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to read PGP message: %w", err)
+		return "", errors.Join(errors.New("failed to read PGP message"), err)
 	}
 
 	outputFile, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return "", fmt.Errorf("failed to create output file: %w", err)
+		return "", errors.Join(errors.New("failed to create output file"), err)
 	}
 	defer func() {
 		_ = outputFile.Close()
 	}()
 
 	if _, err = io.Copy(outputFile, md.UnverifiedBody); err != nil {
-		return "", fmt.Errorf("failed to write decrypted contents: %w", err)
+		return "", errors.Join(errors.New("failed to write decrypted contents"), err)
 	}
 
 	return outputFilePath, nil

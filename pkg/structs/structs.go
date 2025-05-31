@@ -13,7 +13,7 @@ func CopyStruct(src, dst interface{}) error {
 	return StructCopy(src, dst)
 }
 
-// StructCopy copies the contents of src struct to dst struct
+// StructCopy copies the contents of src struct to dst struct.
 func StructCopy(src, dst interface{}) error {
 	srcVal := reflect.ValueOf(src)
 	dstVal := reflect.ValueOf(dst)

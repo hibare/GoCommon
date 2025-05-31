@@ -26,7 +26,7 @@ func TestHealhCheckHandler(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			r, err := http.NewRequest("GET", tc.URL, nil)
+			r, err := http.NewRequest(http.MethodGet, tc.URL, nil)
 
 			assert.NoError(t, err)
 

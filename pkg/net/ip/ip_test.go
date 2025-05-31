@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsPublicIP(t *testing.T) {
-	TestCases := []struct {
+	testCases := []struct {
 		Name     string
 		IP       string
 		Expected bool
@@ -59,7 +59,7 @@ func TestIsPublicIP(t *testing.T) {
 		},
 	}
 
-	for _, tc := range TestCases {
+	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			assert.Equal(t, tc.Expected, IsPublicIP(tc.IP))
 		})
