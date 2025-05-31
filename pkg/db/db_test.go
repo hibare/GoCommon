@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -32,8 +31,7 @@ func TestNewClient(t *testing.T) {
 	mockDB.On("Migrate", mock.Anything, config).Return(nil).Once()
 
 	// Test first client creation
-	ctx := context.Background()
-	client, err := NewClient(ctx, config)
+	client, err := NewClient(t.Context(), config)
 	require.NoError(t, err)
 	require.NotNil(t, client)
 
@@ -50,7 +48,7 @@ func TestNewClient(t *testing.T) {
 
 	// Test singleton behavior
 	mockDB.On("Open", config).Return(gormDB, nil).Maybe()
-	client2, err := NewClient(ctx, config)
+	client2, err := NewClient(t.Context(), config)
 	require.NoError(t, err)
 	assert.Equal(t, client, client2) // This works because it's the same instance
 
@@ -71,8 +69,7 @@ func TestNewClient_OpenError(t *testing.T) {
 	openErr := errors.New("failed to open database")
 	mockDB.On("Open", config).Return(nil, openErr)
 
-	ctx := context.Background()
-	client, err := NewClient(ctx, config)
+	client, err := NewClient(t.Context(), config)
 	assert.Error(t, err)
 	assert.Nil(t, client)
 	assert.Equal(t, openErr, err)
@@ -95,8 +92,7 @@ func TestNewClient_MigrateError(t *testing.T) {
 	migrateErr := errors.New("failed to migrate database")
 	mockDB.On("Migrate", mock.Anything, config).Return(migrateErr)
 
-	ctx := context.Background()
-	client, err := NewClient(ctx, config)
+	client, err := NewClient(t.Context(), config)
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 

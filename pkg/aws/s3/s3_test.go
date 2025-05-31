@@ -56,7 +56,6 @@ func (m *MockS3Client) ListObjects(ctx context.Context, params *s3.ListObjectsIn
 }
 
 func TestS3(t *testing.T) {
-	ctx := context.Background()
 	temp := t.TempDir()
 
 	// create  two files in the temp dir
@@ -86,9 +85,9 @@ func TestS3(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
 
-			mockClient.On("PutObject", ctx, mock.Anything).Return(&s3.PutObjectOutput{}, nil).Twice()
+			mockClient.On("PutObject", t.Context(), mock.Anything).Return(&s3.PutObjectOutput{}, nil).Twice()
 
-			resp, err := s3Client.UploadDir(ctx, "bucket", "prefix", temp, nil)
+			resp, err := s3Client.UploadDir(t.Context(), "bucket", "prefix", temp, nil)
 			assert.NoError(t, err)
 			assert.Equal(t, 2, resp.SuccessFiles)
 			assert.Equal(t, 2, resp.TotalFiles)
@@ -99,9 +98,9 @@ func TestS3(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
 
-			mockClient.On("PutObject", ctx, mock.Anything).Return(nil, errors.New("fail")).Twice()
+			mockClient.On("PutObject", t.Context(), mock.Anything).Return(nil, errors.New("fail")).Twice()
 
-			resp, err := s3Client.UploadDir(ctx, "bucket", "prefix", temp, nil)
+			resp, err := s3Client.UploadDir(t.Context(), "bucket", "prefix", temp, nil)
 			assert.NoError(t, err)
 			assert.Equal(t, 0, resp.SuccessFiles)
 			assert.Equal(t, 2, resp.TotalFiles)
@@ -116,8 +115,8 @@ func TestS3(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("PutObject", ctx, mock.Anything).Return(&s3.PutObjectOutput{}, nil)
-			key, err := s3Client.UploadFile(ctx, "bucket", "prefix", filepath.Join(temp, "file1"))
+			mockClient.On("PutObject", t.Context(), mock.Anything).Return(&s3.PutObjectOutput{}, nil)
+			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
 			assert.NoError(t, err)
 			assert.Contains(t, key, "file1")
 		})
@@ -125,8 +124,8 @@ func TestS3(t *testing.T) {
 		t.Run("upload error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("PutObject", ctx, mock.Anything).Return(nil, errors.New("fail"))
-			key, err := s3Client.UploadFile(ctx, "bucket", "prefix", filepath.Join(temp, "file1"))
+			mockClient.On("PutObject", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
+			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "fail")
 			assert.Empty(t, key)
@@ -137,11 +136,11 @@ func TestS3(t *testing.T) {
 		t.Run("with results", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("ListObjectsV2", ctx, mock.Anything).Return(&s3.ListObjectsV2Output{
+			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(&s3.ListObjectsV2Output{
 				Contents:       []types.Object{{Key: utils.ToPtr("prefix/file1")}},
 				CommonPrefixes: []types.CommonPrefix{{Prefix: utils.ToPtr("prefix/")}},
 			}, nil)
-			keys, err := s3Client.ListObjectsAtPrefixRoot(ctx, "bucket", "prefix")
+			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
 			assert.NoError(t, err)
 			assert.Contains(t, keys, "prefix/file1")
 			assert.Contains(t, keys, "prefix/")
@@ -149,16 +148,16 @@ func TestS3(t *testing.T) {
 		t.Run("no results", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("ListObjectsV2", ctx, mock.Anything).Return(&s3.ListObjectsV2Output{}, nil)
-			keys, err := s3Client.ListObjectsAtPrefixRoot(ctx, "bucket", "prefix")
+			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(&s3.ListObjectsV2Output{}, nil)
+			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
 			assert.NoError(t, err)
 			assert.Empty(t, keys)
 		})
 		t.Run("error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("ListObjectsV2", ctx, mock.Anything).Return(nil, errors.New("fail"))
-			keys, err := s3Client.ListObjectsAtPrefixRoot(ctx, "bucket", "prefix")
+			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
+			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
 			assert.Error(t, err)
 			assert.Empty(t, keys)
 		})
@@ -168,42 +167,42 @@ func TestS3(t *testing.T) {
 		t.Run("non-recursive success", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("DeleteObject", ctx, mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
-			err := s3Client.DeleteObjects(ctx, "bucket", "key", false)
+			mockClient.On("DeleteObject", t.Context(), mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", false)
 			assert.NoError(t, err)
 		})
 		t.Run("recursive success", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("ListObjects", ctx, mock.Anything).Return(&s3.ListObjectsOutput{
+			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(&s3.ListObjectsOutput{
 				Contents: []types.Object{{Key: utils.ToPtr("key/1")}, {Key: utils.ToPtr("key/2")}},
 			}, nil)
-			mockClient.On("DeleteObject", ctx, mock.MatchedBy(func(input *s3.DeleteObjectInput) bool {
+			mockClient.On("DeleteObject", t.Context(), mock.MatchedBy(func(input *s3.DeleteObjectInput) bool {
 				return (input.Key != nil && (*input.Key == "key/1" || *input.Key == "key/2"))
 			})).Return(&s3.DeleteObjectOutput{}, nil).Twice()
-			mockClient.On("DeleteObject", ctx, mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
-			err := s3Client.DeleteObjects(ctx, "bucket", "key", true)
+			mockClient.On("DeleteObject", t.Context(), mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
 			assert.NoError(t, err)
 		})
 		t.Run("list error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
-			mockClient.On("ListObjects", ctx, mock.Anything).Return(nil, errors.New("fail"))
-			err := s3Client.DeleteObjects(ctx, "bucket", "key", true)
+			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
 			assert.Error(t, err)
 		})
 		t.Run("delete error", func(t *testing.T) {
 			mockClient := new(MockS3Client)
 			s3Client := &S3{Client: mockClient}
 			objectKey := "key/1"
-			mockClient.On("ListObjects", ctx, mock.Anything).Return(&s3.ListObjectsOutput{
+			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(&s3.ListObjectsOutput{
 				Contents: []types.Object{{Key: utils.ToPtr(objectKey)}},
 			}, nil)
 			// Mock DeleteObject to fail for the specific key
-			mockClient.On("DeleteObject", ctx, mock.MatchedBy(func(input *s3.DeleteObjectInput) bool {
+			mockClient.On("DeleteObject", t.Context(), mock.MatchedBy(func(input *s3.DeleteObjectInput) bool {
 				return input.Key != nil && *input.Key == objectKey
 			})).Return(nil, errors.New("delete failed"))
-			err := s3Client.DeleteObjects(ctx, "bucket", "key", true)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
 			assert.Error(t, err)
 			// Optionally, check the error message if DeleteObjects wraps or returns the specific error
 			assert.Contains(t, err.Error(), "delete failed")

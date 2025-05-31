@@ -30,7 +30,7 @@ func TestWithRequestID(t *testing.T) {
 func TestWithContext(t *testing.T) {
 	key := ContextKey("key")
 
-	baseCtx := context.WithValue(context.Background(), key, "value")
+	baseCtx := context.WithValue(t.Context(), key, "value")
 	ctx := NewContext().WithContext(baseCtx)
 	if ctx.Get(key) != "value" {
 		t.Errorf("Expected value 'value', got %v", ctx.Get(key))
