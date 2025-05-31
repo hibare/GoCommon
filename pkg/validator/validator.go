@@ -47,29 +47,31 @@ func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJSONT
 	}()
 
 	err := validate.Struct(obj)
-	if err != nil {
-		var validationErrors validator.ValidationErrors
-		if errors.As(err, &validationErrors) {
-			for _, e := range validationErrors {
-				if field, found := reflect.TypeOf(obj).FieldByName(e.Field()); found {
-					fieldTag := getFieldOrTag(field, useJSONTag)
-					validateTags := extractTagAsSlice(field, tagValidate)
-					errMsgs := extractTagAsSlice(field, tagValidateErrMsgs)
+	if err == nil {
+		return nil
+	}
 
-					if len(errMsgs) == 0 {
-						errs = errors.Join(errs, fmt.Errorf("%s: %w", fieldTag, e))
-					} else {
-						validateTagIndex := slice.IndexOf(e.Tag(), validateTags)
-						if validateTagIndex == -1 {
-							errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, strings.Join(errMsgs, ", "), e.Tag()))
-						} else {
-							errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, errMsgs[validateTagIndex], e.Tag()))
-						}
-					}
-				}
+	var validationErrors validator.ValidationErrors
+	if !errors.As(err, &validationErrors) {
+		errs = fmt.Errorf("unexpected error during validation: %w", err)
+	}
+	for _, e := range validationErrors {
+		if field, found := reflect.TypeOf(obj).FieldByName(e.Field()); found {
+			fieldTag := getFieldOrTag(field, useJSONTag)
+			validateTags := extractTagAsSlice(field, tagValidate)
+			errMsgs := extractTagAsSlice(field, tagValidateErrMsgs)
+
+			if len(errMsgs) == 0 {
+				errs = errors.Join(errs, fmt.Errorf("%s: %w", fieldTag, e))
+				continue
 			}
-		} else {
-			errs = fmt.Errorf("unexpected error during validation: %w", err)
+
+			validateTagIndex := slice.IndexOf(e.Tag(), validateTags)
+			if validateTagIndex == -1 {
+				errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, strings.Join(errMsgs, ", "), e.Tag()))
+			} else {
+				errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, errMsgs[validateTagIndex], e.Tag()))
+			}
 		}
 	}
 

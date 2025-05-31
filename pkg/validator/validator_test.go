@@ -9,9 +9,9 @@ import (
 )
 
 type TestStruct struct {
-	Name     string `json:"name" validate:"required" validate_errs:"Name is required"`
-	Age      int    `json:"age" validate:"required,gt=0" validate_errs:"Age is required,Age must be greater than 0"`
-	Email    string `validate:"email"`
+	Name     string `json:"name" validate:"required"      validate_errs:"Name is required"`
+	Age      int    `json:"age"  validate:"required,gt=0" validate_errs:"Age is required,Age must be greater than 0"`
+	Email    string `            validate:"email"`
 	Internal string `json:"-"`
 }
 

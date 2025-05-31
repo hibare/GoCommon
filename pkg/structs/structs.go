@@ -54,7 +54,7 @@ func StructToMap(s interface{}) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 	typ := val.Type()
 
-	for i := 0; i < val.NumField(); i++ {
+	for i := range val.NumField() {
 		field := val.Field(i)
 		fieldName := typ.Field(i).Name
 		result[fieldName] = field.Interface()

@@ -47,7 +47,7 @@ func TestPostgresDatabase(t *testing.T) {
 				if err == nil {
 					sqlDB, err := db.DB()
 					if err == nil {
-						err = sqlDB.Ping()
+						_ = sqlDB.Ping()
 					}
 				}
 
