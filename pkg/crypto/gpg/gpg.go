@@ -1,3 +1,4 @@
+// Package gpg provides utilities for GPG encryption and decryption of files.
 package gpg
 
 import (
@@ -13,6 +14,7 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
+// GPG holds configuration and key data for GPG operations.
 type GPG struct {
 	KeyID          string
 	KeyServerURL   string
@@ -25,6 +27,7 @@ type GPG struct {
 
 const GPGPrefix = "gpg"
 
+// DownloadGPGPubKey downloads a GPG public key from a key server and saves it to a temp file.
 func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	gpgPubKey := GPG{
 		KeyID:        keyID,
@@ -34,35 +37,34 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	keyURL := fmt.Sprintf("%s/pks/lookup?op=get&search=%s", keyServerURL, keyID)
 	response, err := http.Get(keyURL)
 	if err != nil {
-		return gpgPubKey, err
+		return gpgPubKey, fmt.Errorf("failed to download GPG key: %w", err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return gpgPubKey, errors.ErrNonOKError
+		return gpgPubKey, fmt.Errorf("key-server returned non-OK status: %w", errors.ErrNonOKError)
 	}
 
-	// Save the GPG key to a file
 	keyData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return gpgPubKey, err
+		return gpgPubKey, fmt.Errorf("failed to read key data: %w", err)
 	}
 
-	// Create a file in temp dir
 	outputFileName := fmt.Sprintf("gpg_pub_key_%s.asc", keyID)
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
 
-	// Create or open the file for writing (with more control over file permissions)
 	file, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return gpgPubKey, err
+		return gpgPubKey, fmt.Errorf("failed to create key file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if cErr := file.Close(); cErr != nil && err == nil {
+			err = cErr
+		}
+	}()
 
-	// Write data to the file
-	_, err = file.Write(keyData)
-	if err != nil {
-		return gpgPubKey, err
+	if _, err = file.Write(keyData); err != nil {
+		return gpgPubKey, fmt.Errorf("failed to write key data: %w", err)
 	}
 
 	gpgPubKey.PublicKeyPath = outputFilePath
@@ -71,102 +73,127 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	return gpgPubKey, nil
 }
 
+// EncryptFile encrypts the given file using the GPG public key and writes the result to a temp file.
+// Returns the path to the encrypted file on success.
 func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 	fileName := filepath.Base(inputFilePath)
-
-	// Create output file in temp dir
 	outputFileName := fmt.Sprintf("%s.%s", fileName, GPGPrefix)
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
 
-	// Create an entity list from the public key
 	entityList, err := openpgp.ReadArmoredKeyRing(strings.NewReader(g.PublicKey))
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to read armored key ring: %s", err)
+		return "", fmt.Errorf("failed to read armored key ring: %w", err)
+	}
+	if len(entityList) == 0 {
+		return "", fmt.Errorf("no entities found in public key")
 	}
 
-	// Encrypt the file using the public key
 	plaintext, err := os.Open(inputFilePath)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to open input file: %s", err)
+		return "", fmt.Errorf("failed to open input file %q: %w", inputFilePath, err)
 	}
-	defer plaintext.Close()
+	defer func() {
+		_ = plaintext.Close()
+	}()
 
-	// Create the output file
-	output, err := os.Create(outputFilePath)
+	output, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to create output file: %s", err)
+		return "", fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer output.Close()
+	defer func() {
+		_ = output.Close()
+	}()
 
 	encrypted, err := armor.Encode(output, "PGP MESSAGE", nil)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to create armored output: %s", err)
+		return "", fmt.Errorf("failed to create armored output: %w", err)
 	}
-	defer encrypted.Close()
+	defer func() {
+		_ = encrypted.Close()
+	}()
 
 	encryptionWriter, err := openpgp.Encrypt(encrypted, entityList, nil, nil, nil)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to initialize encryption: %s", err)
+		return "", fmt.Errorf("failed to initialize encryption: %w", err)
 	}
+	defer func() {
+		_ = encryptionWriter.Close()
+	}()
 
-	// Copy the contents of the plaintext file to the encryption writer
-	_, err = io.Copy(encryptionWriter, plaintext)
-	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to encrypt file contents: %s", err)
+	if _, err = io.Copy(encryptionWriter, plaintext); err != nil {
+		return "", fmt.Errorf("failed to encrypt file contents: %w", err)
 	}
-
-	encryptionWriter.Close()
 
 	return outputFilePath, nil
 }
 
+// DecryptFile decrypts the given GPG-encrypted file using the private key and writes the result to a temp file.
+// Returns the path to the decrypted file on success.
 func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
 	fileName := filepath.Base(inputFilePath)
-
-	// Create output file in temp dir
 	outputFileName := strings.TrimSuffix(fileName, fmt.Sprintf(".%s", GPGPrefix))
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
 
-	// Create an entity list from the private key
 	entityList, err := openpgp.ReadArmoredKeyRing(strings.NewReader(g.PrivateKey))
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to read armored key ring: %s", err)
+		return "", fmt.Errorf("failed to read armored key ring: %w", err)
+	}
+	if len(entityList) == 0 {
+		return "", fmt.Errorf("no entities found in private key")
 	}
 
 	entity := entityList[0]
-
-	// Get the passphrase and read the private key.
-	passphraseByte := []byte(g.Passphrase)
-	entity.PrivateKey.Decrypt(passphraseByte)
-	for _, subkey := range entity.Subkeys {
-		subkey.PrivateKey.Decrypt(passphraseByte)
+	if entity.PrivateKey == nil {
+		return "", fmt.Errorf("no private key found in entity")
 	}
 
-	// Read the encrypted file
+	passphraseByte := []byte(g.Passphrase)
+	defer func() {
+		for i := range passphraseByte {
+			passphraseByte[i] = 0
+		}
+	}()
+
+	if err := entity.PrivateKey.Decrypt(passphraseByte); err != nil {
+		return "", fmt.Errorf("failed to decrypt private key: %w", err)
+	}
+	for _, subkey := range entity.Subkeys {
+		if subkey.PrivateKey != nil {
+			if err := subkey.PrivateKey.Decrypt(passphraseByte); err != nil {
+				return "", fmt.Errorf("failed to decrypt subkey: %w", err)
+			}
+		}
+	}
+
 	encryptedFile, err := os.Open(inputFilePath)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to open input file: %s", err)
+		return "", fmt.Errorf("failed to open input file %q: %w", inputFilePath, err)
 	}
-	defer encryptedFile.Close()
+	defer func() {
+		_ = encryptedFile.Close()
+	}()
 
 	decoded, err := armor.Decode(encryptedFile)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to decode armored input: %s", err)
+		return "", fmt.Errorf("failed to decode armored input: %w", err)
 	}
 
 	md, err := openpgp.ReadMessage(decoded.Body, entityList, nil, nil)
 	if err != nil {
-		return outputFilePath, err
+		return "", fmt.Errorf("failed to read PGP message: %w", err)
 	}
 
-	// Create the output file
-	outputFile, err := os.Create(outputFilePath)
+	outputFile, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return outputFilePath, fmt.Errorf("failed to create output file: %s", err)
+		return "", fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer outputFile.Close()
+	defer func() {
+		_ = outputFile.Close()
+	}()
 
-	// Decrypt and write the contents to the output file
-	_, err = outputFile.ReadFrom(md.UnverifiedBody)
-	return outputFilePath, err
+	if _, err = io.Copy(outputFile, md.UnverifiedBody); err != nil {
+		return "", fmt.Errorf("failed to write decrypted contents: %w", err)
+	}
+
+	return outputFilePath, nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -18,29 +19,15 @@ const (
 	testFileContent = "This is a sample text file created in the temp directory."
 )
 
-func setupTestFile() (string, error) {
-	// Sample text content
-
-	// Create a temporary file in the system's temp directory
+func setupTestFile(t *testing.T) string {
+	t.Helper()
 	tempFile, err := os.CreateTemp("", "sample*.txt")
-	if err != nil {
-		return "", err
-	}
-	defer tempFile.Close()
-
-	// Write the content to the temporary file
+	require.NoError(t, err)
 	_, err = tempFile.WriteString(testFileContent)
-	if err != nil {
-		return "", err
-	}
-
-	// Get the temporary file path
-	tempFilePath := tempFile.Name()
-	return tempFilePath, nil
-}
-
-func tearDownTestFile(tempFilePath string) {
-	os.Remove(tempFilePath)
+	require.NoError(t, err)
+	require.NoError(t, tempFile.Close())
+	t.Cleanup(func() { os.Remove(tempFile.Name()) })
+	return tempFile.Name()
 }
 
 func TestMain(m *testing.M) {
@@ -49,32 +36,27 @@ func TestMain(m *testing.M) {
 }
 
 func TestDownloadGPGPubKey(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, testPublicKey)
 	}))
-	defer server.Close()
+	t.Cleanup(server.Close)
 
 	keyServerURL := server.URL
 	keyID := "dummy_key_id"
 
 	gpgPubKey, err := DownloadGPGPubKey(keyID, keyServerURL)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	// Check if file exists
 	_, err = os.Stat(gpgPubKey.PublicKeyPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(gpgPubKey.PublicKeyPath) })
 
-	// Read the downloaded file and check if it contains the dummy key
 	downloadedData, err := os.ReadFile(gpgPubKey.PublicKeyPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotEmpty(t, string(downloadedData))
 	assert.Equal(t, testPublicKey, string(downloadedData))
 	assert.Equal(t, testPublicKey, gpgPubKey.PublicKey)
-
-	// remove file
-	os.Remove(gpgPubKey.PublicKeyPath)
 }
 
 func TestDownloadGPGPubKeyNoKey(t *testing.T) {
@@ -88,65 +70,43 @@ func TestDownloadGPGPubKeyNoKey(t *testing.T) {
 
 	gpgPubKey, err := DownloadGPGPubKey(keyID, keyServerURL)
 	assert.Error(t, err)
-	assert.ErrorIs(t, errors.ErrNonOKError, err)
+	assert.ErrorIs(t, err, errors.ErrNonOKError)
+	assert.Contains(t, err.Error(), "key-server returned non-OK status")
 	assert.Empty(t, gpgPubKey.PublicKey)
 	assert.Empty(t, gpgPubKey.PublicKeyPath)
 }
 
 func TestGPGEncrypt(t *testing.T) {
-	// Create a sample text file in temp dir
-	tempFilePath, err := setupTestFile()
-	assert.NoError(t, err)
-
-	gpgPubkey := GPG{
-		PublicKey: testPublicKey,
-	}
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{PublicKey: testPublicKey}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
-	assert.NoError(t, err)
-
-	// Check if file exists
+	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
-	assert.NoError(t, err)
-	tearDownTestFile(tempFilePath)
-	tearDownTestFile(encryptedFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(encryptedFilePath) })
 }
 
 func TestGPGEncryptInvalidPubKey(t *testing.T) {
-	// Create a sample text file in temp dir
-	tempFilePath, err := setupTestFile()
-	assert.NoError(t, err)
-
-	gpgPubkey := GPG{
-		PublicKey: "invalid key",
-	}
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{PublicKey: "invalid key"}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
 	assert.Error(t, err)
-
-	_, err = os.Stat(encryptedFilePath)
-	assert.Error(t, err)
-	tearDownTestFile(tempFilePath)
+	assert.Empty(t, encryptedFilePath)
 }
 
 func TestGPGEncryptInvalidFile(t *testing.T) {
 	tempFilePath := "/tmp/non-exists-file.txt"
-	gpgPubkey := GPG{
-		PublicKey: testPublicKey,
-	}
+	gpgPubkey := GPG{PublicKey: testPublicKey}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
 	assert.Error(t, err)
-
-	_, err = os.Stat(encryptedFilePath)
-	assert.Error(t, err)
+	assert.Empty(t, encryptedFilePath)
 }
 
 func TestGPGDecrypt(t *testing.T) {
-	// Create a sample text file in temp dir
-	tempFilePath, err := setupTestFile()
-	assert.NoError(t, err)
-
+	tempFilePath := setupTestFile(t)
 	gpgPubkey := GPG{
 		PublicKey:  testPublicKey,
 		PrivateKey: testPrivateKey,
@@ -154,35 +114,24 @@ func TestGPGDecrypt(t *testing.T) {
 	}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
-	assert.NoError(t, err)
-
-	// Check if file exists
+	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
-	assert.NoError(t, err)
-
-	tearDownTestFile(tempFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
-	assert.NoError(t, err)
-
-	// Check if file exists
+	require.NoError(t, err)
 	_, err = os.Stat(decryptedFilePath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(decryptedFilePath) })
 
-	// read the decrypted file content and check if its same as the original
 	decryptedData, err := os.ReadFile(decryptedFilePath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, testFileContent, string(decryptedData))
-
-	tearDownTestFile(encryptedFilePath)
-	tearDownTestFile(decryptedFilePath)
 }
 
 func TestGPGDecryptInvalidPass(t *testing.T) {
-	// Create a sample text file in temp dir
-	tempFilePath, err := setupTestFile()
-	assert.NoError(t, err)
-
+	tempFilePath := setupTestFile(t)
 	gpgPubkey := GPG{
 		PublicKey:  testPublicKey,
 		PrivateKey: testPrivateKey,
@@ -190,53 +139,150 @@ func TestGPGDecryptInvalidPass(t *testing.T) {
 	}
 
 	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
-	assert.NoError(t, err)
-
-	// Check if file exists
+	require.NoError(t, err)
 	_, err = os.Stat(encryptedFilePath)
-	assert.NoError(t, err)
-
-	tearDownTestFile(tempFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(encryptedFilePath) })
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	assert.Error(t, err)
-
-	// Check if file exists
-	_, err = os.Stat(decryptedFilePath)
-	assert.Error(t, err)
-
-	tearDownTestFile(encryptedFilePath)
+	assert.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptInvalidFile(t *testing.T) {
 	encryptedFilePath := "/tmp/non-exists-file.txt.gpg"
-
 	gpgPubkey := GPG{
 		PublicKey:  testPublicKey,
 		PrivateKey: testPrivateKey,
 		Passphrase: "invalid",
 	}
-
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	assert.Error(t, err)
-
-	// Check if file exists
-	_, err = os.Stat(decryptedFilePath)
-	assert.Error(t, err)
+	assert.Empty(t, decryptedFilePath)
 }
 
 func TestGPGDecryptInvalidPrivKey(t *testing.T) {
 	encryptedFilePath := "/tmp/non-exists-file.txt.gpg"
-
 	gpgPubkey := GPG{
 		PrivateKey: "invalid",
 		Passphrase: "invalid",
 	}
+	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
+	assert.Error(t, err)
+	assert.Empty(t, decryptedFilePath)
+}
+
+func TestGPGEncryptEmptyPublicKey(t *testing.T) {
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{PublicKey: ""}
+
+	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
+	assert.Error(t, err)
+	assert.Empty(t, encryptedFilePath)
+}
+
+func TestGPGDecryptEmptyPrivateKey(t *testing.T) {
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{
+		PublicKey:  testPublicKey,
+		PrivateKey: "",
+		Passphrase: testPassphrase,
+	}
+
+	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
+	require.NoError(t, err)
+	defer os.Remove(encryptedFilePath)
 
 	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
 	assert.Error(t, err)
+	assert.Empty(t, decryptedFilePath)
+}
 
-	// Check if file exists
-	_, err = os.Stat(decryptedFilePath)
+func TestGPGEncryptEmptyInputFile(t *testing.T) {
+	tempFile, err := os.CreateTemp("", "emptyfile*.txt")
+	require.NoError(t, err)
+	tempFilePath := tempFile.Name()
+	require.NoError(t, tempFile.Close())
+	t.Cleanup(func() { os.Remove(tempFilePath) })
+
+	gpgPubkey := GPG{PublicKey: testPublicKey}
+
+	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
+	require.NoError(t, err)
+	_, err = os.Stat(encryptedFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+}
+
+func TestGPGDecryptNotPGPFile(t *testing.T) {
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{
+		PrivateKey: testPrivateKey,
+		Passphrase: testPassphrase,
+	}
+	decryptedFilePath, err := gpgPubkey.DecryptFile(tempFilePath)
 	assert.Error(t, err)
+	assert.Empty(t, decryptedFilePath)
+}
+
+func TestGPGDecryptEmptyPassphrase(t *testing.T) {
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{
+		PublicKey:  testPublicKey,
+		PrivateKey: testPrivateKey,
+		Passphrase: "",
+	}
+
+	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
+	require.NoError(t, err)
+	defer os.Remove(encryptedFilePath)
+
+	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
+	assert.Error(t, err)
+	assert.Empty(t, decryptedFilePath)
+}
+
+func TestGPGDecryptCorruptedEncryptedFile(t *testing.T) {
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{
+		PublicKey:  testPublicKey,
+		PrivateKey: testPrivateKey,
+		Passphrase: testPassphrase,
+	}
+
+	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+
+	f, err := os.OpenFile(encryptedFilePath, os.O_WRONLY, 0)
+	require.NoError(t, err)
+	_, err = f.WriteAt([]byte("corrupt"), 0)
+	require.NoError(t, f.Close())
+	require.NoError(t, err)
+
+	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
+	assert.Error(t, err)
+	assert.Empty(t, decryptedFilePath)
+}
+
+func TestGPGDecryptFilePermissions(t *testing.T) {
+	tempFilePath := setupTestFile(t)
+	gpgPubkey := GPG{
+		PublicKey:  testPublicKey,
+		PrivateKey: testPrivateKey,
+		Passphrase: testPassphrase,
+	}
+
+	encryptedFilePath, err := gpgPubkey.EncryptFile(tempFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(encryptedFilePath) })
+
+	decryptedFilePath, err := gpgPubkey.DecryptFile(encryptedFilePath)
+	require.NoError(t, err)
+	t.Cleanup(func() { os.Remove(decryptedFilePath) })
+
+	info, err := os.Stat(decryptedFilePath)
+	require.NoError(t, err)
+	mode := info.Mode().Perm()
+	assert.Equal(t, os.FileMode(0600), mode)
 }
