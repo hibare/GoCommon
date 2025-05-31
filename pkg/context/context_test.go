@@ -28,7 +28,7 @@ func TestWithRequestID(t *testing.T) {
 }
 
 func TestWithContext(t *testing.T) {
-	key := ContextKey("key")
+	key := Key("key")
 
 	baseCtx := context.WithValue(t.Context(), key, "value")
 	ctx := NewContext().WithContext(baseCtx)

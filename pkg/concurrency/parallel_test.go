@@ -22,8 +22,8 @@ func TestRunParallelTasks(t *testing.T) {
 			name: "successful tasks",
 			opts: ParallelOptions{WorkerCount: 2},
 			tasks: []ParallelTask{
-				{Name: "task1", Task: func(ctx context.Context) error { return nil }},
-				{Name: "task2", Task: func(ctx context.Context) error { return nil }},
+				{Name: "task1", Task: func(_ context.Context) error { return nil }},
+				{Name: "task2", Task: func(_ context.Context) error { return nil }},
 			},
 			wantErrCnt: 0,
 		},
@@ -31,8 +31,8 @@ func TestRunParallelTasks(t *testing.T) {
 			name: "failing tasks",
 			opts: ParallelOptions{WorkerCount: 2},
 			tasks: []ParallelTask{
-				{Name: "task1", Task: func(ctx context.Context) error { return errors.New("failed task: error1") }},
-				{Name: "task2", Task: func(ctx context.Context) error { return errors.New("failed task: error2") }},
+				{Name: "task1", Task: func(_ context.Context) error { return errors.New("failed task: error1") }},
+				{Name: "task2", Task: func(_ context.Context) error { return errors.New("failed task: error2") }},
 			},
 			wantErrCnt:  2,
 			wantErrText: "failed",
@@ -43,7 +43,7 @@ func TestRunParallelTasks(t *testing.T) {
 			tasks: []ParallelTask{
 				{
 					Name: "slow-task",
-					Task: func(ctx context.Context) error {
+					Task: func(_ context.Context) error {
 						time.Sleep(100 * time.Millisecond)
 						return nil
 					},
@@ -57,7 +57,7 @@ func TestRunParallelTasks(t *testing.T) {
 			name: "default worker count",
 			opts: ParallelOptions{WorkerCount: 0},
 			tasks: []ParallelTask{
-				{Name: "task1", Task: func(ctx context.Context) error { return nil }},
+				{Name: "task1", Task: func(_ context.Context) error { return nil }},
 			},
 			wantErrCnt: 0,
 		},

@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	// TestDataDir is the directory containing test data.
 	TestDataDir = "../testhelper/test_data"
 )
 

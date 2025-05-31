@@ -256,7 +256,7 @@ func NewS3(ctx context.Context, opts Options) (Client, error) {
 	}
 	if opts.Endpoint != "" {
 		cfgOptions = append(cfgOptions, config.WithEndpointResolverWithOptions(
-			aws.EndpointResolverWithOptionsFunc(func(_, region string, options ...interface{}) (aws.Endpoint, error) {
+			aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					URL:               opts.Endpoint,
 					HostnameImmutable: true,

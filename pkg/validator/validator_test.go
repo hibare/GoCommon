@@ -63,7 +63,7 @@ func Test_extractTagAsSlice(t *testing.T) {
 func Test_getFieldOrTag(t *testing.T) {
 	type args struct {
 		field   reflect.StructField
-		useJson bool
+		useJSON bool
 	}
 
 	tests := []struct {
@@ -75,7 +75,7 @@ func Test_getFieldOrTag(t *testing.T) {
 			name: "Use field name when useJson is false",
 			args: args{
 				field:   reflect.TypeOf(TestStruct{}).Field(0),
-				useJson: false,
+				useJSON: false,
 			},
 			want: "Name",
 		},
@@ -83,7 +83,7 @@ func Test_getFieldOrTag(t *testing.T) {
 			name: "Use json tag when useJson is true",
 			args: args{
 				field:   reflect.TypeOf(TestStruct{}).Field(0),
-				useJson: true,
+				useJSON: true,
 			},
 			want: "name",
 		},
@@ -91,7 +91,7 @@ func Test_getFieldOrTag(t *testing.T) {
 			name: "Use field name when json tag is -",
 			args: args{
 				field:   reflect.TypeOf(TestStruct{}).Field(3),
-				useJson: true,
+				useJSON: true,
 			},
 			want: "Internal",
 		},
@@ -99,7 +99,7 @@ func Test_getFieldOrTag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getFieldOrTag(tt.args.field, tt.args.useJson)
+			got := getFieldOrTag(tt.args.field, tt.args.useJSON)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -111,7 +111,7 @@ func TestValidateStructErrors(t *testing.T) {
 	tests := []struct {
 		name      string
 		obj       TestStruct
-		useJson   bool
+		useJSON   bool
 		wantError bool
 	}{
 		{
@@ -121,13 +121,13 @@ func TestValidateStructErrors(t *testing.T) {
 				Age:   25,
 				Email: "john@example.com",
 			},
-			useJson:   true,
+			useJSON:   true,
 			wantError: false,
 		},
 		{
 			name:      "Invalid struct - missing required fields",
 			obj:       TestStruct{},
-			useJson:   true,
+			useJSON:   true,
 			wantError: true,
 		},
 		{
@@ -137,14 +137,14 @@ func TestValidateStructErrors(t *testing.T) {
 				Age:   25,
 				Email: "invalid-email",
 			},
-			useJson:   false,
+			useJSON:   false,
 			wantError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateStructErrors[TestStruct](tt.obj, validate, tt.useJson)
+			err := ValidateStructErrors[TestStruct](tt.obj, validate, tt.useJSON)
 			if tt.wantError {
 				assert.Error(t, err)
 			} else {

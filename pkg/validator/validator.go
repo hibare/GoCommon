@@ -1,3 +1,4 @@
+// Package validator provides utilities for validating structs.
 package validator
 
 import (
@@ -11,7 +12,7 @@ import (
 )
 
 const (
-	tagJson            = "json"
+	tagJSON            = "json"
 	tagValidateErrMsgs = "validate_errs"
 	tagValidate        = "validate"
 )
@@ -29,15 +30,16 @@ func extractTagAsSlice(field reflect.StructField, tagName string) []string {
 	return tagSlice
 }
 
-func getFieldOrTag(field reflect.StructField, useJson bool) string {
-	tag := field.Tag.Get(tagJson)
-	if useJson && tag != "" && tag != "-" {
+func getFieldOrTag(field reflect.StructField, useJSON bool) string {
+	tag := field.Tag.Get(tagJSON)
+	if useJSON && tag != "" && tag != "-" {
 		return tag
 	}
 	return field.Name
 }
 
-func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJsonTag bool) (errs error) {
+// ValidateStructErrors validates a struct and returns a list of errors.
+func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJSONTag bool) (errs error) {
 	defer func() {
 		if r := recover(); r != nil {
 			errs = fmt.Errorf("Unable to validate %+v", r)
@@ -50,7 +52,7 @@ func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJsonT
 		if errors.As(err, &validationErrors) {
 			for _, e := range validationErrors {
 				if field, found := reflect.TypeOf(obj).FieldByName(e.Field()); found {
-					fieldTag := getFieldOrTag(field, useJsonTag)
+					fieldTag := getFieldOrTag(field, useJSONTag)
 					validateTags := extractTagAsSlice(field, tagValidate)
 					errMsgs := extractTagAsSlice(field, tagValidateErrMsgs)
 

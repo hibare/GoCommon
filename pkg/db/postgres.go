@@ -6,7 +6,6 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	migratePG "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/johejo/golang-migrate-extra/source/iofs"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -15,10 +14,12 @@ import (
 // PostgresDatabase implements the Database interface for PostgreSQL.
 type PostgresDatabase struct{}
 
+// Open opens a database connection.
 func (p *PostgresDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(config.DSN), &gorm.Config{})
 }
 
+// Migrate migrates the database.
 func (p *PostgresDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
 	sqlDB, err := db.DB()
 	if err != nil {

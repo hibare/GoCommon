@@ -6,7 +6,6 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	migrateSQLite "github.com/golang-migrate/migrate/v4/database/sqlite"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/johejo/golang-migrate-extra/source/iofs"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -15,10 +14,12 @@ import (
 // SQLiteDatabase implements the Database interface for SQLite.
 type SQLiteDatabase struct{}
 
+// Open opens a database connection.
 func (s *SQLiteDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {
 	return gorm.Open(sqlite.Open(config.DSN), &gorm.Config{})
 }
 
+// Migrate migrates the database.
 func (s *SQLiteDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
 	sqlDB, err := db.DB()
 	if err != nil {

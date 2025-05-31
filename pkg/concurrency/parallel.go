@@ -9,6 +9,7 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/maps"
 )
 
+// DefaultWorkerCount is the default number of concurrent workers.
 const DefaultWorkerCount = 5
 
 // ParallelTask represents a named task that accepts context and returns an error.
@@ -22,6 +23,7 @@ type ParallelOptions struct {
 	WorkerCount int // Number of concurrent workers
 }
 
+// ErrorMap is a map of task names to errors.
 type ErrorMap map[string]error
 
 // RunParallelTasks executes the given tasks in parallel and returns a map of task names to errors.

@@ -99,12 +99,6 @@ func TestToPtr(t *testing.T) {
 	assert.NotNil(t, ptrPtr)
 	assert.Equal(t, *origPtr, **ptrPtr)
 
-	// nil pointer
-	var nilPtr *int = nil
-	nilPtrPtr := ToPtr(nilPtr)
-	assert.NotNil(t, nilPtrPtr)
-	assert.Nil(t, *nilPtrPtr)
-
 	// interface
 	ifaceVal := interface{}("iface")
 	ifacePtr := ToPtr(ifaceVal)

@@ -6,7 +6,6 @@ import (
 	"reflect"
 )
 
-// StructCopy copies the contents of src struct to dst struct.
 // CopyStruct copies the contents of src struct to dst struct.
 // Deprecated: Use StructCopy instead.
 func CopyStruct(src, dst interface{}) error {

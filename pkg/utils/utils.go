@@ -1,3 +1,4 @@
+// Package utils provides utilities for working with utils.
 package utils
 
 import (
@@ -5,6 +6,7 @@ import (
 	"sync"
 )
 
+// GetHostname returns the hostname of the machine.
 func GetHostname() string {
 	hostname, err := os.Hostname()
 	if err != nil {

@@ -5,8 +5,8 @@ import (
 	"context"
 )
 
-// ContextKey is a type for context keys used in the custom Context.
-type ContextKey string
+// Key is a type for context keys used in the custom Context.
+type Key string
 
 // Context wraps a standard context and allows storing additional values.
 type Context struct {
