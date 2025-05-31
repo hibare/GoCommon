@@ -1,17 +1,8 @@
+// Package slice provides utilities for working with slices.
 package slice
 
-// StringInSlice checks if a string is present in slice
-func SliceContains[T comparable](a T, list []T) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-// SliceUnique returns a slice with unique elements
-func SliceUnique[T comparable](list []T) []T {
+// Unique returns a slice with unique elements.
+func Unique[T comparable](list []T) []T {
 	keys := make(map[T]bool)
 	listUnique := []T{}
 	for _, entry := range list {
@@ -23,8 +14,8 @@ func SliceUnique[T comparable](list []T) []T {
 	return listUnique
 }
 
-// SliceDiff returns the difference between two slices
-func SliceDiff[T comparable](a, b []T) []T {
+// Diff returns the difference between two slices.
+func Diff[T comparable](a, b []T) []T {
 	mb := make(map[T]bool)
 	for _, x := range b {
 		mb[x] = true
@@ -38,8 +29,8 @@ func SliceDiff[T comparable](a, b []T) []T {
 	return diff
 }
 
-// SliceIntersect returns the intersection between two slices
-func SliceIntersect[T comparable](a, b []T) []T {
+// Intersect returns the intersection between two slices.
+func Intersect[T comparable](a, b []T) []T {
 	mb := make(map[T]bool)
 	for _, x := range b {
 		mb[x] = true
@@ -53,8 +44,8 @@ func SliceIntersect[T comparable](a, b []T) []T {
 	return intersect
 }
 
-// SliceUnion returns the union between two slices
-func SliceUnion[T comparable](a, b []T) []T {
+// Union returns the union between two slices.
+func Union[T comparable](a, b []T) []T {
 	ma := make(map[T]bool)
 	for _, x := range a {
 		ma[x] = true
@@ -67,14 +58,4 @@ func SliceUnion[T comparable](a, b []T) []T {
 		union = append(union, x)
 	}
 	return union
-}
-
-// SliceIndexOf returns the index of the first occurrence of a in list, or -1 if not found
-func SliceIndexOf[T comparable](a T, list []T) int {
-	for i, b := range list {
-		if b == a {
-			return i
-		}
-	}
-	return -1
 }

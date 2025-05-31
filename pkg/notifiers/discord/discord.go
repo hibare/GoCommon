@@ -1,93 +1,80 @@
+// Package discord provides a Discord client for sending messages to Discord webhooks.
 package discord
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+
+	commonHTTPClient "github.com/hibare/GoCommon/v2/pkg/http/client"
 )
 
-var (
-	ErrNoEmbeds = errors.New("no embeds available")
-)
+// ErrNoEmbeds is returned when no embeds are available in the message.
+var ErrNoEmbeds = errors.New("no embeds available")
 
-type EmbedField struct {
-	Name   string `json:"name,omitempty"`
-	Value  string `json:"value,omitempty"`
-	Inline bool   `json:"inline,omitempty"`
+// Client is the interface for the Discord client.
+type Client interface {
+	Send(ctx context.Context, msg *Message) error
 }
 
-type EmbedImage struct {
-	URL string `json:"url,omitempty"`
+type client struct {
+	webhookURL string
+	httpClient commonHTTPClient.Client
 }
 
-type EmbedFooter struct {
-	Text    string `json:"text,omitempty"`
-	IconURL string `json:"icon_url,omitempty"`
+// Options is the options for the Discord client.
+type Options struct {
+	WebhookURL string
+	HTTPClient commonHTTPClient.Client
 }
 
-type EmbedThumbnail struct {
-	URL string `json:"url,omitempty"`
-}
-
-type EmbedAuthor struct {
-	Name    string `json:"name,omitempty"`
-	URL     string `json:"url,omitempty"`
-	IconURL string `json:"icon_url,omitempty"`
-}
-
-type Embed struct {
-	Title       string         `json:"title,omitempty"`
-	URL         string         `json:"url,omitempty"`
-	Description string         `json:"description,omitempty"`
-	Color       int            `json:"color,omitempty"`
-	Footer      EmbedFooter    `json:"footer,omitempty"`
-	Fields      []EmbedField   `json:"fields,omitempty"`
-	Image       EmbedImage     `json:"image,omitempty"`
-	Thumbnail   EmbedThumbnail `json:"thumbnail,omitempty"`
-	Author      EmbedAuthor    `json:"author,omitempty"`
-}
-
-type Component struct {
-	// Define struct for  components if needed
-}
-
-type Message struct {
-	Embeds     []Embed     `json:"embeds,omitempty"`
-	Components []Component `json:"components,omitempty"`
-	Username   string      `json:"username,omitempty"`
-	Content    string      `json:"content,omitempty"`
-	AvatarURL  string      `json:"avatar_url,omitempty"`
-}
-
-func (d *Message) AddFooter(footerStr string) error {
-	if len(d.Embeds) == 0 {
-		return ErrNoEmbeds
+func (o *Options) validate() error {
+	if o.WebhookURL == "" {
+		return errors.New("webhook URL is required")
 	}
-
-	lastEmbedIndex := len(d.Embeds) - 1
-	d.Embeds[lastEmbedIndex].Footer = EmbedFooter{
-		Text: footerStr,
-	}
-
 	return nil
 }
 
-func (d *Message) Send(webhook string) error {
-	payload, err := json.Marshal(d)
+// Send sends the message to the Discord webhook.
+func (c *client) Send(ctx context.Context, msg *Message) error {
+	payload, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	resp, err := http.Post(webhook, "application/json", bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewBuffer(payload))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusNoContent { //  return 204 on success
+	if resp.StatusCode != http.StatusNoContent { // 204 on success
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
+}
+
+// NewClient creates a new Discord client with the given options.
+func NewClient(opts Options) (Client, error) {
+	if err := opts.validate(); err != nil {
+		return nil, err
+	}
+
+	if opts.HTTPClient == nil {
+		opts.HTTPClient = commonHTTPClient.NewDefaultClient()
+	}
+
+	return &client{
+		webhookURL: opts.WebhookURL,
+		httpClient: opts.HTTPClient,
+	}, nil
 }

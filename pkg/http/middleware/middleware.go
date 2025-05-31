@@ -1,22 +1,25 @@
+// Package middleware provides middleware for the HTTP server.
 package middleware
 
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 	commonHttp "github.com/hibare/GoCommon/v2/pkg/http"
-	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
+// AuthHeaderName is the name of the authorization header.
 const AuthHeaderName = "Authorization"
 
+// TokenAuth is a middleware that checks if the request has a valid token.
 func TokenAuth(next http.Handler, tokens []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Header.Get(AuthHeaderName)
 
-		if apiKey == "" || !slice.SliceContains(apiKey, tokens) {
+		if apiKey == "" || !slices.Contains(tokens, apiKey) {
 			commonHttp.WriteErrorResponse(w, http.StatusUnauthorized, errors.ErrUnauthorized)
 			return
 		}
@@ -24,16 +27,19 @@ func TokenAuth(next http.Handler, tokens []string) http.Handler {
 	})
 }
 
+// ResponseRecorder is a wrapper around the http.ResponseWriter that records the status code.
 type ResponseRecorder struct {
 	http.ResponseWriter
 	StatusCode int
 }
 
+// WriteHeader writes the status code to the response.
 func (rec *ResponseRecorder) WriteHeader(statusCode int) {
 	rec.StatusCode = statusCode
 	rec.ResponseWriter.WriteHeader(statusCode)
 }
 
+// RequestLogger is a middleware that logs the request.
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -49,21 +55,20 @@ func RequestLogger(next http.Handler) http.Handler {
 			duration := time.Since(start).String()
 
 			switch {
-			case statusCode < 400:
+			case statusCode < http.StatusBadRequest:
 				slog.Info("request", "method", method, "path", path, "statusCode", statusCode, "duration", duration)
-			case statusCode < 500:
+			case statusCode < http.StatusInternalServerError:
 				slog.Warn("request", "method", method, "path", path, "statusCode", statusCode, "duration", duration)
 			default:
 				slog.Error("request", "method", method, "path", path, "statusCode", statusCode, "duration", duration)
 			}
-
 		}()
 		// Call the next handler
 		next.ServeHTTP(recorder, r)
 	})
 }
 
-// BasicSecurity adds basic security middleware.
+// BasicSecurity adds basic security headers to the response.
 func BasicSecurity(next http.Handler, sizeBytes int64) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Security headers

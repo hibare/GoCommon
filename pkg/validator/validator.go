@@ -1,17 +1,18 @@
+// Package validator provides utilities for validating structs.
 package validator
 
 import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
 const (
-	tagJson            = "json"
+	tagJSON            = "json"
 	tagValidateErrMsgs = "validate_errs"
 	tagValidate        = "validate"
 )
@@ -29,44 +30,48 @@ func extractTagAsSlice(field reflect.StructField, tagName string) []string {
 	return tagSlice
 }
 
-func getFieldOrTag(field reflect.StructField, useJson bool) string {
-	tag := field.Tag.Get(tagJson)
-	if useJson && tag != "" && tag != "-" {
+func getFieldOrTag(field reflect.StructField, useJSON bool) string {
+	tag := field.Tag.Get(tagJSON)
+	if useJSON && tag != "" && tag != "-" {
 		return tag
 	}
 	return field.Name
 }
 
-func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJsonTag bool) (errs error) {
+// ValidateStructErrors validates a struct and returns a list of errors.
+func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJSONTag bool) (errs error) {
 	defer func() {
 		if r := recover(); r != nil {
-			errs = fmt.Errorf("Unable to validate %+v", r)
+			errs = fmt.Errorf("unable to validate %+v", r)
 		}
 	}()
 
 	err := validate.Struct(obj)
-	if err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			for _, e := range validationErrors {
-				if field, found := reflect.TypeOf(obj).FieldByName(e.Field()); found {
-					fieldTag := getFieldOrTag(field, useJsonTag)
-					validateTags := extractTagAsSlice(field, tagValidate)
-					errMsgs := extractTagAsSlice(field, tagValidateErrMsgs)
+	if err == nil {
+		return nil
+	}
 
-					if len(errMsgs) == 0 {
-						errs = errors.Join(errs, fmt.Errorf("%s: %w", fieldTag, e))
-					} else {
-						validateTagIndex := slice.SliceIndexOf(e.Tag(), validateTags)
-						if validateTagIndex == -1 {
-							errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, strings.Join(errMsgs, ", "), e.Tag()))
-						} else {
-							errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, errMsgs[validateTagIndex], e.Tag()))
-						}
-					}
-				}
+	var validationErrors validator.ValidationErrors
+	if !errors.As(err, &validationErrors) {
+		errs = fmt.Errorf("unexpected error during validation: %w", err)
+	}
+	for _, e := range validationErrors {
+		if field, found := reflect.TypeOf(obj).FieldByName(e.Field()); found {
+			fieldTag := getFieldOrTag(field, useJSONTag)
+			validateTags := extractTagAsSlice(field, tagValidate)
+			errMsgs := extractTagAsSlice(field, tagValidateErrMsgs)
+
+			if len(errMsgs) == 0 {
+				errs = errors.Join(errs, fmt.Errorf("%s: %w", fieldTag, e))
+				continue
 			}
-		} else {
-			errs = fmt.Errorf("unexpected error during validation: %w", err)
+
+			validateTagIndex := slices.Index(validateTags, e.Tag())
+			if validateTagIndex == -1 {
+				errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, strings.Join(errMsgs, ", "), e.Tag()))
+			} else {
+				errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, errMsgs[validateTagIndex], e.Tag()))
+			}
 		}
 	}
 

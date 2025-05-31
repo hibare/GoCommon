@@ -1,36 +1,55 @@
+// Package logger provides logging utilities for the application.
 package logger
 
 import (
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
-
-	"github.com/hibare/GoCommon/v2/pkg/slice"
 )
 
 const (
+	// LogLevelError is the error log level.
 	LogLevelError = "ERROR"
-	LogLevelWarn  = "WARN"
-	LogLevelInfo  = "INFO"
+
+	// LogLevelWarn is the warn log level.
+	LogLevelWarn = "WARN"
+
+	// LogLevelInfo is the info log level.
+	LogLevelInfo = "INFO"
+
+	// LogLevelDebug is the debug log level.
 	LogLevelDebug = "DEBUG"
 )
 
 const (
+	// LogModePretty is the pretty log mode.
 	LogModePretty = "PRETTY"
-	LogModeJSON   = "JSON"
+
+	// LogModeJSON is the JSON log mode.
+	LogModeJSON = "JSON"
 )
 
 var (
-	LogLevels          = []string{LogLevelError, LogLevelWarn, LogLevelInfo, LogLevelDebug}
-	LogModes           = []string{LogModePretty, LogModeJSON}
+	// LogLevels is the list of log levels.
+	LogLevels = []string{LogLevelError, LogLevelWarn, LogLevelInfo, LogLevelDebug}
+
+	// LogModes is the list of log modes.
+	LogModes = []string{LogModePretty, LogModeJSON}
+
+	// DefaultLoggerLevel is the default log level.
 	DefaultLoggerLevel = LogLevelInfo
-	DefaultLoggerMode  = LogModePretty
+
+	// DefaultLoggerMode is the default log mode.
+	DefaultLoggerMode = LogModePretty
 )
 
+// InitDefaultLogger initializes the default logger.
 func InitDefaultLogger() {
 	InitLogger(nil, nil)
 }
 
+// InitLogger initializes the logger with the given log level and mode.
 func InitLogger(logLevel, logMode *string) {
 	handler := getHandler(logLevel, logMode)
 	logger := slog.New(handler)
@@ -78,10 +97,12 @@ func getSlogLevelFromString(level *string) slog.Level {
 	}
 }
 
+// IsValidLogLevel checks if the provided log level is valid.
 func IsValidLogLevel(level string) bool {
-	return slice.SliceContains(strings.ToUpper(level), LogLevels)
+	return slices.Contains(LogLevels, strings.ToUpper(level))
 }
 
+// IsValidLogMode checks if the provided log mode is valid.
 func IsValidLogMode(mode string) bool {
-	return slice.SliceContains(strings.ToUpper(mode), LogModes)
+	return slices.Contains(LogModes, strings.ToUpper(mode))
 }

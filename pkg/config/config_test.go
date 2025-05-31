@@ -7,7 +7,7 @@ import (
 
 	"github.com/hibare/GoCommon/v2/pkg/constants"
 	"github.com/hibare/GoCommon/v2/pkg/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockOS struct {
@@ -107,47 +107,47 @@ func TestGetConfigFilePath(t *testing.T) {
 }
 
 func TestEnsureConfigRootDir(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
 	}
 	err := bc.EnsureConfigRootDir()
-	assert.NoError(t, err)
-	assert.DirExists(t, bc.ConfigRootDir)
-	os.Remove(bc.ConfigRootDir)
+	require.NoError(t, err)
+	require.DirExists(t, bc.ConfigRootDir)
+	_ = os.Remove(bc.ConfigRootDir)
 }
 
 func TestEnsureConfigRootDirFail(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
 	}
 	bc.SetConfigRootDir()
 	f, err := os.Create(bc.ConfigRootDir)
-	assert.NoError(t, err)
-	f.Close()
+	require.NoError(t, err)
+	_ = f.Close()
 	err = bc.EnsureConfigRootDir()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrNotDir)
-	os.Remove(bc.ConfigRootDir)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errors.ErrNotDir)
+	_ = os.Remove(bc.ConfigRootDir)
 }
 
 func TestEnsureConfigFile(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
 	}
 	err := bc.EnsureConfigFile()
-	assert.NoError(t, err)
-	assert.FileExists(t, bc.ConfigFilePath)
-	os.RemoveAll(bc.ConfigRootDir)
+	require.NoError(t, err)
+	require.FileExists(t, bc.ConfigFilePath)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestEnsureConfigFileFail(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -155,44 +155,44 @@ func TestEnsureConfigFileFail(t *testing.T) {
 	bc.SetConfigRootDir()
 	bc.SetConfigFilePath()
 	err := os.MkdirAll(bc.ConfigFilePath, 0755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = bc.EnsureConfigFile()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrNotFile)
-	os.RemoveAll(bc.ConfigRootDir)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errors.ErrNotFile)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestInitBC(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
 	}
 	err := bc.Init()
-	assert.NoError(t, err)
-	assert.DirExists(t, bc.ConfigRootDir)
-	assert.FileExists(t, bc.ConfigFilePath)
-	os.RemoveAll(bc.ConfigRootDir)
+	require.NoError(t, err)
+	require.DirExists(t, bc.ConfigRootDir)
+	require.FileExists(t, bc.ConfigFilePath)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestInitBCFailRootDir(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
 	}
 	bc.SetConfigRootDir()
 	f, err := os.Create(bc.ConfigRootDir)
-	assert.NoError(t, err)
-	f.Close()
+	require.NoError(t, err)
+	_ = f.Close()
 	err = bc.Init()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrNotDir)
-	os.RemoveAll(bc.ConfigRootDir)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errors.ErrNotDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestInitBCFailConfigFile(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
@@ -200,23 +200,23 @@ func TestInitBCFailConfigFile(t *testing.T) {
 	bc.SetConfigRootDir()
 	bc.SetConfigFilePath()
 	err := os.MkdirAll(bc.ConfigFilePath, 0755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = bc.Init()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrNotFile)
-	os.RemoveAll(bc.ConfigRootDir)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errors.ErrNotFile)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestWriteReadYAMLConfig(t *testing.T) {
-	configRootLinux = os.TempDir()
+	configRootLinux = t.TempDir()
 	bc := BaseConfig{
 		ProgramIdentifier: "myapp",
 		OS:                &MockOS{MockGOOS: "linux"},
 	}
 	err := bc.Init()
-	assert.NoError(t, err)
-	assert.DirExists(t, bc.ConfigRootDir)
-	assert.FileExists(t, bc.ConfigFilePath)
+	require.NoError(t, err)
+	require.DirExists(t, bc.ConfigRootDir)
+	require.FileExists(t, bc.ConfigFilePath)
 
 	type config struct {
 		ProgramIdentifier string `yaml:"programIdentifier" mapstructure:"programIdentifier"`
@@ -225,13 +225,14 @@ func TestWriteReadYAMLConfig(t *testing.T) {
 		ProgramIdentifier: "myapp",
 	}
 	err = bc.WriteYAMLConfig(writeConfig)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var readConfig *config
 	rConfig, err := bc.ReadYAMLConfig(readConfig)
-	readConfig = rConfig.(*config)
-	assert.NoError(t, err)
-	assert.Equal(t, writeConfig, *readConfig)
+	readConfig, ok := rConfig.(*config)
+	require.True(t, ok)
+	require.NoError(t, err)
+	require.Equal(t, writeConfig, *readConfig)
 
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }

@@ -3,60 +3,41 @@ package slice
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestStringInSlice(t *testing.T) {
-	assert.True(t, SliceContains("1", []string{"1", "2", "3"}))
-	assert.False(t, SliceContains("11", []string{"1", "2", "3"}))
-	assert.True(t, SliceContains(2, []int{1, 2, 3}))
-	assert.False(t, SliceContains(22, []int{1, 2, 3}))
-	assert.True(t, SliceContains(3.3, []float64{1.1, 2.2, 3.3}))
-	assert.False(t, SliceContains(33.3, []float64{1.1, 2.2, 3.3}))
-}
-
 func TestSliceUnique(t *testing.T) {
-	assert.ElementsMatch(t, []string{"1", "2", "3"}, SliceUnique([]string{"1", "2", "3", "1", "2"}))
-	assert.ElementsMatch(t, []int{1, 2, 3}, SliceUnique([]int{1, 2, 3, 1, 2}))
-	assert.ElementsMatch(t, []float64{1.1, 2.2, 3.3}, SliceUnique([]float64{1.1, 2.2, 3.3, 1.1, 2.2}))
-	assert.ElementsMatch(t, []string{}, SliceUnique([]string{}))
-	assert.ElementsMatch(t, []int{1}, SliceUnique([]int{1, 1, 1, 1}))
+	require.ElementsMatch(t, []string{"1", "2", "3"}, Unique([]string{"1", "2", "3", "1", "2"}))
+	require.ElementsMatch(t, []int{1, 2, 3}, Unique([]int{1, 2, 3, 1, 2}))
+	require.ElementsMatch(t, []float64{1.1, 2.2, 3.3}, Unique([]float64{1.1, 2.2, 3.3, 1.1, 2.2}))
+	require.ElementsMatch(t, []string{}, Unique([]string{}))
+	require.ElementsMatch(t, []int{1}, Unique([]int{1, 1, 1, 1}))
 }
 
 func TestSliceDiff(t *testing.T) {
-	assert.ElementsMatch(t, []string{"1"}, SliceDiff([]string{"1", "2", "3"}, []string{"2", "3"}))
-	assert.ElementsMatch(t, []int{1}, SliceDiff([]int{1, 2, 3}, []int{2, 3}))
-	assert.ElementsMatch(t, []float64{1.1}, SliceDiff([]float64{1.1, 2.2, 3.3}, []float64{2.2, 3.3}))
-	assert.ElementsMatch(t, []string{"1", "2", "3"}, SliceDiff([]string{"1", "2", "3"}, []string{}))
-	assert.ElementsMatch(t, []int{}, SliceDiff([]int{1, 2, 3}, []int{1, 2, 3}))
-	assert.ElementsMatch(t, []int{}, SliceDiff([]int{}, []int{1, 2, 3}))
+	require.ElementsMatch(t, []string{"1"}, Diff([]string{"1", "2", "3"}, []string{"2", "3"}))
+	require.ElementsMatch(t, []int{1}, Diff([]int{1, 2, 3}, []int{2, 3}))
+	require.ElementsMatch(t, []float64{1.1}, Diff([]float64{1.1, 2.2, 3.3}, []float64{2.2, 3.3}))
+	require.ElementsMatch(t, []string{"1", "2", "3"}, Diff([]string{"1", "2", "3"}, []string{}))
+	require.ElementsMatch(t, []int{}, Diff([]int{1, 2, 3}, []int{1, 2, 3}))
+	require.ElementsMatch(t, []int{}, Diff([]int{}, []int{1, 2, 3}))
 }
 
 func TestSliceIntersect(t *testing.T) {
-	assert.ElementsMatch(t, []string{"2", "3"}, SliceIntersect([]string{"1", "2", "3"}, []string{"2", "3", "4"}))
-	assert.ElementsMatch(t, []int{2, 3}, SliceIntersect([]int{1, 2, 3}, []int{2, 3, 4}))
-	assert.ElementsMatch(t, []float64{2.2, 3.3}, SliceIntersect([]float64{1.1, 2.2, 3.3}, []float64{2.2, 3.3, 4.4}))
-	assert.ElementsMatch(t, []string{}, SliceIntersect([]string{"1", "2", "3"}, []string{"4", "5", "6"}))
-	assert.ElementsMatch(t, []int{}, SliceIntersect([]int{1, 2, 3}, []int{}))
-	assert.ElementsMatch(t, []int{}, SliceIntersect([]int{}, []int{1, 2, 3}))
+	require.ElementsMatch(t, []string{"2", "3"}, Intersect([]string{"1", "2", "3"}, []string{"2", "3", "4"}))
+	require.ElementsMatch(t, []int{2, 3}, Intersect([]int{1, 2, 3}, []int{2, 3, 4}))
+	require.ElementsMatch(t, []float64{2.2, 3.3}, Intersect([]float64{1.1, 2.2, 3.3}, []float64{2.2, 3.3, 4.4}))
+	require.ElementsMatch(t, []string{}, Intersect([]string{"1", "2", "3"}, []string{"4", "5", "6"}))
+	require.ElementsMatch(t, []int{}, Intersect([]int{1, 2, 3}, []int{}))
+	require.ElementsMatch(t, []int{}, Intersect([]int{}, []int{1, 2, 3}))
 }
 
 func TestSliceUnion(t *testing.T) {
-	assert.ElementsMatch(t, []string{"1", "2", "3", "4"}, SliceUnion([]string{"1", "2", "3"}, []string{"3", "4"}))
-	assert.ElementsMatch(t, []int{1, 2, 3, 4}, SliceUnion([]int{1, 2, 3}, []int{3, 4}))
-	assert.ElementsMatch(t, []float64{1.1, 2.2, 3.3, 4.4}, SliceUnion([]float64{1.1, 2.2, 3.3}, []float64{3.3, 4.4}))
-	assert.ElementsMatch(t, []string{"1", "2", "3"}, SliceUnion([]string{"1", "2", "3"}, []string{}))
-	assert.ElementsMatch(t, []int{1, 2, 3}, SliceUnion([]int{1, 2, 3}, []int{}))
-	assert.ElementsMatch(t, []int{1, 2, 3}, SliceUnion([]int{}, []int{1, 2, 3}))
-	assert.ElementsMatch(t, []string{}, SliceUnion([]string{}, []string{}))
-}
-
-func TestSliceIndexOf(t *testing.T) {
-	assert.Equal(t, 0, SliceIndexOf("1", []string{"1", "2", "3"}))
-	assert.Equal(t, -1, SliceIndexOf("11", []string{"1", "2", "3"}))
-	assert.Equal(t, 1, SliceIndexOf(2, []int{1, 2, 3}))
-	assert.Equal(t, -1, SliceIndexOf(22, []int{1, 2, 3}))
-	assert.Equal(t, 2, SliceIndexOf(3.3, []float64{1.1, 2.2, 3.3}))
-	assert.Equal(t, -1, SliceIndexOf(33.3, []float64{1.1, 2.2, 3.3}))
-	assert.Equal(t, -1, SliceIndexOf("1", []string{}))
+	require.ElementsMatch(t, []string{"1", "2", "3", "4"}, Union([]string{"1", "2", "3"}, []string{"3", "4"}))
+	require.ElementsMatch(t, []int{1, 2, 3, 4}, Union([]int{1, 2, 3}, []int{3, 4}))
+	require.ElementsMatch(t, []float64{1.1, 2.2, 3.3, 4.4}, Union([]float64{1.1, 2.2, 3.3}, []float64{3.3, 4.4}))
+	require.ElementsMatch(t, []string{"1", "2", "3"}, Union([]string{"1", "2", "3"}, []string{}))
+	require.ElementsMatch(t, []int{1, 2, 3}, Union([]int{1, 2, 3}, []int{}))
+	require.ElementsMatch(t, []int{1, 2, 3}, Union([]int{}, []int{1, 2, 3}))
+	require.ElementsMatch(t, []string{}, Union([]string{}, []string{}))
 }

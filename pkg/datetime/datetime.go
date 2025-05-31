@@ -1,3 +1,4 @@
+// Package datetime provides utilities for working with date and time strings.
 package datetime
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/constants"
 )
 
+// SortDateTimes sorts a slice of date-time strings.
 func SortDateTimes(dt []string) []string {
 	// Convert the strings to time.Time objects
 	var times []time.Time

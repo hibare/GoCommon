@@ -1,3 +1,4 @@
+// Package structs provides utilities for working with Go structs.
 package structs
 
 import (
@@ -5,7 +6,13 @@ import (
 	"reflect"
 )
 
-// CopyStruct copies the contents of src struct to dst struct
+// CopyStruct copies the contents of src struct to dst struct.
+// Deprecated: Use StructCopy instead.
+func CopyStruct(src, dst interface{}) error {
+	return StructCopy(src, dst)
+}
+
+// StructCopy copies the contents of src struct to dst struct.
 func StructCopy(src, dst interface{}) error {
 	srcVal := reflect.ValueOf(src)
 	dstVal := reflect.ValueOf(dst)
@@ -25,7 +32,7 @@ func StructCopy(src, dst interface{}) error {
 	return nil
 }
 
-// CompareStructs compares two structs for equality
+// StructCompare compares two structs for equality.
 func StructCompare(a, b interface{}) (bool, error) {
 	aVal := reflect.ValueOf(a)
 	bVal := reflect.ValueOf(b)
@@ -37,7 +44,7 @@ func StructCompare(a, b interface{}) (bool, error) {
 	return reflect.DeepEqual(a, b), nil
 }
 
-// StructToMap converts a struct to a map
+// StructToMap converts a struct to a map.
 func StructToMap(s interface{}) (map[string]interface{}, error) {
 	val := reflect.ValueOf(s)
 	if val.Kind() != reflect.Struct {
@@ -47,7 +54,7 @@ func StructToMap(s interface{}) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 	typ := val.Type()
 
-	for i := 0; i < val.NumField(); i++ {
+	for i := range val.NumField() {
 		field := val.Field(i)
 		fieldName := typ.Field(i).Name
 		result[fieldName] = field.Interface()
@@ -56,7 +63,7 @@ func StructToMap(s interface{}) (map[string]interface{}, error) {
 	return result, nil
 }
 
-// StructContainsField checks if a struct contains a field with the given name
+// StructContainsField checks if a struct contains a field with the given name.
 func StructContainsField(s interface{}, fieldName string) (bool, error) {
 	val := reflect.ValueOf(s)
 	if val.Kind() != reflect.Struct {

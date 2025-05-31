@@ -1,3 +1,4 @@
+// Package http provides HTTP utilities for the application.
 package http
 
 import (
@@ -7,17 +8,21 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
-func WriteJsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+// WriteJSONResponse writes a JSON response with the given status code and data.
+func WriteJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+	}
 }
 
+// WriteErrorResponse writes an error response with the given status code and error.
 func WriteErrorResponse(w http.ResponseWriter, statusCode int, err error) {
 	e := errors.Error{
 		Code:    statusCode,
 		Message: err.Error(),
 	}
 
-	WriteJsonResponse(w, statusCode, e)
+	WriteJSONResponse(w, statusCode, e)
 }

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -41,16 +40,16 @@ func TestSQLiteDatabase_Open(t *testing.T) {
 			db := &SQLiteDatabase{}
 			gormDB, err := db.Open(tt.config)
 			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, gormDB)
+				require.Error(t, err)
+				require.Nil(t, gormDB)
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, gormDB)
+				require.NoError(t, err)
+				require.NotNil(t, gormDB)
 
 				// Test connection
 				sqlDB, err := gormDB.DB()
 				require.NoError(t, err)
-				assert.NoError(t, sqlDB.Ping())
+				require.NoError(t, sqlDB.Ping())
 
 				// Cleanup if file-based database
 				if tt.config.DSN != "file::memory:?cache=shared" {
@@ -109,9 +108,9 @@ func TestSQLiteDatabase_Migrate(t *testing.T) {
 			gormDB := tt.setup(t)
 			err := db.Migrate(gormDB, tt.config)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}
@@ -151,12 +150,12 @@ func TestSQLiteDatabase_Integration(t *testing.T) {
 	// Create
 	test := &Test{Name: "test_record"}
 	result := gormDB.Create(test)
-	assert.NoError(t, result.Error)
-	assert.NotZero(t, test.ID)
+	require.NoError(t, result.Error)
+	require.NotZero(t, test.ID)
 
 	// Read
 	var retrieved Test
 	result = gormDB.First(&retrieved, test.ID)
-	assert.NoError(t, result.Error)
-	assert.Equal(t, test.Name, retrieved.Name)
+	require.NoError(t, result.Error)
+	require.Equal(t, test.Name, retrieved.Name)
 }

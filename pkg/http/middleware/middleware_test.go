@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 func TestTokenAuthSuccess(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func TestTokenAuthSuccess(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), []string{testToken})
 
@@ -35,14 +35,14 @@ func TestTokenAuthSuccess(t *testing.T) {
 }
 
 func TestTokenAuthNoKeyFailure(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rr := httptest.NewRecorder()
 
-	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), []string{testToken})
 
@@ -54,7 +54,7 @@ func TestTokenAuthNoKeyFailure(t *testing.T) {
 }
 
 func TestTokenAuthWrongKeyFailure(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestTokenAuthWrongKeyFailure(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), []string{testToken})
 
@@ -83,9 +83,11 @@ func TestRequestLogger(t *testing.T) {
 		}()
 
 		// Create a mock server
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Hello, world!"))
+			if _, err := w.Write([]byte("Hello, world!")); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		})
 
 		// Create a test server with the RequestLogger middleware
@@ -94,16 +96,20 @@ func TestRequestLogger(t *testing.T) {
 
 		// Make a request to the test server to trigger logging
 		client := &http.Client{}
-		resp, err := client.Get(ts.URL)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
-		defer resp.Body.Close()
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
 
 		logString := buf.String()
-		assert.NotEmpty(t, logString)
-		assert.Contains(t, logString, "INFO request method=GET path=/ statusCode=200 duration")
-
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "INFO request method=GET path=/ statusCode=200 duration")
 	})
 
 	t.Run("Warning", func(t *testing.T) {
@@ -114,7 +120,7 @@ func TestRequestLogger(t *testing.T) {
 		}()
 
 		// Create a mock server
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		})
 
@@ -124,15 +130,20 @@ func TestRequestLogger(t *testing.T) {
 
 		// Make a request to the test server to trigger logging
 		client := &http.Client{}
-		resp, err := client.Get(ts.URL)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
-		defer resp.Body.Close()
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
 
 		logString := buf.String()
-		assert.NotEmpty(t, logString)
-		assert.Contains(t, logString, "WARN request method=GET path=/ statusCode=400 duration=")
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "WARN request method=GET path=/ statusCode=400 duration=")
 	})
 
 	t.Run("Error", func(t *testing.T) {
@@ -143,7 +154,7 @@ func TestRequestLogger(t *testing.T) {
 		}()
 
 		// Create a mock server
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 
@@ -153,23 +164,27 @@ func TestRequestLogger(t *testing.T) {
 
 		// Make a request to the test server to trigger logging
 		client := &http.Client{}
-		resp, err := client.Get(ts.URL)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
-		defer resp.Body.Close()
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
 
 		logString := buf.String()
-		assert.NotEmpty(t, logString)
-		assert.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
 	})
-
 }
 
 func TestBasicSecurity(t *testing.T) {
 	const requestSizeLimit = 1024 * 1024 // 1 MB
 
-	mw := BasicSecurity(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := BasicSecurity(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), requestSizeLimit)
 

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHealhCheckHandler(t *testing.T) {
@@ -26,20 +26,20 @@ func TestHealhCheckHandler(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			r, err := http.NewRequest("GET", tc.URL, nil)
+			r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, tc.URL, nil)
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			HealthCheck(w, r)
 
-			assert.Equal(t, http.StatusOK, w.Code)
+			require.Equal(t, http.StatusOK, w.Code)
 
 			expectedBody := map[string]bool{"ok": true}
 			responseBody := map[string]bool{}
 
 			err = json.NewDecoder(w.Body).Decode(&responseBody)
-			assert.NoError(t, err)
-			assert.Equal(t, responseBody, expectedBody)
+			require.NoError(t, err)
+			require.Equal(t, expectedBody, responseBody)
 		})
 	}
 }

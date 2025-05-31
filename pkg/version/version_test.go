@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const expectedJSON = `{
@@ -52,84 +52,166 @@ const expectedJSON = `{
 		"mentions_count": 2
 	}`
 
-func TestMain(m *testing.M) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/vnd.github.v3+json")
-		w.Write([]byte(expectedJSON))
-	}))
-	defer server.Close()
+var testHTTPClient *http.Client
 
-	GithubEndpoint = server.URL + "#%s#%s"
+func TestMain(m *testing.M) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.github.v3+json")
+		_, _ = w.Write([]byte(expectedJSON))
+	}))
+	githubReleaseEndpoint = server.URL + "#%s#%s"
+	testHTTPClient = server.Client()
 
 	code := m.Run()
+
+	server.Close()
 	os.Exit(code)
 }
 
 func TestCheckLatestVersion(t *testing.T) {
 	version := Version{
-		GithubOwner: "hibare",
-		GithubRepo:  "Sample",
+		githubOwner: "hibare",
+		githubRepo:  "Sample",
+		httpClient:  testHTTPClient,
 	}
-	err := version.GetLatestVersion()
-	assert.NoError(t, err)
-	assert.Equal(t, "v0.7.1", version.LatestVersion)
+	err := version.FetchLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, "v0.7.1", version.latestVersion)
 }
 
 func TestLatestVersionMissingGitOwner(t *testing.T) {
-	version := Version{}
-	err := version.GetLatestVersion()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errMissingGithubOwner)
+	version := Version{httpClient: testHTTPClient}
+	err := version.FetchLatestVersion()
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrMissingGithubOwner)
 }
 
 func TestLatestVersionMissingGitRepo(t *testing.T) {
 	version := Version{
-		GithubOwner: "hibare",
+		githubOwner: "hibare",
+		httpClient:  testHTTPClient,
 	}
-	err := version.GetLatestVersion()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, errMissingGithubRepo)
+	err := version.FetchLatestVersion()
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrMissingGithubRepo)
 }
 
 func TestIsNewVersionAvailableTrue(t *testing.T) {
 	version := Version{
-		GithubOwner:    "hibare",
-		GithubRepo:     "Sample",
-		CurrentVersion: "0.0.0",
+		githubOwner:    "hibare",
+		githubRepo:     "Sample",
+		currentVersion: "0.0.0",
+		httpClient:     testHTTPClient,
 	}
 	version.CheckUpdate()
-	assert.True(t, version.NewVersionAvailable)
-	assert.Equal(t, "v0.7.1", version.LatestVersion)
+	require.True(t, version.updateAvailable)
+	require.Equal(t, "v0.7.1", version.latestVersion)
 }
 
 func TestIsNewVersionAvailableFalse(t *testing.T) {
 	version := Version{
-		GithubOwner:    "hibare",
-		GithubRepo:     "Sample",
-		CurrentVersion: "v0.7.1",
+		githubOwner:    "hibare",
+		githubRepo:     "Sample",
+		currentVersion: "v0.7.1",
+		httpClient:     testHTTPClient,
 	}
 	version.CheckUpdate()
-	assert.False(t, version.NewVersionAvailable)
-	assert.Equal(t, "v0.7.1", version.LatestVersion)
+	require.False(t, version.updateAvailable)
+	require.Equal(t, "v0.7.1", version.latestVersion)
 }
 
 func TestIsNewVersionAvailableFailure(t *testing.T) {
 	version := Version{}
 	version.CheckUpdate()
-	assert.False(t, version.NewVersionAvailable)
+	require.False(t, version.updateAvailable)
 }
 
 func TestGetUpdateNotification(t *testing.T) {
 	version := Version{
-		LatestVersion: "0.7.1",
+		latestVersion: "0.7.1",
 	}
 	version.CheckUpdate()
-	assert.Equal(t, "[!] New update available: 0.7.1", version.GetUpdateNotification())
+	require.Equal(t, "[!] New update available: 0.7.1", version.GetUpdateNotification())
 }
 
 func TestGetUpdateNotificationNoUpdate(t *testing.T) {
 	version := Version{
-		LatestVersion: "0.7.1",
+		latestVersion: "0.7.1",
 	}
-	assert.Empty(t, version.GetUpdateNotification())
+	require.Empty(t, version.GetUpdateNotification())
+}
+
+func TestStripV(t *testing.T) {
+	v := Version{latestVersion: "v1.2.3"}
+	require.Equal(t, "1.2.3", v.StripV())
+	v2 := Version{latestVersion: "1.2.3"}
+	require.Equal(t, "1.2.3", v2.StripV())
+}
+
+func TestGetCurrentVersion(t *testing.T) {
+	v := Version{currentVersion: "v0.1.0"}
+	require.Equal(t, "v0.1.0", v.GetCurrentVersion())
+}
+
+func TestIsUpdateAvailableDirect(t *testing.T) {
+	v := Version{updateAvailable: true}
+	require.True(t, v.IsUpdateAvailable())
+	v2 := Version{updateAvailable: false}
+	require.False(t, v2.IsUpdateAvailable())
+}
+
+func TestFetchLatestVersion_ErrorCases(t *testing.T) {
+	v := Version{}
+	err := v.FetchLatestVersion()
+	require.ErrorIs(t, err, ErrMissingGithubOwner)
+
+	v = Version{githubOwner: "owner"}
+	err = v.FetchLatestVersion()
+	require.ErrorIs(t, err, ErrMissingGithubRepo)
+}
+
+func TestNewVersion_Success(t *testing.T) {
+	opts := Options{
+		GithubOwner:    "owner",
+		GithubRepo:     "repo",
+		CurrentVersion: "v1.0.0",
+	}
+	vs, err := NewVersion(opts)
+	require.NoError(t, err)
+	require.NotNil(t, vs)
+}
+
+func TestNewVersion_MissingFields(t *testing.T) {
+	_, err := NewVersion(Options{})
+	require.ErrorIs(t, err, ErrMissingGithubOwner)
+
+	_, err = NewVersion(Options{GithubOwner: "owner"})
+	require.ErrorIs(t, err, ErrMissingGithubRepo)
+
+	_, err = NewVersion(Options{GithubOwner: "owner", GithubRepo: "repo"})
+	require.ErrorIs(t, err, ErrMissingCurrentVersion)
+}
+
+func TestNewVersion_DefaultHTTPClient(t *testing.T) {
+	opts := Options{
+		GithubOwner:    "owner",
+		GithubRepo:     "repo",
+		CurrentVersion: "v1.0.0",
+		HTTPClient:     nil,
+	}
+	vs, err := NewVersion(opts)
+	require.NoError(t, err)
+	ver, ok := vs.(*Version)
+	require.True(t, ok)
+	require.NotNil(t, ver.httpClient)
+}
+
+func TestVersionServiceInterface(t *testing.T) {
+	opts := Options{
+		GithubOwner:    "owner",
+		GithubRepo:     "repo",
+		CurrentVersion: "v1.0.0",
+	}
+	_, err := NewVersion(opts)
+	require.NoError(t, err)
 }

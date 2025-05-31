@@ -4,7 +4,6 @@ import (
 	"embed"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +15,7 @@ func TestPostgresDatabase(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		UnsetMockPostgresDB(container)
+		_ = UnsetMockPostgresDB(container)
 	})
 
 	t.Run("Open", func(t *testing.T) {
@@ -46,22 +45,21 @@ func TestPostgresDatabase(t *testing.T) {
 
 				// For connection errors, we need to attempt to use the connection
 				if err == nil {
-					sqlDB, err := db.DB()
-					if err == nil {
-						err = sqlDB.Ping()
+					sqlDB, dErr := db.DB()
+					if dErr == nil {
+						_ = sqlDB.Ping()
 					}
 				}
 
 				if tt.wantErr {
-					assert.Error(t, err)
+					require.Error(t, err)
 				} else {
-					assert.NoError(t, err)
-					assert.NotNil(t, db)
+					require.NotNil(t, db)
 
 					// Additional connection verification for success case
 					sqlDB, err := db.DB()
 					require.NoError(t, err)
-					assert.NoError(t, sqlDB.Ping())
+					require.NoError(t, sqlDB.Ping())
 				}
 			})
 		}
@@ -101,16 +99,16 @@ func TestPostgresDatabase(t *testing.T) {
 
 				err = pgDB.Migrate(db, tt.config)
 				if tt.wantErr {
-					assert.Error(t, err)
+					require.Error(t, err)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 
 					// Verify migration by checking if the test table exists
 					var exists bool
 					row := db.Raw("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'tests')").Row()
 					err := row.Scan(&exists)
 					require.NoError(t, err)
-					assert.True(t, exists)
+					require.True(t, exists)
 				}
 			})
 		}

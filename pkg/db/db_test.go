@@ -1,11 +1,9 @@
 package db
 
 import (
-	"context"
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -32,8 +30,7 @@ func TestNewClient(t *testing.T) {
 	mockDB.On("Migrate", mock.Anything, config).Return(nil).Once()
 
 	// Test first client creation
-	ctx := context.Background()
-	client, err := NewClient(ctx, config)
+	client, err := NewClient(t.Context(), config)
 	require.NoError(t, err)
 	require.NotNil(t, client)
 
@@ -42,17 +39,17 @@ func TestNewClient(t *testing.T) {
 	require.NoError(t, err)
 	sqlDB2, err := client.DB.DB()
 	require.NoError(t, err)
-	assert.NoError(t, sqlDB1.Ping())
-	assert.NoError(t, sqlDB2.Ping())
+	require.NoError(t, sqlDB1.Ping())
+	require.NoError(t, sqlDB2.Ping())
 
 	err = client.Migrate()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Test singleton behavior
 	mockDB.On("Open", config).Return(gormDB, nil).Maybe()
-	client2, err := NewClient(ctx, config)
+	client2, err := NewClient(t.Context(), config)
 	require.NoError(t, err)
-	assert.Equal(t, client, client2) // This works because it's the same instance
+	require.Equal(t, client, client2) // This works because it's the same instance
 
 	// Close DB
 	err = client.Close()
@@ -71,11 +68,10 @@ func TestNewClient_OpenError(t *testing.T) {
 	openErr := errors.New("failed to open database")
 	mockDB.On("Open", config).Return(nil, openErr)
 
-	ctx := context.Background()
-	client, err := NewClient(ctx, config)
-	assert.Error(t, err)
-	assert.Nil(t, client)
-	assert.Equal(t, openErr, err)
+	client, err := NewClient(t.Context(), config)
+	require.Error(t, err)
+	require.Nil(t, client)
+	require.Equal(t, openErr, err)
 
 	mockDB.AssertExpectations(t)
 }
@@ -89,20 +85,19 @@ func TestNewClient_MigrateError(t *testing.T) {
 
 	// Create a new GORM DB instance for testing
 	gormDB, err := gorm.Open(sqlite.Open(config.DSN), &gorm.Config{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	mockDB.On("Open", config).Return(gormDB, nil)
 	migrateErr := errors.New("failed to migrate database")
 	mockDB.On("Migrate", mock.Anything, config).Return(migrateErr)
 
-	ctx := context.Background()
-	client, err := NewClient(ctx, config)
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+	client, err := NewClient(t.Context(), config)
+	require.NoError(t, err)
+	require.NotNil(t, client)
 
 	err = client.Migrate()
-	assert.Error(t, err)
-	assert.Equal(t, migrateErr, err)
+	require.Error(t, err)
+	require.Equal(t, migrateErr, err)
 
 	mockDB.AssertExpectations(t)
 }
@@ -110,9 +105,9 @@ func TestNewClient_MigrateError(t *testing.T) {
 func TestDB_Close(t *testing.T) {
 	// Create a new GORM DB instance for testing
 	gormDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	client := &DB{DB: gormDB}
 	err = client.Close()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

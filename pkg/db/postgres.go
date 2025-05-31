@@ -1,23 +1,25 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
 	migratePG "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/johejo/golang-migrate-extra/source/iofs"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// PostgresDatabase implements the Database interface for PostgreSQL
+// PostgresDatabase implements the Database interface for PostgreSQL.
 type PostgresDatabase struct{}
 
+// Open opens a database connection.
 func (p *PostgresDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(config.DSN), &gorm.Config{})
 }
 
+// Migrate migrates the database.
 func (p *PostgresDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -39,7 +41,7 @@ func (p *PostgresDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
 		return fmt.Errorf("could not create migrate instance: %w", err)
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("could not run migrations: %w", err)
 	}
 
