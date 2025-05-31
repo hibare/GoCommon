@@ -51,15 +51,10 @@ install-pre-commit: ## Install pre-commit
 
 .PHONY: test
 test: ## Run tests
-ifndef GITHUB_ACTIONS
-	$(MAKE) s3-up
-endif
 	export IS_LOCAL=false; \
 	go vet ./...; \
 	go test ./... -cover
-ifndef GITHUB_ACTIONS
-	$(MAKE) s3-down
-endif
+
 
 .PHONY: help
 help: ## Disply this help
