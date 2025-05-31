@@ -115,7 +115,7 @@ func TestEnsureConfigRootDir(t *testing.T) {
 	err := bc.EnsureConfigRootDir()
 	assert.NoError(t, err)
 	assert.DirExists(t, bc.ConfigRootDir)
-	os.Remove(bc.ConfigRootDir)
+	_ = os.Remove(bc.ConfigRootDir)
 }
 
 func TestEnsureConfigRootDirFail(t *testing.T) {
@@ -127,11 +127,11 @@ func TestEnsureConfigRootDirFail(t *testing.T) {
 	bc.SetConfigRootDir()
 	f, err := os.Create(bc.ConfigRootDir)
 	assert.NoError(t, err)
-	f.Close()
+	_ = f.Close()
 	err = bc.EnsureConfigRootDir()
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.ErrNotDir)
-	os.Remove(bc.ConfigRootDir)
+	_ = os.Remove(bc.ConfigRootDir)
 }
 
 func TestEnsureConfigFile(t *testing.T) {
@@ -143,7 +143,7 @@ func TestEnsureConfigFile(t *testing.T) {
 	err := bc.EnsureConfigFile()
 	assert.NoError(t, err)
 	assert.FileExists(t, bc.ConfigFilePath)
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestEnsureConfigFileFail(t *testing.T) {
@@ -159,7 +159,7 @@ func TestEnsureConfigFileFail(t *testing.T) {
 	err = bc.EnsureConfigFile()
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.ErrNotFile)
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestInitBC(t *testing.T) {
@@ -172,7 +172,7 @@ func TestInitBC(t *testing.T) {
 	assert.NoError(t, err)
 	assert.DirExists(t, bc.ConfigRootDir)
 	assert.FileExists(t, bc.ConfigFilePath)
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestInitBCFailRootDir(t *testing.T) {
@@ -184,11 +184,11 @@ func TestInitBCFailRootDir(t *testing.T) {
 	bc.SetConfigRootDir()
 	f, err := os.Create(bc.ConfigRootDir)
 	assert.NoError(t, err)
-	f.Close()
+	_ = f.Close()
 	err = bc.Init()
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.ErrNotDir)
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestInitBCFailConfigFile(t *testing.T) {
@@ -204,7 +204,7 @@ func TestInitBCFailConfigFile(t *testing.T) {
 	err = bc.Init()
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.ErrNotFile)
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }
 
 func TestWriteReadYAMLConfig(t *testing.T) {
@@ -233,5 +233,5 @@ func TestWriteReadYAMLConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, writeConfig, *readConfig)
 
-	os.RemoveAll(bc.ConfigRootDir)
+	_ = os.RemoveAll(bc.ConfigRootDir)
 }

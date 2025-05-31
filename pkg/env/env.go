@@ -10,8 +10,11 @@ import (
 )
 
 // Load loads an optional .env file
-func Load() {
-	godotenv.Load()
+func Load() error {
+	if err := godotenv.Load(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // MustString returns the content of the environment variable with the given key or the given fallback

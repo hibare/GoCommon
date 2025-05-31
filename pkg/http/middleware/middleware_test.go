@@ -85,7 +85,9 @@ func TestRequestLogger(t *testing.T) {
 		// Create a mock server
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Hello, world!"))
+			if _, err := w.Write([]byte("Hello, world!")); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		})
 
 		// Create a test server with the RequestLogger middleware
@@ -98,7 +100,9 @@ func TestRequestLogger(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
-		defer resp.Body.Close()
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
 
 		logString := buf.String()
 		assert.NotEmpty(t, logString)
@@ -128,7 +132,9 @@ func TestRequestLogger(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
-		defer resp.Body.Close()
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
 
 		logString := buf.String()
 		assert.NotEmpty(t, logString)
@@ -157,7 +163,9 @@ func TestRequestLogger(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
-		defer resp.Body.Close()
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
 
 		logString := buf.String()
 		assert.NotEmpty(t, logString)

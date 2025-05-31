@@ -101,7 +101,9 @@ func (bc *BaseConfig) EnsureConfigFile() error {
 		if err != nil {
 			return err
 		}
-		file.Close()
+		if err := file.Close(); err != nil {
+			return err
+		}
 	} else if info.IsDir() {
 		return errors.ErrNotFile
 	}

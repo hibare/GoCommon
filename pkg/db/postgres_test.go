@@ -16,7 +16,7 @@ func TestPostgresDatabase(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		UnsetMockPostgresDB(container)
+		_ = UnsetMockPostgresDB(container)
 	})
 
 	t.Run("Open", func(t *testing.T) {

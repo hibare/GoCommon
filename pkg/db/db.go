@@ -37,8 +37,11 @@ func (d *DB) Close() error {
 	if err != nil {
 		return err
 	}
+	if err := sqlDB.Close(); err != nil {
+		return err
+	}
 	instance = nil
-	return sqlDB.Close()
+	return nil
 }
 
 // NewClient returns a singleton instance of the database connection

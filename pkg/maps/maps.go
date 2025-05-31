@@ -75,12 +75,13 @@ func Map2EnvFile[K comparable, V any](m map[K]V, filePath string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// Iterate over the map and write each key-value pair to the file
 	for key, value := range m {
-		_, err := fmt.Fprintf(file, "%v=%v\n", key, value)
-		if err != nil {
+		if _, err := fmt.Fprintf(file, "%v=%v\n", key, value); err != nil {
 			return err
 		}
 	}

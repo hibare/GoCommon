@@ -65,7 +65,9 @@ func (v *Version) GetLatestVersion() error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	var release ReleaseResponse
 	err = json.NewDecoder(resp.Body).Decode(&release)

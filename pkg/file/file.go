@@ -49,10 +49,14 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, e
 	if err != nil {
 		return ArchiveDirResponse{}, fmt.Errorf("failed to create zip file: %w", err)
 	}
-	defer zipFile.Close()
+	defer func() {
+		_ = zipFile.Close()
+	}()
 
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	defer func() {
+		_ = zipWriter.Close()
+	}()
 
 	totalFiles, totalDirs, successFiles := 0, 0, 0
 	failedFiles := make(map[string]error)
@@ -102,9 +106,11 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, e
 			failedFiles[path] = fmt.Errorf("failed to open file: %w", err)
 			return nil
 		}
+		defer func() {
+			_ = file.Close()
+		}()
 
 		_, err = io.Copy(zh, file)
-		file.Close()
 		if err != nil {
 			failedFiles[path] = fmt.Errorf("failed to copy file to zip: %w", err)
 			return nil
@@ -129,7 +135,9 @@ func ReadFileBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
@@ -145,7 +153,9 @@ func ReadFileLines(path string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	var lines []string
 	scanner := bufio.NewScanner(file)
@@ -165,7 +175,9 @@ func CalculateFileSHA256(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, file); err != nil {
@@ -194,7 +206,9 @@ func DownloadFile(url string, destination string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get url: %w", err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad status: %s", response.Status)
@@ -204,7 +218,9 @@ func DownloadFile(url string, destination string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer out.Close()
+	defer func() {
+		_ = out.Close()
+	}()
 
 	_, err = io.Copy(out, response.Body)
 	if err != nil {
@@ -222,13 +238,17 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 	if err != nil {
 		return targetFilePath, fmt.Errorf("failed to open archive: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	gzipReader, err := gzip.NewReader(file)
 	if err != nil {
 		return targetFilePath, fmt.Errorf("failed to create gzip reader: %w", err)
 	}
-	defer gzipReader.Close()
+	defer func() {
+		_ = gzipReader.Close()
+	}()
 
 	tarReader := tar.NewReader(gzipReader)
 
@@ -247,13 +267,14 @@ func ExtractFileFromTarGz(archivePath, targetFilename string) (string, error) {
 			if err != nil {
 				return targetFilePath, fmt.Errorf("failed to create target file: %w", err)
 			}
+			defer func() {
+				_ = targetFile.Close()
+			}()
 
 			if _, err := io.CopyN(targetFile, tarReader, header.Size); err != nil {
-				targetFile.Close()
-				os.Remove(targetFilePath)
+				_ = os.Remove(targetFilePath)
 				return targetFilePath, fmt.Errorf("failed to copy file from archive: %w", err)
 			}
-			targetFile.Close()
 			break
 		}
 	}
@@ -297,7 +318,9 @@ func FileHash(filePath string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {

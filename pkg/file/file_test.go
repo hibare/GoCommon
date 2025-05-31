@@ -69,7 +69,9 @@ func TestArchiveDir(t *testing.T) {
 
 		// archive tempDir
 		resp, err := ArchiveDir(tempDir, nil)
-		defer os.Remove(resp.ArchivePath)
+		t.Cleanup(func() {
+			_ = os.Remove(resp.ArchivePath)
+		})
 
 		assert.Equal(t, resp.TotalFiles, 1)
 		assert.Equal(t, resp.TotalDirs, 1)
@@ -87,7 +89,9 @@ func TestArchiveDir(t *testing.T) {
 
 		// archive tempDir
 		resp, err := ArchiveDir(tempDir, nil)
-		defer os.Remove(resp.ArchivePath)
+		t.Cleanup(func() {
+			_ = os.Remove(resp.ArchivePath)
+		})
 
 		assert.Empty(t, resp.TotalDirs)
 		assert.Empty(t, resp.TotalFiles)
@@ -118,12 +122,16 @@ func TestArchiveDir(t *testing.T) {
 		// Archive the directory while excluding files and directories based on patterns
 		resp, err := ArchiveDir(testDir, excludePatterns)
 		require.NoError(t, err)
-		defer os.Remove(resp.ArchivePath)
+		t.Cleanup(func() {
+			_ = os.Remove(resp.ArchivePath)
+		})
 
 		// Check the contents of the created ZIP file
 		zipReader, err := zip.OpenReader(resp.ArchivePath)
 		require.NoError(t, err)
-		defer zipReader.Close()
+		t.Cleanup(func() {
+			_ = zipReader.Close()
+		})
 
 		// Verify that the ZIP file only contains the expected files
 		expectedFilePattern := regexp.MustCompile("^test-file.*.txt$")
@@ -242,7 +250,9 @@ func TestDownloadFile(t *testing.T) {
 		defer server.Close()
 
 		downloadFilePath := filepath.Join(os.TempDir(), "test-file.txt")
-		defer os.Remove(downloadFilePath)
+		t.Cleanup(func() {
+			_ = os.Remove(downloadFilePath)
+		})
 
 		// Download the file using the download function
 		err = DownloadFile(server.URL, downloadFilePath)
@@ -262,7 +272,9 @@ func TestDownloadFile(t *testing.T) {
 		defer server.Close()
 
 		downloadFilePath := filepath.Join(os.TempDir(), "test-file.txt")
-		defer os.Remove(downloadFilePath)
+		t.Cleanup(func() {
+			_ = os.Remove(downloadFilePath)
+		})
 
 		// Download the file using the download function
 		err := DownloadFile(server.URL, downloadFilePath)
@@ -367,8 +379,10 @@ func TestFileHash(t *testing.T) {
 		// Create an empty test file
 		file, err := os.CreateTemp("", "empty-file")
 		assert.NoError(t, err)
-		defer os.Remove(file.Name())
-		defer file.Close()
+		t.Cleanup(func() {
+			_ = file.Close()
+			_ = os.Remove(file.Name())
+		})
 
 		// Call the FileHash function
 		actualHash, err := FileHash(file.Name())
@@ -390,8 +404,10 @@ func TestFilesSameContent(t *testing.T) {
 
 		filePath2, err := os.CreateTemp("", "test-file")
 		assert.NoError(t, err)
-		defer os.Remove(filePath2.Name())
-		defer filePath2.Close()
+		t.Cleanup(func() {
+			_ = filePath2.Close()
+			_ = os.Remove(filePath2.Name())
+		})
 
 		_, err = filePath2.Write(content)
 		assert.NoError(t, err)
@@ -413,8 +429,9 @@ func TestFilesSameContent(t *testing.T) {
 		// write random data to the second file
 		file, err := os.OpenFile(filePath2, os.O_WRONLY, os.ModePerm)
 		assert.NoError(t, err)
-		file.Write([]byte("random data"))
-		file.Close()
+		_, err = file.Write([]byte("random data"))
+		assert.NoError(t, err)
+		_ = file.Close()
 
 		// Call the FilesSameContent function
 		same, err := FilesSameContent(filePath1, filePath2)

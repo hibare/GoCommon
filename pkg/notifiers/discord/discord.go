@@ -84,7 +84,9 @@ func (d *Message) Send(webhook string) error {
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusNoContent { //  return 204 on success
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
