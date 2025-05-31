@@ -37,15 +37,20 @@ func TestAddFooterNoEmbeds(t *testing.T) {
 	require.ErrorIs(t, err, ErrNoEmbeds)
 }
 
-func TestSend(t *testing.T) {
+func TestClientSend(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer server.Close()
 
 	webhook := server.URL
+	client, err := NewClient(Options{
+		WebhookURL: webhook,
+		HTTPClient: server.Client(),
+	})
+	require.NoError(t, err)
 
-	message := Message{
+	message := &Message{
 		Embeds: []Embed{
 			{
 				Title: "Test Title",
@@ -53,19 +58,24 @@ func TestSend(t *testing.T) {
 		},
 	}
 
-	err := message.Send(t.Context(), webhook)
+	err = client.Send(t.Context(), message)
 	require.NoError(t, err)
 }
 
-func TestSendErrorStatusCode(t *testing.T) {
+func TestClientSendErrorStatusCode(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()
 
 	webhook := server.URL
+	client, err := NewClient(Options{
+		WebhookURL: webhook,
+		HTTPClient: server.Client(),
+	})
+	require.NoError(t, err)
 
-	message := Message{
+	message := &Message{
 		Embeds: []Embed{
 			{
 				Title: "Test Title",
@@ -73,34 +83,23 @@ func TestSendErrorStatusCode(t *testing.T) {
 		},
 	}
 
-	err := message.Send(t.Context(), webhook)
+	err = client.Send(t.Context(), message)
 	require.Error(t, err)
 }
 
-func TestSendRequestError(t *testing.T) {
-	message := Message{
+func TestClientSendRequestError(t *testing.T) {
+	client, err := NewClient(Options{
+		WebhookURL: "invalid-url",
+		HTTPClient: http.DefaultClient,
+	})
+	require.NoError(t, err)
+	message := &Message{
 		Embeds: []Embed{
 			{
 				Title: "Test Title",
 			},
 		},
 	}
-
-	err := message.Send(t.Context(), "invalid-url")
-	require.Error(t, err)
-}
-
-func TestSendMarshalError(t *testing.T) {
-	message := Message{
-		Embeds: []Embed{
-			{
-				Title: "Test Title",
-			},
-		},
-	}
-	// Force a marshal error by providing an invalid value
-	message.Embeds[0].Color = -1
-
-	err := message.Send(t.Context(), "https://example.com")
+	err = client.Send(t.Context(), message)
 	require.Error(t, err)
 }
