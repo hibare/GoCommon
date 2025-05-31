@@ -70,7 +70,7 @@ func NewClient(opts Options) (Client, error) {
 	}
 
 	if opts.HTTPClient == nil {
-		opts.HTTPClient = http.DefaultClient
+		opts.HTTPClient = commonHTTPClient.NewDefaultClient()
 	}
 
 	return &client{

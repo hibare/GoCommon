@@ -9,19 +9,35 @@ import (
 	"net/http"
 	"strings"
 
-	commonHTTP "github.com/hibare/GoCommon/v2/pkg/http"
+	commonHTTPClient "github.com/hibare/GoCommon/v2/pkg/http/client"
 )
 
 // UpdateNotificationMessage is the template for update notifications.
 var UpdateNotificationMessage = "[!] New update available: %s"
 
-// GithubEndpoint is the GitHub API endpoint for latest releases.
-var GithubEndpoint = "https://api.github.com/repos/%s/%s/releases/latest"
+var githubReleaseEndpoint = "https://api.github.com/repos/%s/%s/releases/latest"
 
 var (
-	errMissingGithubOwner = errors.New("githubOwner is empty")
-	errMissingGithubRepo  = errors.New("githubRepo is empty")
+	// ErrMissingGithubOwner is returned when the githubOwner is empty.
+	ErrMissingGithubOwner = errors.New("githubOwner is empty")
+
+	// ErrMissingGithubRepo is returned when the githubRepo is empty.
+	ErrMissingGithubRepo = errors.New("githubRepo is empty")
+
+	// ErrMissingCurrentVersion is returned when the currentVersion is empty.
+	ErrMissingCurrentVersion = errors.New("currentVersion is empty")
 )
+
+// VersionService is the interface for the version service.
+type VersionService interface {
+	GetUpdateNotification() string
+	StripV() string
+	FetchLatestVersion() error
+	CheckUpdate()
+	IsUpdateAvailable() bool
+	GetLatestVersion() string
+	GetCurrentVersion() string
+}
 
 // ReleaseResponse represents the response from the GitHub releases API.
 type ReleaseResponse struct {
@@ -30,37 +46,36 @@ type ReleaseResponse struct {
 
 // Version holds version information for the application.
 type Version struct {
-	GithubOwner         string
-	GithubRepo          string
-	LatestVersion       string
-	CurrentVersion      string
-	NewVersionAvailable bool
+	githubOwner     string
+	githubRepo      string
+	latestVersion   string
+	currentVersion  string
+	updateAvailable bool
+	httpClient      commonHTTPClient.Client
 }
 
 // GetUpdateNotification returns a notification string if a new version is available.
 func (v *Version) GetUpdateNotification() string {
-	if v.NewVersionAvailable && v.LatestVersion != "" {
-		return fmt.Sprintf(UpdateNotificationMessage, v.LatestVersion)
+	if v.updateAvailable && v.latestVersion != "" {
+		return fmt.Sprintf(UpdateNotificationMessage, v.latestVersion)
 	}
 	return ""
 }
 
 // StripV removes the leading 'v' from the latest version string.
 func (v *Version) StripV() string {
-	return strings.TrimPrefix(v.LatestVersion, "v")
+	return strings.TrimPrefix(v.latestVersion, "v")
 }
 
 // GetLatestVersion fetches the latest version from GitHub.
-func (v *Version) GetLatestVersion() error {
-	if v.GithubOwner == "" {
-		return errMissingGithubOwner
+func (v *Version) FetchLatestVersion() error {
+	if v.githubOwner == "" {
+		return ErrMissingGithubOwner
 	}
-
-	if v.GithubRepo == "" {
-		return errMissingGithubRepo
+	if v.githubRepo == "" {
+		return ErrMissingGithubRepo
 	}
-
-	url := fmt.Sprintf(GithubEndpoint, v.GithubOwner, v.GithubRepo)
+	url := fmt.Sprintf(githubReleaseEndpoint, v.githubOwner, v.githubRepo)
 
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
@@ -69,10 +84,7 @@ func (v *Version) GetLatestVersion() error {
 
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	client := &http.Client{
-		Timeout: commonHTTP.DefaultHTTPClientTimeout,
-	}
-	resp, err := client.Do(req)
+	resp, err := v.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -87,12 +99,69 @@ func (v *Version) GetLatestVersion() error {
 		return err
 	}
 
-	v.LatestVersion = release.TagName
+	v.latestVersion = release.TagName
 	return nil
 }
 
 // CheckUpdate checks if a new version is available.
 func (v *Version) CheckUpdate() {
-	_ = v.GetLatestVersion()
-	v.NewVersionAvailable = v.CurrentVersion != v.LatestVersion
+	_ = v.FetchLatestVersion()
+	v.updateAvailable = v.currentVersion != v.latestVersion
+}
+
+// IsUpdateAvailable checks if a new version is available.
+func (v *Version) IsUpdateAvailable() bool {
+	return v.updateAvailable
+}
+
+// GetLatestVersion returns the latest version.
+func (v *Version) GetLatestVersion() string {
+	return v.latestVersion
+}
+
+// GetCurrentVersion returns the current version.
+func (v *Version) GetCurrentVersion() string {
+	return v.currentVersion
+}
+
+// Options is the options for the version service.
+type Options struct {
+	GithubOwner    string
+	GithubRepo     string
+	CurrentVersion string
+	HTTPClient     commonHTTPClient.Client
+}
+
+func (o *Options) validate() error {
+	if o.GithubOwner == "" {
+		return ErrMissingGithubOwner
+	}
+
+	if o.GithubRepo == "" {
+		return ErrMissingGithubRepo
+	}
+
+	if o.CurrentVersion == "" {
+		return ErrMissingCurrentVersion
+	}
+
+	return nil
+}
+
+// NewVersion creates a new version service.
+func NewVersion(opts Options) (VersionService, error) {
+	if err := opts.validate(); err != nil {
+		return nil, err
+	}
+
+	if opts.HTTPClient == nil {
+		opts.HTTPClient = commonHTTPClient.NewDefaultClient()
+	}
+
+	return &Version{
+		githubOwner:    opts.GithubOwner,
+		githubRepo:     opts.GithubRepo,
+		currentVersion: opts.CurrentVersion,
+		httpClient:     opts.HTTPClient,
+	}, nil
 }
