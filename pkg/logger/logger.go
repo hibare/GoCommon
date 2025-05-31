@@ -32,10 +32,17 @@ const (
 )
 
 var (
-	LogLevels          = []string{LogLevelError, LogLevelWarn, LogLevelInfo, LogLevelDebug}
-	LogModes           = []string{LogModePretty, LogModeJSON}
+	// LogLevels is the list of log levels.
+	LogLevels = []string{LogLevelError, LogLevelWarn, LogLevelInfo, LogLevelDebug}
+
+	// LogModes is the list of log modes.
+	LogModes = []string{LogModePretty, LogModeJSON}
+
+	// DefaultLoggerLevel is the default log level.
 	DefaultLoggerLevel = LogLevelInfo
-	DefaultLoggerMode  = LogModePretty
+
+	// DefaultLoggerMode is the default log mode.
+	DefaultLoggerMode = LogModePretty
 )
 
 // InitDefaultLogger initializes the default logger.
@@ -93,10 +100,10 @@ func getSlogLevelFromString(level *string) slog.Level {
 
 // IsValidLogLevel checks if the provided log level is valid.
 func IsValidLogLevel(level string) bool {
-	return slice.SliceContains(strings.ToUpper(level), LogLevels)
+	return slice.Contains(strings.ToUpper(level), LogLevels)
 }
 
 // IsValidLogMode checks if the provided log mode is valid.
 func IsValidLogMode(mode string) bool {
-	return slice.SliceContains(strings.ToUpper(mode), LogModes)
+	return slice.Contains(strings.ToUpper(mode), LogModes)
 }

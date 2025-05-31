@@ -53,7 +53,7 @@ const expectedJSON = `{
 	}`
 
 func TestMain(m *testing.M) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.github.v3+json")
 		_, _ = w.Write([]byte(expectedJSON))
 	}))

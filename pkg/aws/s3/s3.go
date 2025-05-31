@@ -18,17 +18,16 @@ import (
 	commonFiles "github.com/hibare/GoCommon/v2/pkg/file"
 )
 
-// --- SDK Interfaces ---
-// S3ServiceAPI is the interface for the S3 service.
-type S3ServiceAPI interface {
+// ServiceAPI is the interface for the S3 service.
+type ServiceAPI interface {
 	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 	ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
 	ListObjects(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
 }
 
-// S3Interface is the interface for the S3 service.
-type S3Interface interface {
+// Client is the interface for the S3 service.
+type Client interface {
 	GetPrefix(prefixes ...string) string
 	GetTimestampedPrefix(prefixes ...string) string
 	TrimPrefix(keys []string, prefix string) []string
@@ -39,7 +38,7 @@ type S3Interface interface {
 
 // S3 is the implementation of the S3 service.
 type S3 struct {
-	Client S3ServiceAPI
+	Client ServiceAPI
 }
 
 // getPrefix sets the prefix for the S3 service.
@@ -128,7 +127,7 @@ func (s *S3) UploadDir(ctx context.Context, bucket, prefix, baseDir string, excl
 			resp.FailedFiles[file] = err
 			continue
 		}
-		resp.SuccessFiles += 1
+		resp.SuccessFiles++
 	}
 
 	if resp.SuccessFiles > 0 {
@@ -227,8 +226,8 @@ func (s *S3) DeleteObjects(ctx context.Context, bucket, key string, recursive bo
 	return nil
 }
 
-// S3Options is the options for the S3 service.
-type S3Options struct {
+// Options is the options for the S3 service.
+type Options struct {
 	Endpoint  string
 	Region    string
 	AccessKey string
@@ -238,14 +237,14 @@ type S3Options struct {
 }
 
 // NewS3WithDeps returns a new S3 instance with injected dependencies (for testing/mocking).
-func NewS3WithDeps(client S3ServiceAPI) S3Interface {
+func NewS3WithDeps(client ServiceAPI) Client {
 	return &S3{
 		Client: client,
 	}
 }
 
 // NewS3 returns a new instance of S3 with the provided configuration (for production use).
-func NewS3(opts S3Options) (S3Interface, error) {
+func NewS3(ctx context.Context, opts Options) (Client, error) {
 	// Build config options slice based on provided input
 	var cfgOptions []func(*config.LoadOptions) error
 
@@ -257,7 +256,7 @@ func NewS3(opts S3Options) (S3Interface, error) {
 	}
 	if opts.Endpoint != "" {
 		cfgOptions = append(cfgOptions, config.WithEndpointResolverWithOptions(
-			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+			aws.EndpointResolverWithOptionsFunc(func(_, region string, options ...interface{}) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					URL:               opts.Endpoint,
 					HostnameImmutable: true,
@@ -266,7 +265,7 @@ func NewS3(opts S3Options) (S3Interface, error) {
 		))
 	}
 
-	cfg, err := config.LoadDefaultConfig(context.Background(), cfgOptions...)
+	cfg, err := config.LoadDefaultConfig(ctx, cfgOptions...)
 	if err != nil {
 		return nil, err
 	}

@@ -57,7 +57,7 @@ func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJsonT
 					if len(errMsgs) == 0 {
 						errs = errors.Join(errs, fmt.Errorf("%s: %w", fieldTag, e))
 					} else {
-						validateTagIndex := slice.SliceIndexOf(e.Tag(), validateTags)
+						validateTagIndex := slice.IndexOf(e.Tag(), validateTags)
 						if validateTagIndex == -1 {
 							errs = errors.Join(errs, fmt.Errorf("%s: %s (%s)", fieldTag, strings.Join(errMsgs, ", "), e.Tag()))
 						} else {

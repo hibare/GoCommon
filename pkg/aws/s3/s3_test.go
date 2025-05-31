@@ -19,7 +19,7 @@ import (
 type MockS3Client struct{ mock.Mock }
 
 // PutObject is a mock implementation of the PutObject method.
-func (m *MockS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
+func (m *MockS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput, _ ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
 	args := m.Called(ctx, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -28,7 +28,7 @@ func (m *MockS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput,
 }
 
 // ListObjectsV2 is a mock implementation of the ListObjectsV2 method.
-func (m *MockS3Client) ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error) {
+func (m *MockS3Client) ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, _ ...func(*s3.Options)) (*s3.ListObjectsV2Output, error) {
 	args := m.Called(ctx, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -37,7 +37,7 @@ func (m *MockS3Client) ListObjectsV2(ctx context.Context, params *s3.ListObjects
 }
 
 // DeleteObject is a mock implementation of the DeleteObject method.
-func (m *MockS3Client) DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+func (m *MockS3Client) DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, _ ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
 	args := m.Called(ctx, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -46,7 +46,7 @@ func (m *MockS3Client) DeleteObject(ctx context.Context, params *s3.DeleteObject
 }
 
 // ListObjects is a mock implementation of the ListObjects method.
-func (m *MockS3Client) ListObjects(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+func (m *MockS3Client) ListObjects(ctx context.Context, params *s3.ListObjectsInput, _ ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
 	args := m.Called(ctx, params)
 	// Ensure Get(0) is nil-checked if it can be nil for an error case, or adjust mock.
 	if args.Get(0) == nil {

@@ -8,8 +8,8 @@ import (
 	"github.com/hibare/GoCommon/v2/pkg/errors"
 )
 
-// WriteJsonResponse writes a JSON response with the given status code and data.
-func WriteJsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+// WriteJSONResponse writes a JSON response with the given status code and data.
+func WriteJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -24,5 +24,5 @@ func WriteErrorResponse(w http.ResponseWriter, statusCode int, err error) {
 		Message: err.Error(),
 	}
 
-	WriteJsonResponse(w, statusCode, e)
+	WriteJSONResponse(w, statusCode, e)
 }

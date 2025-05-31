@@ -313,8 +313,8 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 	return files, dirs
 }
 
-// FileHash computes the SHA-256 hash of a file and returns the raw bytes.
-func FileHash(filePath string) ([]byte, error) {
+// GetHash computes the SHA-256 hash of a file and returns the raw bytes.
+func GetHash(filePath string) ([]byte, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
@@ -331,14 +331,14 @@ func FileHash(filePath string) ([]byte, error) {
 	return hash.Sum(nil), nil
 }
 
-// FilesSameContent checks if two files have the same content by comparing their SHA-256 hashes.
-func FilesSameContent(file1, file2 string) (bool, error) {
-	hash1, err := FileHash(file1)
+// IsFilesSameContent checks if two files have the same content by comparing their SHA-256 hashes.
+func IsFilesSameContent(file1, file2 string) (bool, error) {
+	hash1, err := GetHash(file1)
 	if err != nil {
 		return false, fmt.Errorf("failed to hash file1: %w", err)
 	}
 
-	hash2, err := FileHash(file2)
+	hash2, err := GetHash(file2)
 	if err != nil {
 		return false, fmt.Errorf("failed to hash file2: %w", err)
 	}

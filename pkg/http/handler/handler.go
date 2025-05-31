@@ -8,6 +8,6 @@ import (
 )
 
 // HealthCheck is a simple health check handler.
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	commonHttp.WriteJsonResponse(w, http.StatusOK, map[string]bool{"ok": true})
+func HealthCheck(w http.ResponseWriter, _ *http.Request) {
+	commonHttp.WriteJSONResponse(w, http.StatusOK, map[string]bool{"ok": true})
 }

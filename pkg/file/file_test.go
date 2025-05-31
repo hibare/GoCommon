@@ -362,7 +362,7 @@ func TestFileHash(t *testing.T) {
 		expectedHash := sha256.Sum256(content)
 
 		// Call the FileHash function
-		actualHash, err := FileHash(filePath)
+		actualHash, err := GetHash(filePath)
 		assert.NoError(t, err)
 
 		// Compare the actual hash with the expected hash
@@ -371,7 +371,7 @@ func TestFileHash(t *testing.T) {
 
 	t.Run("Non-existent File", func(t *testing.T) {
 		// Call the FileHash function with a non-existent file path
-		_, err := FileHash("/tmp/non-existent-file.txt")
+		_, err := GetHash("/tmp/non-existent-file.txt")
 		assert.Error(t, err)
 	})
 
@@ -385,7 +385,7 @@ func TestFileHash(t *testing.T) {
 		})
 
 		// Call the FileHash function
-		actualHash, err := FileHash(file.Name())
+		actualHash, err := GetHash(file.Name())
 		assert.NoError(t, err)
 
 		// Calculate the expected hash for an empty file
@@ -413,7 +413,7 @@ func TestFilesSameContent(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Call the FilesSameContent function
-		same, err := FilesSameContent(filePath1, filePath2.Name())
+		same, err := IsFilesSameContent(filePath1, filePath2.Name())
 		assert.NoError(t, err)
 		assert.True(t, same)
 	})
@@ -434,7 +434,7 @@ func TestFilesSameContent(t *testing.T) {
 		_ = file.Close()
 
 		// Call the FilesSameContent function
-		same, err := FilesSameContent(filePath1, filePath2)
+		same, err := IsFilesSameContent(filePath1, filePath2)
 		assert.NoError(t, err)
 		assert.False(t, same)
 	})
@@ -445,7 +445,7 @@ func TestFilesSameContent(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Call the FilesSameContent function with a non-existent file path
-		same, err := FilesSameContent(filePath, "/tmp/non-existent-file.txt")
+		same, err := IsFilesSameContent(filePath, "/tmp/non-existent-file.txt")
 		assert.Error(t, err)
 		assert.False(t, same)
 	})

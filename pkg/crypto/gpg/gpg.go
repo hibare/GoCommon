@@ -25,6 +25,7 @@ type GPG struct {
 	Passphrase     string
 }
 
+// GPGPrefix is the prefix for GPG files.
 const GPGPrefix = "gpg"
 
 // DownloadGPGPubKey downloads a GPG public key from a key server and saves it to a temp file.

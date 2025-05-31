@@ -1,3 +1,4 @@
+// Package config provides utilities for loading and managing configuration files.
 package config
 
 import (
@@ -20,16 +21,20 @@ var (
 	configRootDarwin  = constants.ConfigRootDarwin
 )
 
+// OSInterface is the interface for the OS.
 type OSInterface interface {
 	GetGOOS() string
 }
 
+// ActualOS is the actual OS.
 type ActualOS struct{}
 
+// GetGOOS returns the GOOS.
 func (ao ActualOS) GetGOOS() string {
 	return runtime.GOOS
 }
 
+// BaseConfig is the base configuration.
 type BaseConfig struct {
 	ProgramIdentifier   string
 	ConfigRootDir       string
@@ -39,6 +44,7 @@ type BaseConfig struct {
 	ConfigFileExtension string
 }
 
+// SetConfigRootDir sets the config root directory.
 func (bc *BaseConfig) SetConfigRootDir() {
 	var configRootDir string
 
@@ -65,11 +71,13 @@ func (bc *BaseConfig) SetConfigRootDir() {
 	bc.ConfigRootDir = filepath.Join(configRootDir, strings.ToLower(bc.ProgramIdentifier))
 }
 
+// SetConfigFilePath sets the config file path.
 func (bc *BaseConfig) SetConfigFilePath() {
 	bc.SetConfigRootDir()
 	bc.ConfigFilePath = filepath.Join(bc.ConfigRootDir, fmt.Sprintf("%s.%s", constants.ConfigFileName, constants.ConfigFileExtension))
 }
 
+// EnsureConfigRootDir ensures the config root directory.
 func (bc *BaseConfig) EnsureConfigRootDir() error {
 	if bc.ConfigRootDir == "" {
 		bc.SetConfigRootDir()
@@ -86,6 +94,7 @@ func (bc *BaseConfig) EnsureConfigRootDir() error {
 	return nil
 }
 
+// EnsureConfigFile ensures the config file.
 func (bc *BaseConfig) EnsureConfigFile() error {
 	if bc.ConfigFilePath == "" {
 		bc.SetConfigFilePath()
@@ -111,6 +120,7 @@ func (bc *BaseConfig) EnsureConfigFile() error {
 	return nil
 }
 
+// Init initializes the config.
 func (bc *BaseConfig) Init() error {
 	bc.ConfigFileName = constants.ConfigFileName
 	bc.ConfigFileExtension = constants.ConfigFileExtension
@@ -126,6 +136,7 @@ func (bc *BaseConfig) Init() error {
 	return nil
 }
 
+// WriteYAMLConfig writes the YAML config.
 func (bc *BaseConfig) WriteYAMLConfig(current interface{}) error {
 	v := viper.New()
 	v.SetConfigType(bc.ConfigFileExtension)
@@ -148,6 +159,7 @@ func (bc *BaseConfig) WriteYAMLConfig(current interface{}) error {
 	return nil
 }
 
+// ReadYAMLConfig reads the YAML config.
 func (bc *BaseConfig) ReadYAMLConfig(current interface{}) (interface{}, error) {
 	v := viper.New()
 	v.SetConfigType(bc.ConfigFileExtension)
@@ -166,15 +178,14 @@ func (bc *BaseConfig) ReadYAMLConfig(current interface{}) (interface{}, error) {
 	return current, nil
 }
 
+// CleanConfig cleans the config.
 func (bc *BaseConfig) CleanConfig() error {
 	if info, err := os.Stat(bc.ConfigRootDir); err != nil && os.IsExist(err) {
 		return err
 	} else if !info.IsDir() {
 		return errors.ErrNotDir
-	} else {
-		if err := os.RemoveAll(bc.ConfigRootDir); err != nil {
-			return err
-		}
+	} else if err := os.RemoveAll(bc.ConfigRootDir); err != nil {
+		return err
 	}
 	return nil
 }

@@ -1,3 +1,4 @@
+// Package http provides constants for HTTP server and client settings.
 package http
 
 import "time"
@@ -18,7 +19,7 @@ const (
 	// DefaultServerTimeout is the overall timeout for server operations.
 	DefaultServerTimeout = 60 * time.Second
 
-	// DefaultServerMaxHeaderBytes is the maximum size of request headers.
+	// DefaultHTTPRequestSize is the maximum size of request headers.
 	DefaultHTTPRequestSize = 1024 * 1024 * 5 // 5MB
 
 	// DefaultHTTPClientTimeout is the default timeout for HTTP client operations.

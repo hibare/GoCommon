@@ -23,7 +23,7 @@ func TestTokenAuthSuccess(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), []string{testToken})
 
@@ -42,7 +42,7 @@ func TestTokenAuthNoKeyFailure(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), []string{testToken})
 
@@ -63,7 +63,7 @@ func TestTokenAuthWrongKeyFailure(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := TokenAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), []string{testToken})
 
@@ -83,7 +83,7 @@ func TestRequestLogger(t *testing.T) {
 		}()
 
 		// Create a mock server
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			if _, err := w.Write([]byte("Hello, world!")); err != nil {
 				t.Fatalf("failed to write response: %v", err)
@@ -118,7 +118,7 @@ func TestRequestLogger(t *testing.T) {
 		}()
 
 		// Create a mock server
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		})
 
@@ -149,7 +149,7 @@ func TestRequestLogger(t *testing.T) {
 		}()
 
 		// Create a mock server
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 
@@ -177,7 +177,7 @@ func TestRequestLogger(t *testing.T) {
 func TestBasicSecurity(t *testing.T) {
 	const requestSizeLimit = 1024 * 1024 // 1 MB
 
-	mw := BasicSecurity(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mw := BasicSecurity(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}), requestSizeLimit)
 

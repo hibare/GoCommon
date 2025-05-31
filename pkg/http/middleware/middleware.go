@@ -1,3 +1,4 @@
+// Package middleware provides middleware for the HTTP server.
 package middleware
 
 import (
@@ -18,7 +19,7 @@ func TokenAuth(next http.Handler, tokens []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Header.Get(AuthHeaderName)
 
-		if apiKey == "" || !slice.SliceContains(apiKey, tokens) {
+		if apiKey == "" || !slice.Contains(apiKey, tokens) {
 			commonHttp.WriteErrorResponse(w, http.StatusUnauthorized, errors.ErrUnauthorized)
 			return
 		}
