@@ -53,7 +53,7 @@ func TestSend(t *testing.T) {
 		},
 	}
 
-	err := message.Send(webhook)
+	err := message.Send(t.Context(), webhook)
 	require.NoError(t, err)
 }
 
@@ -73,7 +73,7 @@ func TestSendErrorStatusCode(t *testing.T) {
 		},
 	}
 
-	err := message.Send(webhook)
+	err := message.Send(t.Context(), webhook)
 	require.Error(t, err)
 }
 
@@ -86,7 +86,7 @@ func TestSendRequestError(t *testing.T) {
 		},
 	}
 
-	err := message.Send("invalid-url")
+	err := message.Send(t.Context(), "invalid-url")
 	require.Error(t, err)
 }
 
@@ -101,6 +101,6 @@ func TestSendMarshalError(t *testing.T) {
 	// Force a marshal error by providing an invalid value
 	message.Embeds[0].Color = -1
 
-	err := message.Send("https://example.com")
+	err := message.Send(t.Context(), "https://example.com")
 	require.Error(t, err)
 }

@@ -162,13 +162,13 @@ func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
 		}
 	}()
 
-	if err := entity.PrivateKey.Decrypt(passphraseByte); err != nil {
-		return "", errors.Join(errors.New("failed to decrypt private key"), err)
+	if dErr := entity.PrivateKey.Decrypt(passphraseByte); dErr != nil {
+		return "", errors.Join(errors.New("failed to decrypt private key"), dErr)
 	}
 	for _, subkey := range entity.Subkeys {
 		if subkey.PrivateKey != nil {
-			if err := subkey.PrivateKey.Decrypt(passphraseByte); err != nil {
-				return "", errors.Join(errors.New("failed to decrypt subkey"), err)
+			if dErr := subkey.PrivateKey.Decrypt(passphraseByte); dErr != nil {
+				return "", errors.Join(errors.New("failed to decrypt subkey"), dErr)
 			}
 		}
 	}

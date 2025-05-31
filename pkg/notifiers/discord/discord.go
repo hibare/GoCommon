@@ -3,6 +3,7 @@ package discord
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -84,13 +85,19 @@ func (d *Message) AddFooter(footerStr string) error {
 }
 
 // Send sends the message to the specified Discord webhook URL.
-func (d *Message) Send(webhook string) error {
+func (d *Message) Send(ctx context.Context, webhook string) error {
 	payload, err := json.Marshal(d)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	resp, err := http.Post(webhook, "application/json", bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhook, bytes.NewBuffer(payload))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}

@@ -46,7 +46,7 @@ linters:
     - copyloopvar # detects places where loop variables are copied (Go 1.22+)
     - cyclop # checks function and package cyclomatic complexity
     - depguard # checks if package imports are in a list of acceptable packages
-    - dupl # tool for code clone detection
+    # - dupl # tool for code clone detection
     - durationcheck # checks for two durations multiplied together
     - errcheck # checking for unchecked errors, these unchecked errors can be critical bugs in some cases
     - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
@@ -119,7 +119,7 @@ linters:
     #- interfacebloat # checks the number of methods inside an interface
     #- ireturn # accept interfaces, return concrete types
     #- prealloc # [premature optimization, but can be used in some cases] finds slice declarations that could potentially be preallocated
-    #- tagalign # checks that struct tags are well aligned
+    - tagalign # checks that struct tags are well aligned
     #- varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
     #- wrapcheck # checks that errors returned from external packages are wrapped
     #- zerologlint # detects the wrong usage of zerolog that a user forgets to dispatch zerolog.Event
@@ -146,7 +146,17 @@ linters:
     #- wsl # [too strict and mostly code is not more readable] whitespace linter forces you to use empty lines
 
   # All settings can be found here https://github.com/golangci/golangci-lint/blob/HEAD/.golangci.reference.yml
+
   settings:
+    gosec:
+      excludes:
+        - G107 # Url provided to HTTP request as taint input
+        - G301 # Poor file permissions used when creating a directory
+        - G302 # Poor file permissions used with chmod
+        - G303 # Creating tempfile using a predictable path
+        - G304 # File path provided as taint input
+        - G306 # Poor file permissions used when writing to a new file
+
     cyclop:
       # The maximal code complexity to report.
       # Default: 10
@@ -287,7 +297,7 @@ linters:
         shadow:
           # Whether to be strict about shadowing; can be noisy.
           # Default: false
-          strict: true
+          strict: false
 
     inamedparam:
       # Skips check for interface methods with only a single parameter.

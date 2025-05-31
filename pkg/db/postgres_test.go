@@ -45,8 +45,8 @@ func TestPostgresDatabase(t *testing.T) {
 
 				// For connection errors, we need to attempt to use the connection
 				if err == nil {
-					sqlDB, err := db.DB()
-					if err == nil {
+					sqlDB, dErr := db.DB()
+					if dErr == nil {
 						_ = sqlDB.Ping()
 					}
 				}
