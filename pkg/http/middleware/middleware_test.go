@@ -96,7 +96,10 @@ func TestRequestLogger(t *testing.T) {
 
 		// Make a request to the test server to trigger logging
 		client := &http.Client{}
-		resp, err := client.Get(ts.URL)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
@@ -127,7 +130,10 @@ func TestRequestLogger(t *testing.T) {
 
 		// Make a request to the test server to trigger logging
 		client := &http.Client{}
-		resp, err := client.Get(ts.URL)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}
@@ -158,7 +164,10 @@ func TestRequestLogger(t *testing.T) {
 
 		// Make a request to the test server to trigger logging
 		client := &http.Client{}
-		resp, err := client.Get(ts.URL)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
 		if err != nil {
 			t.Fatalf("Error making request: %v", err)
 		}

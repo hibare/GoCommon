@@ -42,7 +42,7 @@ func getFieldOrTag(field reflect.StructField, useJSON bool) string {
 func ValidateStructErrors[T any](obj any, validate *validator.Validate, useJSONTag bool) (errs error) {
 	defer func() {
 		if r := recover(); r != nil {
-			errs = fmt.Errorf("Unable to validate %+v", r)
+			errs = fmt.Errorf("unable to validate %+v", r)
 		}
 	}()
 

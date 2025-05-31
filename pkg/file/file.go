@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -203,7 +204,11 @@ func ValidateFileSHA256(path string, sha256Str string) error {
 
 // DownloadFile downloads a file from the given URL to the specified destination path.
 func DownloadFile(url string, destination string) error {
-	response, err := http.Get(url)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("failed to get url: %w", err)
 	}

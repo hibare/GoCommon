@@ -1,0 +1,378 @@
+pkg/db/postgres.go:1: 1-49 lines are duplicate of `pkg/db/sqlite.go:1-49` (dupl)
+package db
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/golang-migrate/migrate/v4"
+	migratePG "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/johejo/golang-migrate-extra/source/iofs"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+// PostgresDatabase implements the Database interface for PostgreSQL.
+type PostgresDatabase struct{}
+
+// Open opens a database connection.
+func (p *PostgresDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {
+	return gorm.Open(postgres.Open(config.DSN), &gorm.Config{})
+}
+
+// Migrate migrates the database.
+func (p *PostgresDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	driver, err := migratePG.WithInstance(sqlDB, &migratePG.Config{})
+	if err != nil {
+		return fmt.Errorf("could not create postgres driver: %w", err)
+	}
+
+	source, err := iofs.New(config.MigrationsFS, config.MigrationsPath)
+	if err != nil {
+		return fmt.Errorf("could not create source: %w", err)
+	}
+
+	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
+	if err != nil {
+		return fmt.Errorf("could not create migrate instance: %w", err)
+	}
+
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("could not run migrations: %w", err)
+	}
+
+	return nil
+}
+pkg/db/sqlite.go:1: 1-49 lines are duplicate of `pkg/db/postgres.go:1-49` (dupl)
+package db
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/golang-migrate/migrate/v4"
+	migrateSQLite "github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/johejo/golang-migrate-extra/source/iofs"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+// SQLiteDatabase implements the Database interface for SQLite.
+type SQLiteDatabase struct{}
+
+// Open opens a database connection.
+func (s *SQLiteDatabase) Open(config DatabaseConfig) (*gorm.DB, error) {
+	return gorm.Open(sqlite.Open(config.DSN), &gorm.Config{})
+}
+
+// Migrate migrates the database.
+func (s *SQLiteDatabase) Migrate(db *gorm.DB, config DatabaseConfig) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	driver, err := migrateSQLite.WithInstance(sqlDB, &migrateSQLite.Config{})
+	if err != nil {
+		return fmt.Errorf("could not create sqlite driver: %w", err)
+	}
+
+	source, err := iofs.New(config.MigrationsFS, config.MigrationsPath)
+	if err != nil {
+		return fmt.Errorf("could not create source: %w", err)
+	}
+
+	m, err := migrate.NewWithInstance("iofs", source, "sqlite", driver)
+	if err != nil {
+		return fmt.Errorf("could not create migrate instance: %w", err)
+	}
+
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("could not run migrations: %w", err)
+	}
+
+	return nil
+}
+pkg/http/middleware/middleware_test.go:115: 115-147 lines are duplicate of `pkg/http/middleware/middleware_test.go:149-181` (dupl)
+	t.Run("Warning", func(t *testing.T) {
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer func() {
+			log.SetOutput(log.Writer())
+		}()
+
+		// Create a mock server
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+		})
+
+		// Create a test server with the RequestLogger middleware
+		ts := httptest.NewServer(RequestLogger(handler))
+		defer ts.Close()
+
+		// Make a request to the test server to trigger logging
+		client := &http.Client{}
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
+		if err != nil {
+			t.Fatalf("Error making request: %v", err)
+		}
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
+
+		logString := buf.String()
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "WARN request method=GET path=/ statusCode=400 duration=")
+	})
+pkg/http/middleware/middleware_test.go:149: 149-181 lines are duplicate of `pkg/http/middleware/middleware_test.go:115-147` (dupl)
+	t.Run("Error", func(t *testing.T) {
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer func() {
+			log.SetOutput(log.Writer())
+		}()
+
+		// Create a mock server
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+
+		// Create a test server with the RequestLogger middleware
+		ts := httptest.NewServer(RequestLogger(handler))
+		defer ts.Close()
+
+		// Make a request to the test server to trigger logging
+		client := &http.Client{}
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+		require.NoError(t, err)
+
+		resp, err := client.Do(request)
+		if err != nil {
+			t.Fatalf("Error making request: %v", err)
+		}
+		t.Cleanup(func() {
+			_ = resp.Body.Close()
+		})
+
+		logString := buf.String()
+		require.NotEmpty(t, logString)
+		require.Contains(t, logString, "ERROR request method=GET path=/ statusCode=500 duration=")
+	})
+pkg/validator/validator_test.go:12:1: File is not properly formatted (golines)
+	Name     string `json:"name" validate:"required" validate_errs:"Name is required"`
+^
+pkg/aws/s3/s3.go:111:14: G304: Potential file inclusion via variable (gosec)
+		fp, err := os.Open(file)
+		           ^
+pkg/aws/s3/s3.go:142:13: G304: Potential file inclusion via variable (gosec)
+	fp, err := os.Open(filePath)
+	           ^
+pkg/aws/s3/s3_test.go:61:9: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	err := os.WriteFile(filepath.Join(temp, "file1"), []byte("file1"), 0644)
+	       ^
+pkg/aws/s3/s3_test.go:63:8: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	err = os.WriteFile(filepath.Join(temp, "file2"), []byte("file2"), 0644)
+	      ^
+pkg/config/config.go:87:13: G301: Expect directory permissions to be 0750 or less (gosec)
+		if err := os.MkdirAll(bc.ConfigRootDir, 0755); err != nil {
+		          ^
+pkg/config/config_test.go:157:9: G301: Expect directory permissions to be 0750 or less (gosec)
+	err := os.MkdirAll(bc.ConfigFilePath, 0755)
+	       ^
+pkg/config/config_test.go:202:9: G301: Expect directory permissions to be 0750 or less (gosec)
+	err := os.MkdirAll(bc.ConfigFilePath, 0755)
+	       ^
+pkg/crypto/gpg/gpg.go:64:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	             ^
+pkg/crypto/gpg/gpg.go:99:20: G304: Potential file inclusion via variable (gosec)
+	plaintext, err := os.Open(inputFilePath)
+	                  ^
+pkg/crypto/gpg/gpg.go:107:17: G304: Potential file inclusion via variable (gosec)
+	output, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	               ^
+pkg/crypto/gpg/gpg.go:176:24: G304: Potential file inclusion via variable (gosec)
+	encryptedFile, err := os.Open(inputFilePath)
+	                      ^
+pkg/crypto/gpg/gpg.go:194:21: G304: Potential file inclusion via variable (gosec)
+	outputFile, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	                   ^
+pkg/crypto/gpg/gpg_test.go:15:2: G101: Potential hardcoded credentials: PGP private key block (gosec)
+	testPrivateKey  = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n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\n=ZxHp\n-----END PGP PRIVATE KEY BLOCK-----"
+	^
+pkg/crypto/gpg/gpg_test.go:124:24: G304: Potential file inclusion via variable (gosec)
+	decryptedData, err := os.ReadFile(decryptedFilePath)
+	                      ^
+pkg/crypto/gpg/gpg_test.go:252:12: G304: Potential file inclusion via variable (gosec)
+	f, err := os.OpenFile(encryptedFilePath, os.O_WRONLY, 0)
+	          ^
+pkg/file/file.go:50:18: G304: Potential file inclusion via variable (gosec)
+	zipFile, err := os.Create(zipPath)
+	                ^
+pkg/file/file.go:106:16: G304: Potential file inclusion via variable (gosec)
+		file, err := os.Open(path)
+		             ^
+pkg/file/file.go:136:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Open(path)
+	             ^
+pkg/file/file.go:154:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Open(path)
+	             ^
+pkg/file/file.go:176:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Open(path)
+	             ^
+pkg/file/file.go:223:14: G304: Potential file inclusion via variable (gosec)
+	out, err := os.Create(destination)
+	            ^
+pkg/file/file.go:243:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Open(archivePath)
+	             ^
+pkg/file/file.go:272:23: G304: Potential file inclusion via variable (gosec)
+			targetFile, err := os.OpenFile(targetFilePath, os.O_CREATE|os.O_WRONLY, header.FileInfo().Mode())
+			                   ^
+pkg/file/file.go:323:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Open(filePath)
+	             ^
+pkg/file/file_test.go:66:10: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+		err := os.WriteFile(filepath.Join(tempDir, "test"), []byte("test"), 0644)
+		       ^
+pkg/file/file_test.go:106:10: G301: Expect directory permissions to be 0750 or less (gosec)
+		err := os.MkdirAll(filepath.Join(testDir, "subdir"), os.ModePerm)
+		       ^
+pkg/file/file_test.go:428:16: G304: Potential file inclusion via variable (gosec)
+		file, err := os.OpenFile(filePath2, os.O_WRONLY, os.ModePerm)
+		             ^
+pkg/maps/maps.go:76:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Create(filePath)
+	             ^
+pkg/notifiers/discord/discord.go:93:15: G107: Potential HTTP request made with variable url (gosec)
+	resp, err := http.Post(webhook, "application/json", bytes.NewBuffer(payload))
+	             ^
+pkg/aws/s3/s3_test.go:89:10: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			resp, err := s3Client.UploadDir(t.Context(), "bucket", "prefix", temp, nil)
+			      ^
+pkg/aws/s3/s3_test.go:102:10: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			resp, err := s3Client.UploadDir(t.Context(), "bucket", "prefix", temp, nil)
+			      ^
+pkg/aws/s3/s3_test.go:117:9: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
+			     ^
+pkg/aws/s3/s3_test.go:126:9: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
+			     ^
+pkg/aws/s3/s3_test.go:141:10: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
+			      ^
+pkg/aws/s3/s3_test.go:150:10: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
+			      ^
+pkg/aws/s3/s3_test.go:158:10: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
+			      ^
+pkg/aws/s3/s3_test.go:169:4: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", false)
+			^
+pkg/aws/s3/s3_test.go:182:4: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
+			^
+pkg/aws/s3/s3_test.go:189:4: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
+			^
+pkg/aws/s3/s3_test.go:203:4: shadow: declaration of "err" shadows declaration at line 61 (govet)
+			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
+			^
+pkg/config/config.go:108:11: shadow: declaration of "err" shadows declaration at line 102 (govet)
+	if info, err := os.Stat(bc.ConfigFilePath); os.IsNotExist(err) {
+	         ^
+pkg/config/config.go:109:9: shadow: declaration of "err" shadows declaration at line 108 (govet)
+		file, err := os.Create(bc.ConfigFilePath)
+		      ^
+pkg/config/config.go:113:6: shadow: declaration of "err" shadows declaration at line 109 (govet)
+		if err := file.Close(); err != nil {
+		   ^
+pkg/config/config.go:174:5: shadow: declaration of "err" shadows declaration at line 169 (govet)
+	if err := v.Unmarshal(&current); err != nil {
+	   ^
+pkg/config/config.go:187:12: shadow: declaration of "err" shadows declaration at line 183 (govet)
+	} else if err := os.RemoveAll(bc.ConfigRootDir); err != nil {
+	          ^
+pkg/crypto/gpg/gpg.go:165:5: shadow: declaration of "err" shadows declaration at line 145 (govet)
+	if err := entity.PrivateKey.Decrypt(passphraseByte); err != nil {
+	   ^
+pkg/crypto/gpg/gpg.go:170:7: shadow: declaration of "err" shadows declaration at line 145 (govet)
+			if err := subkey.PrivateKey.Decrypt(passphraseByte); err != nil {
+			   ^
+pkg/db/db.go:43:5: shadow: declaration of "err" shadows declaration at line 39 (govet)
+	if err := sqlDB.Close(); err != nil {
+	   ^
+pkg/db/postgres.go:44:5: shadow: declaration of "err" shadows declaration at line 24 (govet)
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	   ^
+pkg/db/postgres_test.go:44:9: shadow: declaration of "err" shadows declaration at line 14 (govet)
+				db, err := pgDB.Open(tt.config)
+				    ^
+pkg/db/postgres_test.go:48:13: shadow: declaration of "err" shadows declaration at line 44 (govet)
+					sqlDB, err := db.DB()
+					       ^
+pkg/db/postgres_test.go:60:13: shadow: declaration of "err" shadows declaration at line 44 (govet)
+					sqlDB, err := db.DB()
+					       ^
+pkg/db/postgres_test.go:97:9: shadow: declaration of "err" shadows declaration at line 14 (govet)
+				db, err := pgDB.Open(tt.config)
+				    ^
+pkg/db/postgres_test.go:109:6: shadow: declaration of "err" shadows declaration at line 97 (govet)
+					err := row.Scan(&exists)
+					^
+pkg/db/sqlite.go:44:5: shadow: declaration of "err" shadows declaration at line 24 (govet)
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	   ^
+pkg/db/sqlite_test.go:50:12: shadow: declaration of "err" shadows declaration at line 41 (govet)
+				sqlDB, err := gormDB.DB()
+				       ^
+pkg/db/sqlite_test.go:56:6: shadow: declaration of "err" shadows declaration at line 50 (govet)
+					err := sqlDB.Close()
+					^
+pkg/file/file.go:168:5: shadow: declaration of "err" shadows declaration at line 154 (govet)
+	if err := scanner.Err(); err != nil {
+	   ^
+pkg/file/file.go:185:8: shadow: declaration of "err" shadows declaration at line 176 (govet)
+	if _, err := io.Copy(h, file); err != nil {
+	      ^
+pkg/file/file.go:262:11: shadow: declaration of "err" shadows declaration at line 243 (govet)
+		header, err := tarReader.Next()
+		        ^
+pkg/file/file.go:280:10: shadow: declaration of "err" shadows declaration at line 272 (govet)
+			if _, err := io.CopyN(targetFile, tarReader, header.Size); err != nil {
+			      ^
+pkg/file/file.go:332:8: shadow: declaration of "err" shadows declaration at line 323 (govet)
+	if _, err := io.Copy(hash, file); err != nil {
+	      ^
+pkg/maps/maps.go:86:9: shadow: declaration of "err" shadows declaration at line 76 (govet)
+		if _, err := fmt.Fprintf(file, "%v=%v\n", key, value); err != nil {
+		      ^
+pkg/db/postgres_test.go:50:7: ineffectual assignment to err (ineffassign)
+						err = sqlDB.Ping()
+						^
+pkg/structs/structs.go:57:2: for loop can be changed to use an integer range (Go 1.22+)
+Because the key is returned by a function or method, take care to consider side effects. (intrange)
+	for i := 0; i < val.NumField(); i++ {
+	^
+pkg/validator/validator.go:50:1: `if err != nil` has complex nested blocks (complexity: 13) (nestif)
+	if err != nil {
+^
+71 issues:
+* dupl: 4
+* golines: 1
+* gosec: 29
+* govet: 34
+* ineffassign: 1
+* intrange: 1
+* nestif: 1

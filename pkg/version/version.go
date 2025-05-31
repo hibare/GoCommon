@@ -2,6 +2,7 @@
 package version
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -61,7 +62,7 @@ func (v *Version) GetLatestVersion() error {
 
 	url := fmt.Sprintf(GithubEndpoint, v.GithubOwner, v.GithubRepo)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}

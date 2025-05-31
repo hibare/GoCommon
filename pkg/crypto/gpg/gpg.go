@@ -2,6 +2,7 @@
 package gpg
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -36,7 +37,11 @@ func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
 	}
 
 	keyURL := fmt.Sprintf("%s/pks/lookup?op=get&search=%s", keyServerURL, keyID)
-	response, err := http.Get(keyURL)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, keyURL, nil)
+	if err != nil {
+		return gpgPubKey, err
+	}
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return gpgPubKey, errors.Join(errors.New("failed to download GPG key"), err)
 	}
