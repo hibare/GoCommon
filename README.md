@@ -17,6 +17,7 @@ A modern, modular Go library providing reusable utilities and abstractions for c
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Makefile Commands](#makefile-commands)
 - [Usage](#usage)
 - [Package Documentation](#package-documentation)
   - [AWS](docs/aws.md)
@@ -71,6 +72,27 @@ Each package is documented and designed for easy integration and testing.
 
 ```sh
 go get github.com/hibare/GoCommon/v2
+```
+
+---
+
+## Makefile Commands
+
+This project provides a `Makefile` to simplify common development tasks. Use these commands to lint, test, and manage dependencies:
+
+| Command                      | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `make help`                  | Display all available make targets           |
+| `make clean`                 | Cleanup and tidy Go modules                  |
+| `make init`                  | Initialize project (lint & pre-commit setup) |
+| `make install-golangci-lint` | Install `golangci-lint` if not present       |
+| `make install-pre-commit`    | Install pre-commit git hooks                 |
+| `make test`                  | Run tests                                    |
+
+**Example:**
+
+```sh
+make test
 ```
 
 ---
