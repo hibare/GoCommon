@@ -8,7 +8,7 @@ import (
 )
 
 func TestCreateTestFile(t *testing.T) {
-	dir := os.TempDir()
+	dir := t.TempDir()
 	pattern := "test-file-*.txt"
 
 	// Test case 1: When pattern is empty
@@ -39,7 +39,7 @@ func TestCreateTestFile(t *testing.T) {
 }
 
 func TestCreateTestDir(t *testing.T) {
-	tempDir := os.TempDir()
+	tempDir := t.TempDir()
 
 	// Test case 1: Testing when dir and pattern are empty
 	// Expect the function to create a temporary directory with the default pattern and return the directory path without error

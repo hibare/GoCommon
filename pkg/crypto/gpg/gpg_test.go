@@ -20,12 +20,11 @@ const (
 
 func setupTestFile(t *testing.T) string {
 	t.Helper()
-	tempFile, err := os.CreateTemp("", "sample*.txt")
+	tempFile, err := os.CreateTemp(t.TempDir(), "sample*.txt")
 	require.NoError(t, err)
 	_, err = tempFile.WriteString(testFileContent)
 	require.NoError(t, err)
 	require.NoError(t, tempFile.Close())
-	t.Cleanup(func() { _ = os.Remove(tempFile.Name()) })
 	return tempFile.Name()
 }
 
@@ -197,11 +196,10 @@ func TestGPGDecryptEmptyPrivateKey(t *testing.T) {
 }
 
 func TestGPGEncryptEmptyInputFile(t *testing.T) {
-	tempFile, err := os.CreateTemp("", "emptyfile*.txt")
+	tempFile, err := os.CreateTemp(t.TempDir(), "emptyfile*.txt")
 	require.NoError(t, err)
 	tempFilePath := tempFile.Name()
 	require.NoError(t, tempFile.Close())
-	t.Cleanup(func() { _ = os.Remove(tempFilePath) })
 
 	gpgPubkey := GPG{PublicKey: testPublicKey}
 

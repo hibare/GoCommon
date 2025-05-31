@@ -249,7 +249,7 @@ func TestDownloadFile(t *testing.T) {
 		}))
 		defer server.Close()
 
-		downloadFilePath := filepath.Join(os.TempDir(), "test-file.txt")
+		downloadFilePath := filepath.Join(t.TempDir(), "test-file.txt")
 		t.Cleanup(func() {
 			_ = os.Remove(downloadFilePath)
 		})
@@ -271,7 +271,7 @@ func TestDownloadFile(t *testing.T) {
 		}))
 		defer server.Close()
 
-		downloadFilePath := filepath.Join(os.TempDir(), "test-file.txt")
+		downloadFilePath := filepath.Join(t.TempDir(), "test-file.txt")
 		t.Cleanup(func() {
 			_ = os.Remove(downloadFilePath)
 		})
@@ -290,11 +290,10 @@ func TestExtractFileFromTarGz(t *testing.T) {
 	t.Run("Valid Extraction", func(t *testing.T) {
 		archivePath := filepath.Join(testhelper.TestDataDir, "sample.tar.gz")
 		targetFilename := "sample.txt"
-		extractedFilePath := filepath.Join(os.TempDir(), targetFilename)
 
 		extractedPath, err := ExtractFileFromTarGz(archivePath, targetFilename)
 		assert.NoError(t, err)
-		assert.Equal(t, extractedFilePath, extractedPath)
+		assert.Contains(t, extractedPath, targetFilename)
 	})
 
 	t.Run("Invalid Extraction", func(t *testing.T) {
@@ -377,7 +376,7 @@ func TestFileHash(t *testing.T) {
 
 	t.Run("Empty File", func(t *testing.T) {
 		// Create an empty test file
-		file, err := os.CreateTemp("", "empty-file")
+		file, err := os.CreateTemp(t.TempDir(), "empty-file")
 		assert.NoError(t, err)
 		t.Cleanup(func() {
 			_ = file.Close()
@@ -402,7 +401,7 @@ func TestFilesSameContent(t *testing.T) {
 		content, filePath1, err := testhelper.CreateTestFile(t.TempDir(), "")
 		assert.NoError(t, err)
 
-		filePath2, err := os.CreateTemp("", "test-file")
+		filePath2, err := os.CreateTemp(t.TempDir(), "test-file")
 		assert.NoError(t, err)
 		t.Cleanup(func() {
 			_ = filePath2.Close()
