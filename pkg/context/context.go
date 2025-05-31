@@ -8,6 +8,8 @@ import (
 // Key is a type for context keys used in the custom Context.
 type Key string
 
+const requestIDKey Key = "request_id"
+
 // Context wraps a standard context and allows storing additional values.
 type Context struct {
 	Context context.Context
@@ -28,7 +30,7 @@ func (c *Context) WithValue(key, value any) *Context {
 
 // WithRequestID returns a copy of the Context with the provided request ID.
 func (c *Context) WithRequestID(requestID string) *Context {
-	return c.WithValue("request_id", requestID)
+	return c.WithValue(requestIDKey, requestID)
 }
 
 // WithContext sets the underlying context.Context.
@@ -49,5 +51,9 @@ func (c *Context) GetContext() context.Context {
 
 // GetRequestID returns the request ID from the Context.
 func (c *Context) GetRequestID() string {
-	return c.Context.Value("request_id").(string) //nolint:errcheck // reason: no error possible/needed
+	v := c.Context.Value(requestIDKey)
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
 }

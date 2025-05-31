@@ -201,7 +201,8 @@ func TestNewVersion_DefaultHTTPClient(t *testing.T) {
 	}
 	vs, err := NewVersion(opts)
 	require.NoError(t, err)
-	ver := vs.(*Version)
+	ver, ok := vs.(*Version)
+	require.True(t, ok)
 	require.NotNil(t, ver.httpClient)
 }
 
@@ -211,7 +212,6 @@ func TestVersionServiceInterface(t *testing.T) {
 		GithubRepo:     "repo",
 		CurrentVersion: "v1.0.0",
 	}
-	vs, err := NewVersion(opts)
+	_, err := NewVersion(opts)
 	require.NoError(t, err)
-	var _ VersionService = vs // compile-time check
 }

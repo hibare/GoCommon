@@ -28,8 +28,8 @@ var (
 	ErrMissingCurrentVersion = errors.New("currentVersion is empty")
 )
 
-// VersionService is the interface for the version service.
-type VersionService interface {
+// Versions is the interface for the version service.
+type Versions interface {
 	GetUpdateNotification() string
 	StripV() string
 	FetchLatestVersion() error
@@ -67,7 +67,7 @@ func (v *Version) StripV() string {
 	return strings.TrimPrefix(v.latestVersion, "v")
 }
 
-// GetLatestVersion fetches the latest version from GitHub.
+// FetchLatestVersion fetches the latest version from GitHub.
 func (v *Version) FetchLatestVersion() error {
 	if v.githubOwner == "" {
 		return ErrMissingGithubOwner
@@ -149,7 +149,7 @@ func (o *Options) validate() error {
 }
 
 // NewVersion creates a new version service.
-func NewVersion(opts Options) (VersionService, error) {
+func NewVersion(opts Options) (Versions, error) {
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
