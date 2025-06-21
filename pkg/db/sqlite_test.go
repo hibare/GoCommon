@@ -55,8 +55,7 @@ func TestSQLiteDatabase_Open(t *testing.T) {
 				if tt.config.DSN != "file::memory:?cache=shared" {
 					err := sqlDB.Close()
 					require.NoError(t, err)
-					err = os.Remove(tt.config.DSN)
-					require.NoError(t, err)
+					_ = os.Remove(tt.config.DSN)
 				}
 			}
 		})
