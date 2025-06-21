@@ -246,31 +246,31 @@ func NewS3WithDeps(client ServiceAPI) Client {
 // NewS3 returns a new instance of S3 with the provided configuration (for production use).
 func NewS3(ctx context.Context, opts Options) (Client, error) {
 	// Build config options slice based on provided input
-	var cfgOptions []func(*config.LoadOptions) error
+	var cfgOptions []func(*s3.Options)
 
 	if opts.Region != "" {
-		cfgOptions = append(cfgOptions, config.WithRegion(opts.Region))
+		cfgOptions = append(cfgOptions, func(o *s3.Options) {
+			o.Region = opts.Region
+		})
 	}
 	if opts.AccessKey != "" && opts.SecretKey != "" {
-		cfgOptions = append(cfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(opts.AccessKey, opts.SecretKey, "")))
-	}
-	if opts.Endpoint != "" {
-		cfgOptions = append(cfgOptions, config.WithEndpointResolverWithOptions(
-			aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{
-					URL:               opts.Endpoint,
-					HostnameImmutable: true,
-				}, nil
-			}),
-		))
+		cfgOptions = append(cfgOptions, func(o *s3.Options) {
+			o.Credentials = credentials.NewStaticCredentialsProvider(opts.AccessKey, opts.SecretKey, "")
+		})
 	}
 
-	cfg, err := config.LoadDefaultConfig(ctx, cfgOptions...)
+	if opts.Endpoint != "" {
+		cfgOptions = append(cfgOptions, func(o *s3.Options) {
+			o.BaseEndpoint = aws.String(opts.Endpoint)
+		})
+	}
+
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	s3Client := s3.NewFromConfig(cfg)
+	s3Client := s3.NewFromConfig(cfg, cfgOptions...)
 
 	return &S3{
 		Client: s3Client,
