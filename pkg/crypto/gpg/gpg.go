@@ -2,11 +2,9 @@
 package gpg
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,10 +13,18 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
 )
 
+const (
+	// GPGPrefix is the prefix for GPG files.
+	GPGPrefix = "gpg"
+)
+
+type GPGIface interface {
+	EncryptFile(inputFilePath string) (string, error)
+	DecryptFile(inputFilePath string) (string, error)
+}
+
 // GPG holds configuration and key data for GPG operations.
 type GPG struct {
-	KeyID          string
-	KeyServerURL   string
 	PublicKey      string
 	PublicKeyPath  string
 	PrivateKey     string
@@ -26,64 +32,17 @@ type GPG struct {
 	Passphrase     string
 }
 
-// GPGPrefix is the prefix for GPG files.
-const GPGPrefix = "gpg"
-
-// DownloadGPGPubKey downloads a GPG public key from a key server and saves it to a temp file.
-func DownloadGPGPubKey(keyID, keyServerURL string) (GPG, error) {
-	gpgPubKey := GPG{
-		KeyID:        keyID,
-		KeyServerURL: keyServerURL,
-	}
-
-	keyURL := fmt.Sprintf("%s/pks/lookup?op=get&search=%s", keyServerURL, keyID)
-	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, keyURL, nil)
-	if err != nil {
-		return gpgPubKey, err
-	}
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return gpgPubKey, errors.Join(errors.New("failed to download GPG key"), err)
-	}
-	defer func() {
-		_ = response.Body.Close()
-	}()
-
-	if response.StatusCode != http.StatusOK {
-		return gpgPubKey, errors.New("key-server returned non-OK status")
-	}
-
-	keyData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return gpgPubKey, errors.Join(errors.New("failed to read key data"), err)
-	}
-
-	outputFileName := fmt.Sprintf("gpg_pub_key_%s.asc", keyID)
-	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
-
-	file, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return gpgPubKey, errors.Join(errors.New("failed to create key file"), err)
-	}
-	defer func() {
-		if cErr := file.Close(); cErr != nil && err == nil {
-			err = cErr
-		}
-	}()
-
-	if _, err = file.Write(keyData); err != nil {
-		return gpgPubKey, errors.Join(errors.New("failed to write key data"), err)
-	}
-
-	gpgPubKey.PublicKeyPath = outputFilePath
-	gpgPubKey.PublicKey = string(keyData)
-
-	return gpgPubKey, nil
-}
-
 // EncryptFile encrypts the given file using the GPG public key and writes the result to a temp file.
 // Returns the path to the encrypted file on success.
 func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
+	// Input validation
+	if inputFilePath == "" {
+		return "", errors.New("inputFilePath cannot be empty")
+	}
+	if g.PublicKey == "" {
+		return "", errors.New("public key is required for encryption")
+	}
+
 	fileName := filepath.Base(inputFilePath)
 	outputFileName := fmt.Sprintf("%s.%s", fileName, GPGPrefix)
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
@@ -138,6 +97,17 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 // DecryptFile decrypts the given GPG-encrypted file using the private key and writes the result to a temp file.
 // Returns the path to the decrypted file on success.
 func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
+	// Input validation
+	if inputFilePath == "" {
+		return "", errors.New("inputFilePath cannot be empty")
+	}
+	if g.PrivateKey == "" {
+		return "", errors.New("private key is required for decryption")
+	}
+	if g.Passphrase == "" {
+		return "", errors.New("passphrase is required for decryption")
+	}
+
 	fileName := filepath.Base(inputFilePath)
 	outputFileName := strings.TrimSuffix(fileName, fmt.Sprintf(".%s", GPGPrefix))
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
@@ -205,3 +175,25 @@ func (g *GPG) DecryptFile(inputFilePath string) (string, error) {
 
 	return outputFilePath, nil
 }
+
+// Options is the options for the GPG service.
+type Options struct {
+	PublicKey      string
+	PublicKeyPath  string
+	PrivateKey     string
+	PrivateKeyPath string
+	Passphrase     string
+}
+
+func newGPG(opts Options) GPGIface {
+	return &GPG{
+		PublicKey:      opts.PublicKey,
+		PublicKeyPath:  opts.PublicKeyPath,
+		PrivateKey:     opts.PrivateKey,
+		PrivateKeyPath: opts.PrivateKeyPath,
+		Passphrase:     opts.Passphrase,
+	}
+}
+
+// NewGPG returns a new GPG instance.
+var NewGPG = newGPG

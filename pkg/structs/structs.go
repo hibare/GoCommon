@@ -6,14 +6,8 @@ import (
 	"reflect"
 )
 
-// CopyStruct copies the contents of src struct to dst struct.
-// Deprecated: Use StructCopy instead.
-func CopyStruct(src, dst interface{}) error {
-	return StructCopy(src, dst)
-}
-
-// StructCopy copies the contents of src struct to dst struct.
-func StructCopy(src, dst interface{}) error {
+// Copy copies the contents of src struct to dst struct.
+func Copy(src, dst any) error {
 	srcVal := reflect.ValueOf(src)
 	dstVal := reflect.ValueOf(dst)
 
@@ -32,8 +26,8 @@ func StructCopy(src, dst interface{}) error {
 	return nil
 }
 
-// StructCompare compares two structs for equality.
-func StructCompare(a, b interface{}) (bool, error) {
+// Compare compares two structs for equality.
+func Compare(a, b any) (bool, error) {
 	aVal := reflect.ValueOf(a)
 	bVal := reflect.ValueOf(b)
 
@@ -44,14 +38,14 @@ func StructCompare(a, b interface{}) (bool, error) {
 	return reflect.DeepEqual(a, b), nil
 }
 
-// StructToMap converts a struct to a map.
-func StructToMap(s interface{}) (map[string]interface{}, error) {
+// ToMap converts a struct to a map.
+func ToMap(s any) (map[string]any, error) {
 	val := reflect.ValueOf(s)
 	if val.Kind() != reflect.Struct {
 		return nil, errors.New("input must be a struct")
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	typ := val.Type()
 
 	for i := range val.NumField() {
@@ -63,8 +57,8 @@ func StructToMap(s interface{}) (map[string]interface{}, error) {
 	return result, nil
 }
 
-// StructContainsField checks if a struct contains a field with the given name.
-func StructContainsField(s interface{}, fieldName string) (bool, error) {
+// ContainsField checks if a struct contains a field with the given name.
+func ContainsField(s any, fieldName string) (bool, error) {
 	val := reflect.ValueOf(s)
 	if val.Kind() != reflect.Struct {
 		return false, errors.New("input must be a struct")
