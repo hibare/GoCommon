@@ -8,14 +8,14 @@ import (
 	"sync"
 )
 
-// MapContains checks if a key is present in map m.
-func MapContains[K comparable, V any](m map[K]V, k K) bool {
+// Contains checks if a key is present in map m.
+func Contains[K comparable, V any](m map[K]V, k K) bool {
 	_, ok := m[k]
 	return ok
 }
 
-// MapKeys returns all keys in a map.
-func MapKeys[K comparable, V any](m map[K]V) []K {
+// Keys returns all keys in a map.
+func Keys[K comparable, V any](m map[K]V) []K {
 	keys := make([]K, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
@@ -23,8 +23,8 @@ func MapKeys[K comparable, V any](m map[K]V) []K {
 	return keys
 }
 
-// MapValues returns all values in a map.
-func MapValues[K comparable, V any](m map[K]V) []V {
+// Values returns all values in a map.
+func Values[K comparable, V any](m map[K]V) []V {
 	values := make([]V, 0, len(m))
 	for _, value := range m {
 		values = append(values, value)
@@ -32,8 +32,8 @@ func MapValues[K comparable, V any](m map[K]V) []V {
 	return values
 }
 
-// MapSortByKeys sorts a map by its keys and returns a new map with sorted keys.
-func MapSortByKeys[K comparable, V any](m map[K]V, less func(a, b K) bool) map[K]V {
+// SortByKeys sorts a map by its keys and returns a new map with sorted keys.
+func SortByKeys[K comparable, V any](m map[K]V, less func(a, b K) bool) map[K]V {
 	keys := make([]K, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
@@ -51,8 +51,8 @@ func MapSortByKeys[K comparable, V any](m map[K]V, less func(a, b K) bool) map[K
 	return sortedMap
 }
 
-// MapSortByValues sorts a map by its values and returns a new map with sorted values.
-func MapSortByValues[K comparable, V any](m map[K]V, less func(a, b V) bool) map[K]V {
+// SortByValues sorts a map by its values and returns a new map with sorted values.
+func SortByValues[K comparable, V any](m map[K]V, less func(a, b V) bool) map[K]V {
 	keys := make([]K, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
@@ -70,8 +70,8 @@ func MapSortByValues[K comparable, V any](m map[K]V, less func(a, b V) bool) map
 	return sortedMap
 }
 
-// Map2EnvFile writes the map to a file where each line is key=value.
-func Map2EnvFile[K comparable, V any](m map[K]V, filePath string) error {
+// ToEnvFile writes the map to a file where each line is key=value.
+func ToEnvFile[K comparable, V any](m map[K]V, filePath string) error {
 	// Open or create the file for writing
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -91,8 +91,8 @@ func Map2EnvFile[K comparable, V any](m map[K]V, filePath string) error {
 	return nil
 }
 
-// MapFromSyncMap converts a sync.Map to a regular map.
-func MapFromSyncMap[K comparable, V any](m *sync.Map) map[K]V {
+// FromSyncMap converts a sync.Map to a regular map.
+func FromSyncMap[K comparable, V any](m *sync.Map) map[K]V {
 	result := make(map[K]V)
 	m.Range(func(key, value any) bool {
 		k, ok := key.(K)
