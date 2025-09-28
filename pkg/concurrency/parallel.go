@@ -74,7 +74,7 @@ func RunParallelTasks(ctx context.Context, opts ParallelOptions, tasks ...Parall
 	wg.Wait()
 
 	// Convert sync.Map to regular map
-	result := maps.MapFromSyncMap[string, error](&errorMap)
+	result := maps.FromSyncMap[string, error](&errorMap)
 
 	return result
 }
