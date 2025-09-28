@@ -3,6 +3,7 @@ package db
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/orlangure/gnomock"
 	"github.com/orlangure/gnomock/preset/postgres"
@@ -23,7 +24,7 @@ const (
 )
 
 // SetupMockPostgresDB sets up a mock postgres database.
-func SetupMockPostgresDB() (*gnomock.Container, DatabaseConfig, error) {
+func SetupMockPostgresDB(t *testing.T) (*gnomock.Container, DatabaseConfig, error) {
 	p := postgres.Preset(
 		postgres.WithUser(PGTestUser, PGTestPass),
 		postgres.WithDatabase(PGTestDB),
@@ -35,6 +36,10 @@ func SetupMockPostgresDB() (*gnomock.Container, DatabaseConfig, error) {
 		return nil, DatabaseConfig{}, err
 	}
 
+	t.Cleanup(func() {
+		_ = gnomock.Stop(container)
+	})
+
 	return container, DatabaseConfig{
 		DSN: fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 			container.Host,
@@ -44,9 +49,4 @@ func SetupMockPostgresDB() (*gnomock.Container, DatabaseConfig, error) {
 			PGTestDB,
 		),
 	}, nil
-}
-
-// UnsetMockPostgresDB unsets the mock postgres database.
-func UnsetMockPostgresDB(container *gnomock.Container) error {
-	return gnomock.Stop(container)
 }
