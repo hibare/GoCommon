@@ -70,7 +70,7 @@ func (m *MockClient) VolumeList(ctx context.Context, options volumeType.ListOpti
 	return args.Get(0).(volumeType.ListResponse), args.Error(1) //nolint:errcheck // reason: type assertion on mock, error not possible/needed
 }
 
-
+// SetMockClient sets the mock client for the Docker package.
 func SetMockClient(t *testing.T) *MockClient {
 	mockClient := &MockClient{}
 	NewClient = func(_ context.Context, _ Options) (ClientIface, error) {
