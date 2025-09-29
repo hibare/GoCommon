@@ -26,8 +26,8 @@ type S3APIIface interface {
 	ListObjects(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
 }
 
-// Client is the interface for the S3 service.
-type Client interface {
+// ClientIface is the interface for the S3 service.
+type ClientIface interface {
 	BuildKey(prefixes ...string) string
 	BuildTimestampedKey(prefixes ...string) string
 	TrimPrefix(keys []string, prefix string) []string
@@ -35,15 +35,16 @@ type Client interface {
 	UploadDir(ctx context.Context, bucket, prefix, baseDir string, exclude []*regexp.Regexp) (UploadDirResponse, error)
 	UploadFile(ctx context.Context, bucket, prefix, filePath string) (string, error)
 	ListObjectsAtPrefix(ctx context.Context, bucket, prefix string) ([]string, error)
+	DeleteObjects(ctx context.Context, bucket, key string, recursive bool) error
 }
 
-// S3 is the implementation of the S3 service.
-type S3 struct {
+// client is the implementation of the client service.
+type client struct {
 	Client S3APIIface
 }
 
 // BuildKey builds a key from the parts.
-func (s *S3) BuildKey(parts ...string) string {
+func (s *client) BuildKey(parts ...string) string {
 	partsSlice := []string{}
 
 	for _, p := range parts {
@@ -62,17 +63,14 @@ func (s *S3) BuildKey(parts ...string) string {
 }
 
 // BuildTimestampedKey builds a timestamped key from the parts.
-func (s *S3) BuildTimestampedKey(parts ...string) string {
-	partsSlice := make([]string, len(parts)+1)
-	timePrefix := time.Now().Format(constants.DefaultDateTimeLayout)
-	partsSlice[0] = timePrefix
-	copy(partsSlice[1:], parts)
-
-	return s.BuildKey(partsSlice...)
+func (s *client) BuildTimestampedKey(parts ...string) string {
+	// append the timestamp to the parts and reuse BuildKey
+	parts = append(parts, time.Now().Format(constants.DefaultDateTimeLayout))
+	return s.BuildKey(parts...)
 }
 
 // TrimPrefix trims the prefix from the keys.
-func (s *S3) TrimPrefix(keys []string, prefix string) []string {
+func (s *client) TrimPrefix(keys []string, prefix string) []string {
 	trimmedKeys := make([]string, 0, len(keys))
 	for _, key := range keys {
 		trimmedKey := strings.TrimPrefix(key, prefix)
@@ -92,7 +90,7 @@ type UploadDirResponse struct {
 }
 
 // UploadDir uploads a directory to the S3 service.
-func (s *S3) UploadDir(ctx context.Context, bucket, prefix, baseDir string, exclude []*regexp.Regexp) (UploadDirResponse, error) {
+func (s *client) UploadDir(ctx context.Context, bucket, prefix, baseDir string, exclude []*regexp.Regexp) (UploadDirResponse, error) {
 	resp := UploadDirResponse{
 		FailedFiles: make(map[string]error), // Initialize the map
 	}
@@ -134,7 +132,7 @@ func (s *S3) UploadDir(ctx context.Context, bucket, prefix, baseDir string, excl
 }
 
 // UploadFile uploads a file to the S3 service.
-func (s *S3) UploadFile(ctx context.Context, bucket, prefix, filePath string) (string, error) {
+func (s *client) UploadFile(ctx context.Context, bucket, prefix, filePath string) (string, error) {
 	fp, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -157,7 +155,7 @@ func (s *S3) UploadFile(ctx context.Context, bucket, prefix, filePath string) (s
 }
 
 // ListObjectsAtPrefix lists the objects at the prefix root.
-func (s *S3) ListObjectsAtPrefix(ctx context.Context, bucket, prefix string) ([]string, error) {
+func (s *client) ListObjectsAtPrefix(ctx context.Context, bucket, prefix string) ([]string, error) {
 	var keys []string
 	input := &s3.ListObjectsV2Input{
 		Bucket:    &bucket,
@@ -189,7 +187,7 @@ func (s *S3) ListObjectsAtPrefix(ctx context.Context, bucket, prefix string) ([]
 }
 
 // DeleteObjects deletes the objects from the S3 service.
-func (s *S3) DeleteObjects(ctx context.Context, bucket, key string, recursive bool) error {
+func (s *client) DeleteObjects(ctx context.Context, bucket, key string, recursive bool) error {
 	// Delete all child object recursively
 	if recursive {
 		resp, err := s.Client.ListObjects(ctx, &s3.ListObjectsInput{
@@ -228,11 +226,9 @@ type Options struct {
 	Region    string
 	AccessKey string
 	SecretKey string
-	Bucket    string
-	Prefix    string
 }
 
-func newClient(ctx context.Context, opts Options) (Client, error) {
+func newClient(ctx context.Context, opts Options) (ClientIface, error) {
 	// Build config options slice based on provided input
 	var cfgOptions []func(*s3.Options)
 
@@ -260,7 +256,7 @@ func newClient(ctx context.Context, opts Options) (Client, error) {
 
 	s3Client := s3.NewFromConfig(cfg, cfgOptions...)
 
-	return &S3{
+	return &client{
 		Client: s3Client,
 	}, nil
 }

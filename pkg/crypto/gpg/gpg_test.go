@@ -61,7 +61,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 	defer server.Close()
 
 	// Create GPG gpg with default HTTP client.
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	// Test fetching the key.
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
@@ -91,7 +91,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 }
 
 func TestGPG_FetchGPGPubKeyFromKeyServer_EmptyKeyID(t *testing.T) {
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer("", testKeyServerURL)
 
@@ -101,7 +101,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_EmptyKeyID(t *testing.T) {
 }
 
 func TestGPG_FetchGPGPubKeyFromKeyServer_EmptyKeyServerURL(t *testing.T) {
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, "")
 
@@ -115,7 +115,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_HTTPClientError(t *testing.T) {
 	mockClient := &commonHTTPClient.MockClient{}
 	mockClient.On("Do", mock.AnythingOfType("*http.Request")).Return(nil, assert.AnError)
 
-	gpg := NewGPG(GPGOptions{
+	gpg := NewGPG(Options{
 		HTTPClient: mockClient,
 	})
 
@@ -137,7 +137,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_NonOKStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 
@@ -158,7 +158,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_ReadBodyError(t *testing.T) {
 
 	mockClient.On("Do", mock.AnythingOfType("*http.Request")).Return(response, nil)
 
-	gpg := NewGPG(GPGOptions{
+	gpg := NewGPG(Options{
 		HTTPClient: mockClient,
 	})
 
@@ -256,7 +256,7 @@ func TestGPG_FetchGPGPubKeyFromKeyServer_FileWriteError(t *testing.T) {
 func TestNewGPG_WithHTTPClient(t *testing.T) {
 	mockClient := &commonHTTPClient.MockClient{}
 
-	gpg := NewGPG(GPGOptions{
+	gpg := NewGPG(Options{
 		HTTPClient: mockClient,
 	})
 
@@ -269,7 +269,7 @@ func TestNewGPG_WithHTTPClient(t *testing.T) {
 }
 
 func TestNewGPG_WithoutHTTPClient(t *testing.T) {
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	require.NotNil(t, gpg)
 
@@ -310,7 +310,7 @@ func TestGPG_FileNaming(t *testing.T) {
 	}))
 	defer server.Close()
 
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
@@ -370,7 +370,7 @@ func TestGPG_DifferentKeyIDs(t *testing.T) {
 			}))
 			defer server.Close()
 
-			gpg := NewGPG(GPGOptions{})
+			gpg := NewGPG(Options{})
 
 			filePath, err := gpg.FetchGPGPubKeyFromKeyServer(tc.keyID, server.URL)
 			require.NoError(t, err)
@@ -405,7 +405,7 @@ func TestGPG_ContextHandling(t *testing.T) {
 	}))
 	defer server.Close()
 
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
@@ -426,7 +426,7 @@ func TestGPG_FilePermissions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	gpg := NewGPG(GPGOptions{})
+	gpg := NewGPG(Options{})
 
 	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)

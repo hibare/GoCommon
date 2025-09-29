@@ -91,10 +91,16 @@ func (m *MockClient) ListObjectsAtPrefix(ctx context.Context, bucket, prefix str
 	return args.Get(0).([]string), args.Error(1) //nolint:errcheck // reason: type assertion on mock, error not possible/needed
 }
 
+// DeleteObjects is a mock implementation of the DeleteObjects method.
+func (m *MockClient) DeleteObjects(ctx context.Context, bucket, key string, recursive bool) error {
+	args := m.Called(ctx, bucket, key, recursive)
+	return args.Error(0)
+}
+
 // SetMockClient sets the mock client for the S3 package.
 func SetMockClient(t *testing.T) *MockClient {
 	mockClient := new(MockClient)
-	NewClient = func(_ context.Context, _ Options) (Client, error) {
+	NewClient = func(_ context.Context, _ Options) (ClientIface, error) {
 		return mockClient, nil
 	}
 	t.Cleanup(func() {
