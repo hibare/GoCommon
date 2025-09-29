@@ -137,7 +137,7 @@ func (bc *BaseConfig) Init() error {
 }
 
 // WriteYAMLConfig writes the YAML config.
-func (bc *BaseConfig) WriteYAMLConfig(current interface{}) error {
+func (bc *BaseConfig) WriteYAMLConfig(current any) error {
 	v := viper.New()
 	v.SetConfigType(bc.ConfigFileExtension)
 	v.SetConfigName(bc.ConfigFileName)
@@ -160,7 +160,7 @@ func (bc *BaseConfig) WriteYAMLConfig(current interface{}) error {
 }
 
 // ReadYAMLConfig reads the YAML config.
-func (bc *BaseConfig) ReadYAMLConfig(current interface{}) (interface{}, error) {
+func (bc *BaseConfig) ReadYAMLConfig(current any) (any, error) {
 	v := viper.New()
 	v.SetConfigType(bc.ConfigFileExtension)
 	v.SetConfigName(bc.ConfigFileName)
