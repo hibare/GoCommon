@@ -22,13 +22,13 @@ type Client interface {
 
 type client struct {
 	webhookURL string
-	httpClient commonHTTPClient.Client
+	httpClient commonHTTPClient.ClientIface
 }
 
 // Options is the options for the Discord client.
 type Options struct {
 	WebhookURL string
-	HTTPClient commonHTTPClient.Client
+	HTTPClient commonHTTPClient.ClientIface
 }
 
 func (o *Options) validate() error {

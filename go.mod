@@ -1,6 +1,6 @@
 module github.com/hibare/GoCommon/v2
 
-go 1.24.0
+go 1.25.1
 
 require (
 	github.com/ProtonMail/go-crypto v1.3.0
@@ -8,6 +8,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.31.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.14
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.2
+	github.com/distribution/reference v0.6.0
+	github.com/docker/docker v28.3.3+incompatible
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a
@@ -41,8 +43,6 @@ require (
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v28.3.3+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

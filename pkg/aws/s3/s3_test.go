@@ -24,9 +24,9 @@ func TestS3(t *testing.T) {
 
 	t.Run("GetPrefix and GetTimestampedPrefix", func(t *testing.T) {
 		s3 := &S3{}
-		prefix := s3.GetPrefix("foo", "bar")
+		prefix := s3.BuildKey("foo", "bar")
 		require.Equal(t, "foo/bar/", prefix)
-		tsPrefix := s3.GetTimestampedPrefix("foo", "bar")
+		tsPrefix := s3.BuildTimestampedKey("foo", "bar")
 		require.Contains(t, tsPrefix, "foo/bar/")
 		require.Greater(t, len(tsPrefix), len("foo/bar/"))
 	})
@@ -40,7 +40,7 @@ func TestS3(t *testing.T) {
 
 	t.Run("UploadDir", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(&s3.PutObjectOutput{}, nil).Twice()
@@ -53,7 +53,7 @@ func TestS3(t *testing.T) {
 			require.Empty(t, resp.FailedFiles)
 		})
 		t.Run("error", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(nil, errors.New("fail")).Twice()
@@ -70,7 +70,7 @@ func TestS3(t *testing.T) {
 
 	t.Run("UploadFile", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(&s3.PutObjectOutput{}, nil)
 			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
@@ -79,7 +79,7 @@ func TestS3(t *testing.T) {
 		})
 
 		t.Run("upload error", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("PutObject", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
 			key, err := s3Client.UploadFile(t.Context(), "bucket", "prefix", filepath.Join(temp, "file1"))
@@ -91,30 +91,30 @@ func TestS3(t *testing.T) {
 
 	t.Run("ListObjectsAtPrefixRoot", func(t *testing.T) {
 		t.Run("with results", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(&s3.ListObjectsV2Output{
 				Contents:       []types.Object{{Key: utils.ToPtr("prefix/file1")}},
 				CommonPrefixes: []types.CommonPrefix{{Prefix: utils.ToPtr("prefix/")}},
 			}, nil)
-			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
+			keys, err := s3Client.ListObjectsAtPrefix(t.Context(), "bucket", "prefix")
 			require.NoError(t, err)
 			require.Contains(t, keys, "prefix/file1")
 			require.Contains(t, keys, "prefix/")
 		})
 		t.Run("no results", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(&s3.ListObjectsV2Output{}, nil)
-			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
+			keys, err := s3Client.ListObjectsAtPrefix(t.Context(), "bucket", "prefix")
 			require.NoError(t, err)
 			require.Empty(t, keys)
 		})
 		t.Run("error", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjectsV2", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
-			keys, err := s3Client.ListObjectsAtPrefixRoot(t.Context(), "bucket", "prefix")
+			keys, err := s3Client.ListObjectsAtPrefix(t.Context(), "bucket", "prefix")
 			require.Error(t, err)
 			require.Empty(t, keys)
 		})
@@ -122,14 +122,14 @@ func TestS3(t *testing.T) {
 
 	t.Run("DeleteObjects", func(t *testing.T) {
 		t.Run("non-recursive success", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("DeleteObject", t.Context(), mock.Anything).Return(&s3.DeleteObjectOutput{}, nil)
 			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", false)
 			require.NoError(t, err)
 		})
 		t.Run("recursive success", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(&s3.ListObjectsOutput{
 				Contents: []types.Object{{Key: utils.ToPtr("key/1")}, {Key: utils.ToPtr("key/2")}},
@@ -142,14 +142,14 @@ func TestS3(t *testing.T) {
 			require.NoError(t, err)
 		})
 		t.Run("list error", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(nil, errors.New("fail"))
 			err := s3Client.DeleteObjects(t.Context(), "bucket", "key", true)
 			require.Error(t, err)
 		})
 		t.Run("delete error", func(t *testing.T) {
-			mockClient := new(MockS3Client)
+			mockClient := new(mockS3API)
 			s3Client := &S3{Client: mockClient}
 			objectKey := "key/1"
 			mockClient.On("ListObjects", t.Context(), mock.Anything).Return(&s3.ListObjectsOutput{

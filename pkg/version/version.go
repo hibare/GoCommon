@@ -51,7 +51,7 @@ type Version struct {
 	latestVersion   string
 	currentVersion  string
 	updateAvailable bool
-	httpClient      commonHTTPClient.Client
+	httpClient      commonHTTPClient.ClientIface
 }
 
 // GetUpdateNotification returns a notification string if a new version is available.
@@ -129,7 +129,7 @@ type Options struct {
 	GithubOwner    string
 	GithubRepo     string
 	CurrentVersion string
-	HTTPClient     commonHTTPClient.Client
+	HTTPClient     commonHTTPClient.ClientIface
 }
 
 func (o *Options) validate() error {

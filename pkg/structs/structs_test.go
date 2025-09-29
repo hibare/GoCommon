@@ -19,7 +19,7 @@ func TestStructCopy(t *testing.T) {
 	}
 	dst := &TestStruct{}
 
-	err := StructCopy(src, dst)
+	err := Copy(src, dst)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -46,7 +46,7 @@ func TestStructCompare(t *testing.T) {
 		Field3: false,
 	}
 
-	equal, err := StructCompare(a, b)
+	equal, err := Compare(a, b)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -54,7 +54,7 @@ func TestStructCompare(t *testing.T) {
 		t.Fatalf("expected structs to be equal")
 	}
 
-	equal, err = StructCompare(a, c)
+	equal, err = Compare(a, c)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -70,7 +70,7 @@ func TestStructToMap(t *testing.T) {
 		Field3: true,
 	}
 
-	m, err := StructToMap(s)
+	m, err := ToMap(s)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -93,7 +93,7 @@ func TestStructContainsField(t *testing.T) {
 		Field3: true,
 	}
 
-	contains, err := StructContainsField(s, "Field1")
+	contains, err := ContainsField(s, "Field1")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -101,7 +101,7 @@ func TestStructContainsField(t *testing.T) {
 		t.Fatalf("expected struct to contain field 'Field1'")
 	}
 
-	contains, err = StructContainsField(s, "NonExistentField")
+	contains, err = ContainsField(s, "NonExistentField")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

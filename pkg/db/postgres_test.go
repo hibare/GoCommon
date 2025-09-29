@@ -11,12 +11,8 @@ import (
 var testMigrationsPostgres embed.FS
 
 func TestPostgresDatabase(t *testing.T) {
-	container, baseConfig, err := SetupMockPostgresDB()
+	_, baseConfig, err := SetupMockPostgresDB(t)
 	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = UnsetMockPostgresDB(container)
-	})
 
 	t.Run("Open", func(t *testing.T) {
 		tests := []struct {

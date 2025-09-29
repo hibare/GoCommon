@@ -21,3 +21,6 @@ main.go
 
 # Go workspace file
 go.work
+
+# Other
+.ignored

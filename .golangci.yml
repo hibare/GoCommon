@@ -378,3 +378,11 @@ linters:
       # Enable/disable `os.TempDir()` detections.
       # Default: false
       os-temp-dir: true
+
+    revive:
+      # Rules to disable
+      rules:
+        - name: exported
+          disabled: true
+        - name: var-naming
+          disabled: true

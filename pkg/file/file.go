@@ -5,11 +5,8 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bufio"
-	"bytes"
 	"compress/gzip"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log/slog"
@@ -19,7 +16,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hibare/GoCommon/v2/pkg/errors"
+	"github.com/hibare/GoCommon/v2/pkg/crypto/hash"
 )
 
 func shouldExclude(name string, exclude []*regexp.Regexp) bool {
@@ -171,40 +168,9 @@ func ReadFileLines(path string) ([]string, error) {
 	return lines, nil
 }
 
-// CalculateFileSHA256 calculates the SHA-256 checksum of a file and returns it as a hex string.
-func CalculateFileSHA256(path string) (string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() {
-		_ = file.Close()
-	}()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, file); err != nil {
-		return "", fmt.Errorf("failed to hash file: %w", err)
-	}
-
-	return hex.EncodeToString(h.Sum(nil)), nil
-}
-
-// ValidateFileSHA256 checks if the SHA-256 checksum of a file matches the provided checksum string.
-func ValidateFileSHA256(path string, sha256Str string) error {
-	calculatedSha256, err := CalculateFileSHA256(path)
-	if err != nil {
-		return fmt.Errorf("failed to calculate file SHA256: %w", err)
-	}
-
-	if calculatedSha256 != sha256Str {
-		return errors.ErrChecksumMismatch
-	}
-	return nil
-}
-
 // DownloadFile downloads a file from the given URL to the specified destination path.
-func DownloadFile(url string, destination string) error {
-	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+func DownloadFile(ctx context.Context, url string, destination string) error {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
@@ -318,35 +284,18 @@ func ListFilesDirs(root string, exclude []*regexp.Regexp) ([]string, []string) {
 	return files, dirs
 }
 
-// GetHash computes the SHA-256 hash of a file and returns the raw bytes.
-func GetHash(filePath string) ([]byte, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() {
-		_ = file.Close()
-	}()
-
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return nil, fmt.Errorf("failed to hash file: %w", err)
-	}
-
-	return hash.Sum(nil), nil
-}
-
 // IsFilesSameContent checks if two files have the same content by comparing their SHA-256 hashes.
 func IsFilesSameContent(file1, file2 string) (bool, error) {
-	hash1, err := GetHash(file1)
+	hasher := hash.NewSHA256Hasher()
+	hash1, err := hasher.HashFile(file1)
 	if err != nil {
 		return false, fmt.Errorf("failed to hash file1: %w", err)
 	}
 
-	hash2, err := GetHash(file2)
+	hash2, err := hasher.HashFile(file2)
 	if err != nil {
 		return false, fmt.Errorf("failed to hash file2: %w", err)
 	}
 
-	return bytes.Equal(hash1, hash2), nil
+	return hash1 == hash2, nil
 }
