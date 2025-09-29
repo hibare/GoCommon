@@ -8,6 +8,7 @@ import (
 	imageType "github.com/docker/docker/api/types/image"
 	networkType "github.com/docker/docker/api/types/network"
 	volumeType "github.com/docker/docker/api/types/volume"
+	"github.com/docker/docker/client"
 )
 
 // DockerAPIIface is the interface for the Docker API.
@@ -83,3 +84,20 @@ func (c *Client) NetworkList(ctx context.Context, options networkType.ListOption
 func (c *Client) VolumeList(ctx context.Context, options volumeType.ListOptions) (volumeType.ListResponse, error) {
 	return c.client.VolumeList(ctx, options)
 }
+
+// Options is the options for the Docker client.
+type Options struct {}
+
+func newClient(ctx context.Context, _ Options) (ClientIface, error) {
+	dClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{
+		client: dClient,
+	}, nil
+}
+
+// NewClient returns a new instance of the Client.
+var NewClient = newClient
