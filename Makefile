@@ -22,10 +22,8 @@ init: ## Initialize the project
 
 .PHONY: install-golangci-lint
 install-golangci-lint: ## Install golangci-lint
-ifeq (, $(shell which golangci-lint))
 	@echo "Installing golangci-lint..."
 	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin
-endif
 
 .PHONY: install-pre-commit
 install-pre-commit: ## Install pre-commit

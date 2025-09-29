@@ -321,9 +321,11 @@ func TestGPGManager_FileNaming(t *testing.T) {
 	actualFileName := filepath.Base(*filePath)
 	assert.Equal(t, expectedFileName, actualFileName)
 
-	// Verify the file is in the temp directory.
-	tempDir := t.TempDir()
-	assert.True(t, strings.HasPrefix(*filePath, tempDir))
+	// Verify the file exists and is readable.
+	fileInfo, err := os.Stat(*filePath)
+	require.NoError(t, err)
+	assert.False(t, fileInfo.IsDir())
+	assert.Greater(t, fileInfo.Size(), int64(0))
 
 	// Cleanup.
 	t.Cleanup(func() {
