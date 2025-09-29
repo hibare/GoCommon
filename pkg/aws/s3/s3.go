@@ -28,12 +28,13 @@ type ServiceAPI interface {
 
 // Client is the interface for the S3 service.
 type Client interface {
-	GetPrefix(prefixes ...string) string
-	GetTimestampedPrefix(prefixes ...string) string
+	BuildKey(prefixes ...string) string
+	BuildTimestampedKey(prefixes ...string) string
 	TrimPrefix(keys []string, prefix string) []string
+
 	UploadDir(ctx context.Context, bucket, prefix, baseDir string, exclude []*regexp.Regexp) (UploadDirResponse, error)
 	UploadFile(ctx context.Context, bucket, prefix, filePath string) (string, error)
-	ListObjectsAtPrefixRoot(ctx context.Context, bucket, prefix string) ([]string, error)
+	ListObjectsAtPrefix(ctx context.Context, bucket, prefix string) ([]string, error)
 }
 
 // S3 is the implementation of the S3 service.
@@ -41,8 +42,8 @@ type S3 struct {
 	Client ServiceAPI
 }
 
-// getPrefix sets the prefix for the S3 service.
-func (s *S3) getPrefix(timestamped bool, parts ...string) string {
+// BuildKey builds a key from the parts.
+func (s *S3) BuildKey(parts ...string) string {
 	partsSlice := []string{}
 
 	for _, p := range parts {
@@ -51,33 +52,28 @@ func (s *S3) getPrefix(timestamped bool, parts ...string) string {
 		}
 	}
 
-	generatedPrefix := filepath.Join(partsSlice...)
+	generatedKey := filepath.Join(partsSlice...)
 
-	if timestamped {
-		timePrefix := time.Now().Format(constants.DefaultDateTimeLayout)
-		generatedPrefix = filepath.Join(generatedPrefix, timePrefix)
+	if !strings.HasSuffix(generatedKey, S3PrefixSeparator) {
+		generatedKey = fmt.Sprintf("%s%s", generatedKey, S3PrefixSeparator)
 	}
 
-	if !strings.HasSuffix(generatedPrefix, constants.S3PrefixSeparator) {
-		generatedPrefix = fmt.Sprintf("%s%s", generatedPrefix, constants.S3PrefixSeparator)
-	}
-
-	return generatedPrefix
+	return generatedKey
 }
 
-// GetTimestampedPrefix sets the timestamped prefix for the S3 service.
-func (s *S3) GetTimestampedPrefix(parts ...string) string {
-	return s.getPrefix(true, parts...)
-}
+// BuildTimestampedKey builds a timestamped key from the parts.
+func (s *S3) BuildTimestampedKey(parts ...string) string {
+	partsSlice := make([]string, len(parts)+1)
+	timePrefix := time.Now().Format(constants.DefaultDateTimeLayout)
+	partsSlice[0] = timePrefix
+	copy(partsSlice[1:], parts)
 
-// GetPrefix sets the prefix for the S3 service.
-func (s *S3) GetPrefix(parts ...string) string {
-	return s.getPrefix(false, parts...)
+	return s.BuildKey(partsSlice...)
 }
 
 // TrimPrefix trims the prefix from the keys.
 func (s *S3) TrimPrefix(keys []string, prefix string) []string {
-	var trimmedKeys []string
+	trimmedKeys := make([]string, 0, len(keys))
 	for _, key := range keys {
 		trimmedKey := strings.TrimPrefix(key, prefix)
 		trimmedKey = strings.TrimSuffix(trimmedKey, "/")
@@ -160,8 +156,8 @@ func (s *S3) UploadFile(ctx context.Context, bucket, prefix, filePath string) (s
 	return key, nil
 }
 
-// ListObjectsAtPrefixRoot lists the objects at the prefix root.
-func (s *S3) ListObjectsAtPrefixRoot(ctx context.Context, bucket, prefix string) ([]string, error) {
+// ListObjectsAtPrefix lists the objects at the prefix root.
+func (s *S3) ListObjectsAtPrefix(ctx context.Context, bucket, prefix string) ([]string, error) {
 	var keys []string
 	input := &s3.ListObjectsV2Input{
 		Bucket:    &bucket,
@@ -236,15 +232,7 @@ type Options struct {
 	Prefix    string
 }
 
-// NewS3WithDeps returns a new S3 instance with injected dependencies (for testing/mocking).
-func NewS3WithDeps(client ServiceAPI) Client {
-	return &S3{
-		Client: client,
-	}
-}
-
-// NewS3 returns a new instance of S3 with the provided configuration (for production use).
-func NewS3(ctx context.Context, opts Options) (Client, error) {
+func newS3(ctx context.Context, opts Options) (Client, error) {
 	// Build config options slice based on provided input
 	var cfgOptions []func(*s3.Options)
 
@@ -276,3 +264,6 @@ func NewS3(ctx context.Context, opts Options) (Client, error) {
 		Client: s3Client,
 	}, nil
 }
+
+// NewS3 returns a new instance of S3 with the provided configuration (for production use).
+var NewS3 = newS3

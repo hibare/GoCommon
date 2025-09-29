@@ -19,7 +19,4 @@ const (
 
 	// ConfigFileExtension is the config file extension.
 	ConfigFileExtension = "yaml"
-
-	// S3PrefixSeparator is the S3 prefix separator.
-	S3PrefixSeparator = "/"
 )
