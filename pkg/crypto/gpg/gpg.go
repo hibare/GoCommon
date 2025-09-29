@@ -23,6 +23,9 @@ const (
 
 	// GPGPrefix is the prefix for GPG files.
 	GPGPrefix = "gpg"
+
+	// GPGEncodeBlockType is the block type for armored GPG messages.
+	GPGEncodeBlockType = "PGP MESSAGE"
 )
 
 // GPGIface is the interface for the GPG manager.
@@ -46,22 +49,22 @@ type GPG struct {
 	httpClient     commonHTTPClient.ClientIface
 }
 
-// ReadPublicKeyFromFile reads the public key from the file.
-func (g *GPG) ReadPublicKeyFromFile() (string, error) {
-	keyData, err := os.ReadFile(g.PublicKeyPath)
+func (g *GPG) readFile(p string) (string, error) {
+	keyData, err := os.ReadFile(p)
 	if err != nil {
 		return "", err
 	}
 	return string(keyData), nil
 }
 
+// ReadPublicKeyFromFile reads the public key from the file.
+func (g *GPG) ReadPublicKeyFromFile() (string, error) {
+	return g.readFile(g.PublicKeyPath)
+}
+
 // ReadPrivateKeyFromFile reads the private key from the file.
 func (g *GPG) ReadPrivateKeyFromFile() (string, error) {
-	keyData, err := os.ReadFile(g.PrivateKeyPath)
-	if err != nil {
-		return "", err
-	}
-	return string(keyData), nil
+	return g.readFile(g.PrivateKeyPath)
 }
 
 // FetchGPGPubKeyFromKeyServer fetches a GPG key from the key server.
@@ -158,7 +161,7 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 		_ = output.Close()
 	}()
 
-	encrypted, err := armor.Encode(output, "PGP MESSAGE", nil)
+	encrypted, err := armor.Encode(output, GPGEncodeBlockType, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create armored output: %w", err)
 	}
@@ -265,7 +268,7 @@ type ManagerOptions struct {
 	HTTPClient commonHTTPClient.ClientIface
 }
 
-func newGPGManager(opts ManagerOptions) GPGIface {
+func newGPG(opts ManagerOptions) GPGIface {
 	if opts.HTTPClient == nil {
 		opts.HTTPClient = commonHTTPClient.NewDefaultClient()
 	}
@@ -275,5 +278,5 @@ func newGPGManager(opts ManagerOptions) GPGIface {
 	}
 }
 
-// NewGPGManager returns a new GPG manager.
-var NewGPGManager = newGPGManager
+// NewGPG returns a new GPG manager.
+var NewGPG = newGPG

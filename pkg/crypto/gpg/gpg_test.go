@@ -61,7 +61,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 	defer server.Close()
 
 	// Create GPG manager with default HTTP client
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	// Test fetching the key
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
@@ -91,7 +91,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 }
 
 func TestGPGManager_FetchGPGPubKeyFromKeyServer_EmptyKeyID(t *testing.T) {
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer("", testKeyServerURL)
 
@@ -101,7 +101,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_EmptyKeyID(t *testing.T) {
 }
 
 func TestGPGManager_FetchGPGPubKeyFromKeyServer_EmptyKeyServerURL(t *testing.T) {
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, "")
 
@@ -115,7 +115,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_HTTPClientError(t *testing.T) {
 	mockClient := &commonHTTPClient.MockClient{}
 	mockClient.On("Do", mock.AnythingOfType("*http.Request")).Return(nil, assert.AnError)
 
-	manager := NewGPGManager(ManagerOptions{
+	manager := NewGPG(ManagerOptions{
 		HTTPClient: mockClient,
 	})
 
@@ -137,7 +137,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_NonOKStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 
@@ -158,7 +158,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_ReadBodyError(t *testing.T) {
 
 	mockClient.On("Do", mock.AnythingOfType("*http.Request")).Return(response, nil)
 
-	manager := NewGPGManager(ManagerOptions{
+	manager := NewGPG(ManagerOptions{
 		HTTPClient: mockClient,
 	})
 
@@ -254,7 +254,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_FileWriteError(t *testing.T) {
 func TestNewGPGManager_WithHTTPClient(t *testing.T) {
 	mockClient := &commonHTTPClient.MockClient{}
 
-	manager := NewGPGManager(ManagerOptions{
+	manager := NewGPG(ManagerOptions{
 		HTTPClient: mockClient,
 	})
 
@@ -267,7 +267,7 @@ func TestNewGPGManager_WithHTTPClient(t *testing.T) {
 }
 
 func TestNewGPGManager_WithoutHTTPClient(t *testing.T) {
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	require.NotNil(t, manager)
 
@@ -308,7 +308,7 @@ func TestGPGManager_FileNaming(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
@@ -366,7 +366,7 @@ func TestGPGManager_DifferentKeyIDs(t *testing.T) {
 			}))
 			defer server.Close()
 
-			manager := NewGPGManager(ManagerOptions{})
+			manager := NewGPG(ManagerOptions{})
 
 			filePath, err := manager.FetchGPGPubKeyFromKeyServer(tc.keyID, server.URL)
 			require.NoError(t, err)
@@ -401,7 +401,7 @@ func TestGPGManager_ContextHandling(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
@@ -422,7 +422,7 @@ func TestGPGManager_FilePermissions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPGManager(ManagerOptions{})
+	manager := NewGPG(ManagerOptions{})
 
 	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
