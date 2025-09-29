@@ -15,8 +15,8 @@ import (
 // ErrNoEmbeds is returned when no embeds are available in the message.
 var ErrNoEmbeds = errors.New("no embeds available")
 
-// Client is the interface for the Discord client.
-type Client interface {
+// ClientIface is the interface for the Discord client.
+type ClientIface interface {
 	Send(ctx context.Context, msg *Message) error
 }
 
@@ -63,8 +63,7 @@ func (c *client) Send(ctx context.Context, msg *Message) error {
 	return nil
 }
 
-// NewClient creates a new Discord client with the given options.
-func NewClient(opts Options) (Client, error) {
+func newClient(opts Options) (ClientIface, error) {
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -78,3 +77,6 @@ func NewClient(opts Options) (Client, error) {
 		httpClient: opts.HTTPClient,
 	}, nil
 }
+
+// NewClient creates a new Discord client with the given options.
+var NewClient = newClient
