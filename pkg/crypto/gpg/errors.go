@@ -15,6 +15,9 @@ var (
 	// ErrNoEntitiesFoundInPrivateKey indicates no entities found in private key
 	ErrNoEntitiesFoundInPrivateKey = errors.New("no entities found in private key")
 
+	// ErrNoEntitiesFoundInPublicKey indicates no entities found in public key
+	ErrNoEntitiesFoundInPublicKey = errors.New("no entities found in public key")
+
 	// ErrNoPrivateKeyFoundInEntity indicates no private key found in entity
 	ErrNoPrivateKeyFoundInEntity = errors.New("no private key found in entity")
 )

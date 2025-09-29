@@ -3,6 +3,8 @@
     "godotenv",
     "gomod",
     "hibare",
+    "Iface",
+    "openpgp",
     "stdlog",
     "stretchr",
     "testhelper",
