@@ -18,8 +18,8 @@ import (
 	commonFiles "github.com/hibare/GoCommon/v2/pkg/file"
 )
 
-// ServiceAPI is the interface for the S3 service.
-type ServiceAPI interface {
+// S3APIIface is the interface for the S3 service.
+type S3APIIface interface {
 	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 	ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
@@ -39,7 +39,7 @@ type Client interface {
 
 // S3 is the implementation of the S3 service.
 type S3 struct {
-	Client ServiceAPI
+	Client S3APIIface
 }
 
 // BuildKey builds a key from the parts.
@@ -232,7 +232,7 @@ type Options struct {
 	Prefix    string
 }
 
-func newS3(ctx context.Context, opts Options) (Client, error) {
+func newClient(ctx context.Context, opts Options) (Client, error) {
 	// Build config options slice based on provided input
 	var cfgOptions []func(*s3.Options)
 
@@ -265,5 +265,5 @@ func newS3(ctx context.Context, opts Options) (Client, error) {
 	}, nil
 }
 
-// NewS3 returns a new instance of S3 with the provided configuration (for production use).
-var NewS3 = newS3
+// NewClient returns a new instance of S3 with the provided configuration (for production use).
+var NewClient = newClient
