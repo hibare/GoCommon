@@ -40,6 +40,10 @@ type GPGIface interface {
 
 	// Fetch keys
 	FetchGPGPubKeyFromKeyServer(keyID, keyServerURL string) (*string, error)
+
+	// Setter
+	SetPublicKey(p string)
+	SetPrivateKey(p string)
 }
 
 // GPG is the implementation of the GPG manager.
