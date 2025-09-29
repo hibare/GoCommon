@@ -57,6 +57,16 @@ func (g *GPG) readFile(p string) (string, error) {
 	return string(keyData), nil
 }
 
+// SetPublicKey sets the path to the public key file.
+func (g *GPG) SetPublicKey(p string) {
+	g.PublicKeyPath = p
+}
+
+// SetPrivateKey sets the path to the private key file.
+func (g *GPG) SetPrivateKey(p string) {
+	g.PrivateKeyPath = p
+}
+
 // ReadPublicKeyFromFile reads the public key from the file.
 func (g *GPG) ReadPublicKeyFromFile() (string, error) {
 	return g.readFile(g.PublicKeyPath)
@@ -129,7 +139,7 @@ func (g *GPG) EncryptFile(inputFilePath string) (string, error) {
 	}
 
 	fileName := filepath.Base(inputFilePath)
-	outputFileName := strings.TrimSuffix(fileName, fmt.Sprintf(".%s", GPGPrefix))
+	outputFileName := fmt.Sprintf("%s.%s", fileName, GPGPrefix)
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
 
 	publicKey, err := g.ReadPublicKeyFromFile()
@@ -263,12 +273,12 @@ func (g *GPG) DecryptFile(inputFilePath string, passphrase string) (string, erro
 	return outputFilePath, nil
 }
 
-// GPGOptions is the options for the GPG manager.
-type GPGOptions struct {
+// Options is the options for the GPG manager.
+type Options struct {
 	HTTPClient commonHTTPClient.ClientIface
 }
 
-func newGPG(opts GPGOptions) GPGIface {
+func newGPG(opts Options) GPGIface {
 	if opts.HTTPClient == nil {
 		opts.HTTPClient = commonHTTPClient.NewDefaultClient()
 	}
