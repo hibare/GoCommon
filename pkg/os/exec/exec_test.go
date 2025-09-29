@@ -285,7 +285,7 @@ func TestCmd_CombinedOutput(t *testing.T) {
 
 func TestCmd_ContextCancellation(t *testing.T) {
 	executor := NewExec()
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
 	defer cancel()
 
 	// Start a long-running command

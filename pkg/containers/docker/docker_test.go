@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"context"
 	"testing"
 
 	containerType "github.com/docker/docker/api/types/container"
@@ -328,17 +327,6 @@ func TestClient_Integration(t *testing.T) {
 }
 
 func TestClient_EdgeCases(t *testing.T) {
-	t.Run("context.TODO()", func(t *testing.T) {
-		mockAPI := &mockDockerAPI{}
-		client := &Client{client: mockAPI}
-
-		// Test with context.TODO()
-		mockAPI.On("ContainerList", context.TODO(), containerType.ListOptions{}).Return([]containerType.Summary{}, nil)
-		_, err := client.ContainerList(context.TODO(), containerType.ListOptions{})
-		require.NoError(t, err)
-		mockAPI.AssertExpectations(t)
-	})
-
 	t.Run("empty image list", func(t *testing.T) {
 		mockAPI := &mockDockerAPI{}
 		client := &Client{client: mockAPI}
