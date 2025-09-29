@@ -2,7 +2,6 @@ package file
 
 import (
 	"archive/zip"
-	"crypto/sha256"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -183,58 +182,6 @@ func TestReadFileLines(t *testing.T) {
 	})
 }
 
-func TestCalculateFileSHA256(t *testing.T) {
-	t.Run("Valid File", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
-
-		require.NoError(t, err)
-
-		expectedSHA256 := "2172154e8979de165445a17dd2bdcba6408df06de67d042a6ae6781a1461e076"
-
-		calculatedSHA256, err := CalculateFileSHA256(absPath)
-
-		require.NoError(t, err)
-		require.Equal(t, expectedSHA256, calculatedSHA256)
-	})
-
-	t.Run("Invalid File", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
-
-		require.NoError(t, err)
-
-		expectedSHA256 := "daed58c831385cdebbb45785b1d5e2c5b2d0769a83896affa720bb32a325b5c6"
-
-		calculatedSHA256, err := CalculateFileSHA256(absPath)
-
-		require.NoError(t, err)
-		require.NotEqual(t, expectedSHA256, calculatedSHA256)
-	})
-}
-
-func TestValidateFileSHA256(t *testing.T) {
-	t.Run("Valid SHA256", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
-
-		require.NoError(t, err)
-
-		expectedSHA256 := "2172154e8979de165445a17dd2bdcba6408df06de67d042a6ae6781a1461e076"
-
-		err = ValidateFileSHA256(absPath, expectedSHA256)
-		require.NoError(t, err)
-	})
-
-	t.Run("Invalid SHA256", func(t *testing.T) {
-		_, absPath, err := testhelper.CreateTestFile(t.TempDir(), "")
-
-		require.NoError(t, err)
-
-		expectedSHA256 := "daed58c831385cdebbb45785b1d5e2c5b2d0769a83896affa720bb32a325b5c6"
-
-		err = ValidateFileSHA256(absPath, expectedSHA256)
-		require.Error(t, err)
-	})
-}
-
 func TestDownloadFile(t *testing.T) {
 	t.Run("Valid Download", func(t *testing.T) {
 		// Create a test file
@@ -254,7 +201,7 @@ func TestDownloadFile(t *testing.T) {
 		})
 
 		// Download the file using the download function
-		err = DownloadFile(server.URL, downloadFilePath)
+		err = DownloadFile(t.Context(), server.URL, downloadFilePath)
 		require.NoError(t, err)
 
 		lines, err := ReadFileLines(downloadFilePath)
@@ -276,7 +223,7 @@ func TestDownloadFile(t *testing.T) {
 		})
 
 		// Download the file using the download function
-		err := DownloadFile(server.URL, downloadFilePath)
+		err := DownloadFile(t.Context(), server.URL, downloadFilePath)
 		require.Error(t, err)
 
 		lines, err := ReadFileLines(downloadFilePath)
@@ -347,50 +294,6 @@ func TestListFilesDirs(t *testing.T) {
 		files, dirs := ListFilesDirs(rootDir, []*regexp.Regexp{regexp.MustCompile("test_data")})
 		require.Equal(t, expectedFiles, files)
 		require.Equal(t, expectedDirs, dirs)
-	})
-}
-
-func TestFileHash(t *testing.T) {
-	t.Run("Valid File", func(t *testing.T) {
-		// Create a test file with known content
-		content, filePath, err := testhelper.CreateTestFile(t.TempDir(), "")
-		require.NoError(t, err)
-
-		// Calculate the expected hash using the same content
-		expectedHash := sha256.Sum256(content)
-
-		// Call the FileHash function
-		actualHash, err := GetHash(filePath)
-		require.NoError(t, err)
-
-		// Compare the actual hash with the expected hash
-		require.Equal(t, expectedHash[:], actualHash)
-	})
-
-	t.Run("Non-existent File", func(t *testing.T) {
-		// Call the FileHash function with a non-existent file path
-		_, err := GetHash("/tmp/non-existent-file.txt")
-		require.Error(t, err)
-	})
-
-	t.Run("Empty File", func(t *testing.T) {
-		// Create an empty test file
-		file, err := os.CreateTemp(t.TempDir(), "empty-file")
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_ = file.Close()
-			_ = os.Remove(file.Name())
-		})
-
-		// Call the FileHash function
-		actualHash, err := GetHash(file.Name())
-		require.NoError(t, err)
-
-		// Calculate the expected hash for an empty file
-		expectedHash := sha256.Sum256(nil)
-
-		// Compare the actual hash with the expected hash
-		require.Equal(t, expectedHash[:], actualHash)
 	})
 }
 
