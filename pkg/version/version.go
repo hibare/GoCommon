@@ -28,8 +28,8 @@ var (
 	ErrMissingCurrentVersion = errors.New("currentVersion is empty")
 )
 
-// Versions is the interface for the version service.
-type Versions interface {
+// VersionIface is the interface for the version service.
+type VersionIface interface {
 	GetUpdateNotification() string
 	StripV() string
 	FetchLatestVersion() error
@@ -149,7 +149,7 @@ func (o *Options) validate() error {
 }
 
 // NewVersion creates a new version service.
-func NewVersion(opts Options) (Versions, error) {
+func NewVersion(opts Options) (VersionIface, error) {
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
