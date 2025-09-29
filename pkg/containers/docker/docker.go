@@ -86,7 +86,7 @@ func (c *Client) VolumeList(ctx context.Context, options volumeType.ListOptions)
 }
 
 // Options is the options for the Docker client.
-type Options struct {}
+type Options struct{}
 
 func newClient(ctx context.Context, _ Options) (ClientIface, error) {
 	dClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
