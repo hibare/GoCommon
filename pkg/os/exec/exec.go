@@ -85,7 +85,9 @@ func (c *Cmd) CombinedOutput() ([]byte, error) {
 	return c.cmd.CombinedOutput()
 }
 
-// NewExec creates a real executor.
-func NewExec() ExecIface {
+func newExec() ExecIface {
 	return Exec{}
 }
+
+// NewExec creates a real executor.
+var NewExec = newExec
