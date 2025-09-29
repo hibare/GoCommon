@@ -46,7 +46,7 @@ func writeTempFile(t *testing.T, prefix, content string) string {
 	return f.Name()
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
+func TestGPG_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 	// Create a test server that returns a GPG key.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify the request URL
@@ -60,11 +60,11 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create GPG manager with default HTTP client.
-	manager := NewGPG(ManagerOptions{})
+	// Create GPG gpg with default HTTP client.
+	gpg := NewGPG(GPGOptions{})
 
 	// Test fetching the key.
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 
 	// Verify results.
 	require.NoError(t, err)
@@ -90,36 +90,36 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_Success(t *testing.T) {
 	})
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_EmptyKeyID(t *testing.T) {
-	manager := NewGPG(ManagerOptions{})
+func TestGPG_FetchGPGPubKeyFromKeyServer_EmptyKeyID(t *testing.T) {
+	gpg := NewGPG(GPGOptions{})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer("", testKeyServerURL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer("", testKeyServerURL)
 
 	require.Error(t, err)
 	require.Nil(t, filePath)
 	assert.Contains(t, err.Error(), "keyID cannot be empty")
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_EmptyKeyServerURL(t *testing.T) {
-	manager := NewGPG(ManagerOptions{})
+func TestGPG_FetchGPGPubKeyFromKeyServer_EmptyKeyServerURL(t *testing.T) {
+	gpg := NewGPG(GPGOptions{})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, "")
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, "")
 
 	require.Error(t, err)
 	require.Nil(t, filePath)
 	assert.Contains(t, err.Error(), "keyServerURL cannot be empty")
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_HTTPClientError(t *testing.T) {
+func TestGPG_FetchGPGPubKeyFromKeyServer_HTTPClientError(t *testing.T) {
 	// Create a mock HTTP client that returns an error.
 	mockClient := &commonHTTPClient.MockClient{}
 	mockClient.On("Do", mock.AnythingOfType("*http.Request")).Return(nil, assert.AnError)
 
-	manager := NewGPG(ManagerOptions{
+	gpg := NewGPG(GPGOptions{
 		HTTPClient: mockClient,
 	})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, testKeyServerURL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, testKeyServerURL)
 
 	require.Error(t, err)
 	require.Nil(t, filePath)
@@ -128,7 +128,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_HTTPClientError(t *testing.T) {
 	mockClient.AssertExpectations(t)
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_NonOKStatus(t *testing.T) {
+func TestGPG_FetchGPGPubKeyFromKeyServer_NonOKStatus(t *testing.T) {
 	// Create a test server that returns a non-OK status
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -137,16 +137,16 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_NonOKStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPG(ManagerOptions{})
+	gpg := NewGPG(GPGOptions{})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 
 	require.Error(t, err)
 	require.Nil(t, filePath)
 	assert.Contains(t, err.Error(), "key-server returned non-OK status: 404")
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_ReadBodyError(t *testing.T) {
+func TestGPG_FetchGPGPubKeyFromKeyServer_ReadBodyError(t *testing.T) {
 	// Create a mock HTTP client that returns a response with a body that fails to read.
 	mockClient := &commonHTTPClient.MockClient{}
 
@@ -158,11 +158,11 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_ReadBodyError(t *testing.T) {
 
 	mockClient.On("Do", mock.AnythingOfType("*http.Request")).Return(response, nil)
 
-	manager := NewGPG(ManagerOptions{
+	gpg := NewGPG(GPGOptions{
 		HTTPClient: mockClient,
 	})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, testKeyServerURL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, testKeyServerURL)
 
 	require.Error(t, err)
 	require.Nil(t, filePath)
@@ -171,7 +171,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_ReadBodyError(t *testing.T) {
 	mockClient.AssertExpectations(t)
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_FileCreationError(t *testing.T) {
+func TestGPG_FetchGPGPubKeyFromKeyServer_FileCreationError(t *testing.T) {
 	// Create a test server that returns a GPG key
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -207,7 +207,7 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_FileCreationError(t *testing.T) 
 	_ = file.Close()
 }
 
-func TestGPGManager_FetchGPGPubKeyFromKeyServer_FileWriteError(t *testing.T) {
+func TestGPG_FetchGPGPubKeyFromKeyServer_FileWriteError(t *testing.T) {
 	// Create a test server that returns a GPG key.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -253,40 +253,40 @@ func TestGPGManager_FetchGPGPubKeyFromKeyServer_FileWriteError(t *testing.T) {
 	t.Error("Expected file write to fail due to permission denied, but it succeeded")
 }
 
-func TestNewGPGManager_WithHTTPClient(t *testing.T) {
+func TestNewGPG_WithHTTPClient(t *testing.T) {
 	mockClient := &commonHTTPClient.MockClient{}
 
-	manager := NewGPG(ManagerOptions{
+	gpg := NewGPG(GPGOptions{
 		HTTPClient: mockClient,
 	})
 
-	require.NotNil(t, manager)
+	require.NotNil(t, gpg)
 
-	// Verify the manager uses the provided HTTP client.
-	gpgManager, ok := manager.(*GPG)
+	// Verify the gpg uses the provided HTTP client.
+	g, ok := gpg.(*GPG)
 	require.True(t, ok)
-	assert.Equal(t, mockClient, gpgManager.httpClient)
+	assert.Equal(t, mockClient, g.httpClient)
 }
 
-func TestNewGPGManager_WithoutHTTPClient(t *testing.T) {
-	manager := NewGPG(ManagerOptions{})
+func TestNewGPG_WithoutHTTPClient(t *testing.T) {
+	gpg := NewGPG(GPGOptions{})
 
-	require.NotNil(t, manager)
+	require.NotNil(t, gpg)
 
-	// Verify the manager uses the default HTTP client.
-	gpgManager, ok := manager.(*GPG)
+	// Verify the gpg uses the default HTTP client.
+	g, ok := gpg.(*GPG)
 	require.True(t, ok)
-	assert.NotNil(t, gpgManager.httpClient)
-	assert.IsType(t, &http.Client{}, gpgManager.httpClient)
+	assert.NotNil(t, g.httpClient)
+	assert.IsType(t, &http.Client{}, g.httpClient)
 }
 
-func TestGPGManager_Constants(t *testing.T) {
+func TestGPG_Constants(t *testing.T) {
 	assert.Equal(t, "asc", GPGFileExtension)
 	assert.Equal(t, "gpg_pub_key_", GPGFilePrefix)
 }
 
-func TestGPGManager_InterfaceCompliance(_ *testing.T) {
-	// Verify that GPGManager implements GPGManagerIface.
+func TestGPG_InterfaceCompliance(_ *testing.T) {
+	// Verify that GPG implements GPGIface.
 	var _ GPGIface = (*GPG)(nil)
 }
 
@@ -302,7 +302,7 @@ func (f *failingReader) Close() error {
 }
 
 // Test helper to verify the generated file path format.
-func TestGPGManager_FileNaming(t *testing.T) {
+func TestGPG_FileNaming(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(testGPGKeyData))
@@ -310,9 +310,9 @@ func TestGPGManager_FileNaming(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPG(ManagerOptions{})
+	gpg := NewGPG(GPGOptions{})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
 	require.NotNil(t, filePath)
 
@@ -325,7 +325,7 @@ func TestGPGManager_FileNaming(t *testing.T) {
 	fileInfo, err := os.Stat(*filePath)
 	require.NoError(t, err)
 	assert.False(t, fileInfo.IsDir())
-	assert.Greater(t, fileInfo.Size(), int64(0))
+	assert.Positive(t, fileInfo.Size())
 
 	// Cleanup.
 	t.Cleanup(func() {
@@ -334,7 +334,7 @@ func TestGPGManager_FileNaming(t *testing.T) {
 }
 
 // Test with different key IDs to ensure proper URL construction.
-func TestGPGManager_DifferentKeyIDs(t *testing.T) {
+func TestGPG_DifferentKeyIDs(t *testing.T) {
 	testCases := []struct {
 		name  string
 		keyID string
@@ -370,9 +370,9 @@ func TestGPGManager_DifferentKeyIDs(t *testing.T) {
 			}))
 			defer server.Close()
 
-			manager := NewGPG(ManagerOptions{})
+			gpg := NewGPG(GPGOptions{})
 
-			filePath, err := manager.FetchGPGPubKeyFromKeyServer(tc.keyID, server.URL)
+			filePath, err := gpg.FetchGPGPubKeyFromKeyServer(tc.keyID, server.URL)
 			require.NoError(t, err)
 			require.NotNil(t, filePath)
 
@@ -390,7 +390,7 @@ func TestGPGManager_DifferentKeyIDs(t *testing.T) {
 }
 
 // Test context handling in HTTP requests.
-func TestGPGManager_ContextHandling(t *testing.T) {
+func TestGPG_ContextHandling(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify that the request has a context.
 		ctx := r.Context()
@@ -405,9 +405,9 @@ func TestGPGManager_ContextHandling(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPG(ManagerOptions{})
+	gpg := NewGPG(GPGOptions{})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
 	require.NotNil(t, filePath)
 
@@ -418,7 +418,7 @@ func TestGPGManager_ContextHandling(t *testing.T) {
 }
 
 // Test file permissions.
-func TestGPGManager_FilePermissions(t *testing.T) {
+func TestGPG_FilePermissions(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(testGPGKeyData))
@@ -426,9 +426,9 @@ func TestGPGManager_FilePermissions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	manager := NewGPG(ManagerOptions{})
+	gpg := NewGPG(GPGOptions{})
 
-	filePath, err := manager.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
+	filePath, err := gpg.FetchGPGPubKeyFromKeyServer(testKeyID, server.URL)
 	require.NoError(t, err)
 	require.NotNil(t, filePath)
 

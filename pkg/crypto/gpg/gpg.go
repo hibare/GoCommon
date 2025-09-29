@@ -263,12 +263,12 @@ func (g *GPG) DecryptFile(inputFilePath string, passphrase string) (string, erro
 	return outputFilePath, nil
 }
 
-// ManagerOptions is the options for the GPG manager.
-type ManagerOptions struct {
+// GPGOptions is the options for the GPG manager.
+type GPGOptions struct {
 	HTTPClient commonHTTPClient.ClientIface
 }
 
-func newGPG(opts ManagerOptions) GPGIface {
+func newGPG(opts GPGOptions) GPGIface {
 	if opts.HTTPClient == nil {
 		opts.HTTPClient = commonHTTPClient.NewDefaultClient()
 	}
