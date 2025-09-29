@@ -14,8 +14,8 @@ func TestNewSHA256Hasher(t *testing.T) {
 	hasher := NewSHA256Hasher()
 	assert.NotNil(t, hasher, "NewSHA256Hasher() should not return nil")
 
-	// Verify it implements the Hasher interface
-	var _ Hasher = hasher
+	// Verify it implements the Hasher interface.
+	var _ = hasher
 }
 
 func TestSHA256Hasher_HashString(t *testing.T) {
@@ -108,9 +108,9 @@ func TestSHA256Hasher_VerifyString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := hasher.VerifyString(tt.data, tt.hash)
 			if tt.wantErr {
-				assert.Error(t, err, "VerifyString() should return error")
+				require.Error(t, err, "VerifyString() should return error")
 			} else {
-				assert.NoError(t, err, "VerifyString() should not return error")
+				require.NoError(t, err, "VerifyString() should not return error")
 			}
 			assert.Equal(t, tt.expected, result, "VerifyString() result should match expected")
 		})
@@ -127,7 +127,7 @@ func TestSHA256Hasher_HashFile(t *testing.T) {
 	}{
 		{
 			name: "non-existent file",
-			createFile: func(t *testing.T) string {
+			createFile: func(_ *testing.T) string {
 				return "non-existent-file.txt"
 			},
 			wantErr: true,
@@ -167,12 +167,11 @@ func TestSHA256Hasher_HashFile(t *testing.T) {
 			filePath := tt.createFile(t)
 			result, err := hasher.HashFile(filePath)
 			if tt.wantErr {
-				assert.Error(t, err, "HashFile() should return error")
+				require.Error(t, err, "HashFile() should return error")
 			} else {
-				assert.NoError(t, err, "HashFile() should not return error")
+				require.NoError(t, err, "HashFile() should not return error")
 				require.Len(t, result, 64, "HashFile() result should be 64 characters long")
 			}
-
 		})
 	}
 }
@@ -180,7 +179,7 @@ func TestSHA256Hasher_HashFile(t *testing.T) {
 func TestSHA256Hasher_VerifyFile(t *testing.T) {
 	hasher := &SHA256Hasher{}
 
-	// Create a temporary file for testing
+	// Create a temporary file for testing.
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "verify_test.txt")
 	testData := "hello world"
@@ -188,7 +187,7 @@ func TestSHA256Hasher_VerifyFile(t *testing.T) {
 	err := os.WriteFile(tempFile, []byte(testData), 0644)
 	require.NoError(t, err, "Failed to create test file")
 
-	// Calculate the correct hash
+	// Calculate the correct hash.
 	correctHash, err := hasher.HashString(testData)
 	require.NoError(t, err, "Failed to calculate correct hash")
 
@@ -226,9 +225,9 @@ func TestSHA256Hasher_VerifyFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := hasher.VerifyFile(tt.filePath, tt.hash)
 			if tt.wantErr {
-				assert.Error(t, err, "VerifyFile() should return error")
+				require.Error(t, err, "VerifyFile() should return error")
 			} else {
-				assert.NoError(t, err, "VerifyFile() should not return error")
+				require.NoError(t, err, "VerifyFile() should not return error")
 			}
 			assert.Equal(t, tt.expected, result, "VerifyFile() result should match expected")
 		})
@@ -238,44 +237,44 @@ func TestSHA256Hasher_VerifyFile(t *testing.T) {
 func TestSHA256Hasher_Integration(t *testing.T) {
 	hasher := &SHA256Hasher{}
 
-	// Test the complete workflow: hash string, verify string, hash file, verify file
+	// Test the complete workflow: hash string, verify string, hash file, verify file.
 	testData := "integration test data"
 
-	// Hash string
+	// Hash string.
 	stringHash, err := hasher.HashString(testData)
 	require.NoError(t, err, "HashString() should not return error")
 
-	// Verify string
+	// Verify string.
 	valid, err := hasher.VerifyString(testData, stringHash)
 	require.NoError(t, err, "VerifyString() should not return error")
 	assert.True(t, valid, "VerifyString() should return true for correct hash")
 
-	// Create temporary file
+	// Create temporary file.
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "integration_test.txt")
 	err = os.WriteFile(tempFile, []byte(testData), 0644)
 	require.NoError(t, err, "Failed to create test file")
 
-	// Hash file
+	// Hash file.
 	fileHash, err := hasher.HashFile(tempFile)
 	require.NoError(t, err, "HashFile() should not return error")
 
-	// Verify file
+	// Verify file.
 	valid, err = hasher.VerifyFile(tempFile, fileHash)
 	require.NoError(t, err, "VerifyFile() should not return error")
 	assert.True(t, valid, "VerifyFile() should return true for correct hash")
 
-	// Verify that string hash and file hash are the same for the same data
+	// Verify that string hash and file hash are the same for the same data.
 	assert.Equal(t, stringHash, fileHash, "String hash and file hash should be the same for identical data")
 }
 
 func TestSHA256Hasher_EdgeCases(t *testing.T) {
 	hasher := &SHA256Hasher{}
 
-	// Test with very long string
+	// Test with very long string.
 	t.Run("very long string", func(t *testing.T) {
 		longString := ""
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			longString += "a"
 		}
 
@@ -284,7 +283,7 @@ func TestSHA256Hasher_EdgeCases(t *testing.T) {
 		assert.Len(t, hash, 64, "Hash result should be 64 characters long")
 	})
 
-	// Test with string containing null bytes
+	// Test with string containing null bytes.
 	t.Run("string with null bytes", func(t *testing.T) {
 		nullString := "hello\x00world"
 
@@ -293,7 +292,7 @@ func TestSHA256Hasher_EdgeCases(t *testing.T) {
 		assert.Len(t, hash, 64, "Hash result should be 64 characters long")
 	})
 
-	// Test with string containing newlines
+	// Test with string containing newlines.
 	t.Run("string with newlines", func(t *testing.T) {
 		newlineString := "line1\nline2\r\nline3"
 
@@ -306,26 +305,26 @@ func TestSHA256Hasher_EdgeCases(t *testing.T) {
 func TestSHA256Hasher_ErrorCases(t *testing.T) {
 	hasher := &SHA256Hasher{}
 
-	// Test error handling in HashString - this is difficult to trigger in practice
-	// since sha256.Write() doesn't typically fail, but let's test the error path
+	// Test error handling in HashString - this is difficult to trigger in practice.
+	// since sha256.Write() doesn't typically fail, but let's test the error path.
 	t.Run("HashString error handling", func(t *testing.T) {
-		// Create a very large string that might cause memory issues
-		// This is unlikely to fail in practice, but tests the error path
+		// Create a very large string that might cause memory issues.
+		// This is unlikely to fail in practice, but tests the error path.
 		veryLargeString := make([]byte, 1<<30) // 1GB
 		for i := range veryLargeString {
 			veryLargeString[i] = 'a'
 		}
 
-		// This should not fail in practice, but tests the error handling code
+		// This should not fail in practice, but tests the error handling code.
 		_, err := hasher.HashString(string(veryLargeString))
-		// We expect this to succeed, but the error handling code is covered
+		// We expect this to succeed, but the error handling code is covered.
 		assert.NoError(t, err, "HashString should handle large strings")
 	})
 
-	// Test error handling in VerifyString when HashString fails
+	// Test error handling in VerifyString when HashString fails.
 	t.Run("VerifyString error handling", func(t *testing.T) {
-		// This tests the error path in VerifyString when HashString fails
-		// We can't easily trigger HashString to fail, but we can test the logic
+		// This tests the error path in VerifyString when HashString fails.
+		// We can't easily trigger HashString to fail, but we can test the logic.
 		testData := "test data"
 		invalidHash := "invalid"
 
@@ -335,15 +334,15 @@ func TestSHA256Hasher_ErrorCases(t *testing.T) {
 	})
 }
 
-// TestErrorPaths tests the error handling paths that are difficult to trigger
+// TestErrorPaths tests the error handling paths that are difficult to trigger.
 func TestErrorPaths(t *testing.T) {
 	hasher := &SHA256Hasher{}
 
-	// Test the error path in VerifyString when HashString would fail
-	// We can't easily make HashString fail, but we can test the error handling logic
+	// Test the error path in VerifyString when HashString would fail.
+	// We can't easily make HashString fail, but we can test the error handling logic.
 	t.Run("VerifyString with error from HashString", func(t *testing.T) {
-		// This tests the error handling in VerifyString when HashString fails
-		// Since we can't easily make HashString fail, we'll test the logic path
+		// This tests the error handling in VerifyString when HashString fails.
+		// Since we can't easily make HashString fail, we'll test the logic path.
 		testData := "test data"
 		invalidHash := "invalid"
 
@@ -352,25 +351,25 @@ func TestErrorPaths(t *testing.T) {
 		assert.False(t, result, "VerifyString should return false for invalid hash")
 	})
 
-	// Test the error path in VerifyFile when HashFile would fail
+	// Test the error path in VerifyFile when HashFile would fail.
 	t.Run("VerifyFile with error from HashFile", func(t *testing.T) {
-		// This tests the error handling in VerifyFile when HashFile fails
+		// This tests the error handling in VerifyFile when HashFile fails.
 		nonExistentFile := "non-existent-file.txt"
 		invalidHash := "invalid"
 
 		result, err := hasher.VerifyFile(nonExistentFile, invalidHash)
-		assert.Error(t, err, "VerifyFile should return error for non-existent file")
+		require.Error(t, err, "VerifyFile should return error for non-existent file")
 		assert.False(t, result, "VerifyFile should return false when there's an error")
 	})
 }
 
-// TestCoverageCompleteness tests to ensure we have comprehensive coverage
+// TestCoverageCompleteness tests to ensure we have comprehensive coverage.
 func TestCoverageCompleteness(t *testing.T) {
 	hasher := &SHA256Hasher{}
 
-	// Test all possible code paths
+	// Test all possible code paths.
 	t.Run("comprehensive coverage test", func(t *testing.T) {
-		// Test HashString with various inputs
+		// Test HashString with various inputs.
 		testCases := []string{
 			"",
 			"a",
@@ -385,23 +384,23 @@ func TestCoverageCompleteness(t *testing.T) {
 			require.NoError(t, err, "HashString should not fail for: %s", testCase)
 			assert.Len(t, hash, 64, "Hash should be 64 characters long")
 
-			// Test VerifyString with correct hash
+			// Test VerifyString with correct hash.
 			valid, err := hasher.VerifyString(testCase, hash)
 			require.NoError(t, err, "VerifyString should not fail")
 			assert.True(t, valid, "VerifyString should return true for correct hash")
 
-			// Test VerifyString with incorrect hash
+			// Test VerifyString with incorrect hash.
 			valid, err = hasher.VerifyString(testCase, "incorrect")
 			require.NoError(t, err, "VerifyString should not fail")
 			assert.False(t, valid, "VerifyString should return false for incorrect hash")
 		}
 	})
 
-	// Test file operations with various scenarios
+	// Test file operations with various scenarios.
 	t.Run("file operations coverage", func(t *testing.T) {
 		tempDir := t.TempDir()
 
-		// Test with empty file
+		// Test with empty file.
 		emptyFile := filepath.Join(tempDir, "empty.txt")
 		err := os.WriteFile(emptyFile, []byte(""), 0644)
 		require.NoError(t, err)
@@ -414,7 +413,7 @@ func TestCoverageCompleteness(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, valid)
 
-		// Test with non-empty file
+		// Test with non-empty file.
 		dataFile := filepath.Join(tempDir, "data.txt")
 		testData := "test file content"
 		err = os.WriteFile(dataFile, []byte(testData), 0644)
@@ -428,7 +427,7 @@ func TestCoverageCompleteness(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, valid)
 
-		// Test with incorrect file hash
+		// Test with incorrect file hash.
 		valid, err = hasher.VerifyFile(dataFile, "incorrect")
 		require.NoError(t, err)
 		assert.False(t, valid)
