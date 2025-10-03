@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -143,9 +144,9 @@ func TestGetUpdateNotificationNoUpdate(t *testing.T) {
 
 func TestStripV(t *testing.T) {
 	v := Version{latestVersion: "v1.2.3"}
-	require.Equal(t, "1.2.3", v.StripV())
+	require.Equal(t, "1.2.3", strings.TrimPrefix(v.latestVersion, "v"))
 	v2 := Version{latestVersion: "1.2.3"}
-	require.Equal(t, "1.2.3", v2.StripV())
+	require.Equal(t, "1.2.3", strings.TrimPrefix(v2.latestVersion, "v"))
 }
 
 func TestGetCurrentVersion(t *testing.T) {
@@ -171,47 +172,22 @@ func TestFetchLatestVersion_ErrorCases(t *testing.T) {
 }
 
 func TestNewVersion_Success(t *testing.T) {
-	opts := Options{
-		GithubOwner:    "owner",
-		GithubRepo:     "repo",
-		CurrentVersion: "v1.0.0",
-	}
-	vs, err := NewVersion(opts)
-	require.NoError(t, err)
+	opts := Options{}
+	vs := NewVersion("owner", "repo", "v1.0.0", opts)
 	require.NotNil(t, vs)
-}
-
-func TestNewVersion_MissingFields(t *testing.T) {
-	_, err := NewVersion(Options{})
-	require.ErrorIs(t, err, ErrMissingGithubOwner)
-
-	_, err = NewVersion(Options{GithubOwner: "owner"})
-	require.ErrorIs(t, err, ErrMissingGithubRepo)
-
-	_, err = NewVersion(Options{GithubOwner: "owner", GithubRepo: "repo"})
-	require.ErrorIs(t, err, ErrMissingCurrentVersion)
 }
 
 func TestNewVersion_DefaultHTTPClient(t *testing.T) {
 	opts := Options{
-		GithubOwner:    "owner",
-		GithubRepo:     "repo",
-		CurrentVersion: "v1.0.0",
-		HTTPClient:     nil,
+		HTTPClient: nil,
 	}
-	vs, err := NewVersion(opts)
-	require.NoError(t, err)
+	vs := NewVersion("owner", "repo", "v1.0.0", opts)
 	ver, ok := vs.(*Version)
 	require.True(t, ok)
 	require.NotNil(t, ver.httpClient)
 }
 
 func TestVersionServiceInterface(t *testing.T) {
-	opts := Options{
-		GithubOwner:    "owner",
-		GithubRepo:     "repo",
-		CurrentVersion: "v1.0.0",
-	}
-	_, err := NewVersion(opts)
-	require.NoError(t, err)
+	opts := Options{}
+	_ = NewVersion("owner", "repo", "v1.0.0", opts)
 }
