@@ -104,7 +104,8 @@ func TestIsNewVersionAvailableTrue(t *testing.T) {
 		currentVersion: "0.0.0",
 		httpClient:     testHTTPClient,
 	}
-	version.CheckUpdate()
+	err := version.CheckUpdate()
+	require.NoError(t, err)
 	require.True(t, version.updateAvailable)
 	require.Equal(t, "v0.7.1", version.latestVersion)
 }
@@ -116,23 +117,30 @@ func TestIsNewVersionAvailableFalse(t *testing.T) {
 		currentVersion: "v0.7.1",
 		httpClient:     testHTTPClient,
 	}
-	version.CheckUpdate()
+	err := version.CheckUpdate()
+	require.NoError(t, err)
 	require.False(t, version.updateAvailable)
 	require.Equal(t, "v0.7.1", version.latestVersion)
 }
 
 func TestIsNewVersionAvailableFailure(t *testing.T) {
 	version := Version{}
-	version.CheckUpdate()
+	err := version.CheckUpdate()
+	require.Error(t, err)
 	require.False(t, version.updateAvailable)
 }
 
 func TestGetUpdateNotification(t *testing.T) {
 	version := Version{
-		latestVersion: "0.7.1",
+		githubOwner:    "hibare",
+		githubRepo:     "Sample",
+		currentVersion: "0.0.0",
+		httpClient:     testHTTPClient,
 	}
-	version.CheckUpdate()
-	require.Equal(t, "[!] New update available: 0.7.1", version.GetUpdateNotification())
+	err := version.CheckUpdate()
+	require.NoError(t, err)
+	require.True(t, version.updateAvailable)
+	require.Equal(t, "[!] New update available: v0.7.1", version.GetUpdateNotification())
 }
 
 func TestGetUpdateNotificationNoUpdate(t *testing.T) {
