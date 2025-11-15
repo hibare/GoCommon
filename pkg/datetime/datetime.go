@@ -2,6 +2,7 @@
 package datetime
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -32,4 +33,40 @@ func SortDateTimes(dt []string) []string {
 	}
 
 	return sorted
+}
+
+func HumanizeTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	now := time.Now()
+	diff := now.Sub(t)
+
+	switch {
+	case diff < time.Minute:
+		return fmt.Sprintf("%d seconds ago", int(diff.Seconds()))
+	case diff < 2*time.Minute:
+		return "1 min ago"
+	case diff < time.Hour:
+		return fmt.Sprintf("%d mins ago", int(diff.Minutes()))
+	case diff < 2*time.Hour:
+		return "1 hour ago"
+	case diff < 24*time.Hour:
+		return fmt.Sprintf("%d hours ago", int(diff.Hours()))
+	case diff < 48*time.Hour:
+		return "yesterday"
+	case diff < 30*24*time.Hour:
+		return fmt.Sprintf("%d days ago", int(diff.Hours()/24))
+	case diff < 60*24*time.Hour:
+		return "1 month ago"
+	case diff < 365*24*time.Hour:
+		return fmt.Sprintf("%d months ago", int(diff.Hours()/(24*30)))
+	default:
+		years := int(diff.Hours() / (24 * 365))
+		if years == 1 {
+			return "1 year ago"
+		}
+		return fmt.Sprintf("%d years ago", years)
+	}
 }
