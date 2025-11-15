@@ -17,6 +17,8 @@ func TestSortDateTimes(t *testing.T) {
 }
 
 func TestHumanizeTime(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now()
 
 	tests := []struct {
@@ -24,77 +26,28 @@ func TestHumanizeTime(t *testing.T) {
 		input    time.Time
 		expected string
 	}{
-		{
-			name:     "zero time",
-			input:    time.Time{},
-			expected: "",
-		},
-		{
-			name:     "seconds ago",
-			input:    now.Add(-30 * time.Second),
-			expected: "30 seconds ago",
-		},
-		{
-			name:     "1 min ago",
-			input:    now.Add(-90 * time.Second), // 1.5 minutes
-			expected: "1 min ago",
-		},
-		{
-			name:     "minutes ago",
-			input:    now.Add(-10 * time.Minute),
-			expected: "10 mins ago",
-		},
-		{
-			name:     "1 hour ago",
-			input:    now.Add(-90 * time.Minute),
-			expected: "1 hour ago",
-		},
-		{
-			name:     "hours ago",
-			input:    now.Add(-5 * time.Hour),
-			expected: "5 hours ago",
-		},
-		{
-			name:     "yesterday",
-			input:    now.Add(-36 * time.Hour),
-			expected: "yesterday",
-		},
-		{
-			name:     "days ago",
-			input:    now.Add(-5 * 24 * time.Hour),
-			expected: "5 days ago",
-		},
-		{
-			name:     "1 month ago",
-			input:    now.Add(-45 * 24 * time.Hour),
-			expected: "1 month ago",
-		},
-		{
-			name:     "months ago",
-			input:    now.Add(-90 * 24 * time.Hour),
-			expected: "3 months ago",
-		},
-		{
-			name:     "1 year ago",
-			input:    now.Add(-370 * 24 * time.Hour),
-			expected: "1 year ago",
-		},
-		{
-			name:     "years ago",
-			input:    now.Add(-3 * 365 * 24 * time.Hour),
-			expected: "3 years ago",
-		},
+		{"zero time", time.Time{}, ""},
+		{"seconds ago", now.Add(-30 * time.Second), "30 seconds ago"},
+		{"1 min ago", now.Add(-90 * time.Second), "1 min ago"},
+		{"minutes ago", now.Add(-10 * time.Minute), "10 mins ago"},
+		{"1 hour ago", now.Add(-90 * time.Minute), "1 hour ago"},
+		{"hours ago", now.Add(-5 * time.Hour), "5 hours ago"},
+		{"yesterday", now.Add(-36 * time.Hour), "yesterday"},
+		{"days ago", now.Add(-5 * 24 * time.Hour), "5 days ago"},
+		{"1 month ago", now.Add(-45 * 24 * time.Hour), "1 month ago"},
+		{"months ago", now.Add(-90 * 24 * time.Hour), "3 months ago"},
+		{"1 year ago", now.Add(-370 * 24 * time.Hour), "1 year ago"},
+		{"years ago", now.Add(-3 * 365 * 24 * time.Hour), "3 years ago"},
 	}
 
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := HumanizeTime(tc.input)
-
+			result := HumanizeTime(tt.input)
 			require.NotNil(t, result)
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

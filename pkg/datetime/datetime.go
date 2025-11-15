@@ -35,6 +35,12 @@ func SortDateTimes(dt []string) []string {
 	return sorted
 }
 
+const (
+	hourInDay   = 24
+	daysInMonth = 30
+	daysInYear  = 365
+)
+
 func HumanizeTime(t time.Time) string {
 	if t.IsZero() {
 		return ""
@@ -52,18 +58,18 @@ func HumanizeTime(t time.Time) string {
 		return fmt.Sprintf("%d mins ago", int(diff.Minutes()))
 	case diff < 2*time.Hour:
 		return "1 hour ago"
-	case diff < 24*time.Hour:
+	case diff < hourInDay*time.Hour:
 		return fmt.Sprintf("%d hours ago", int(diff.Hours()))
-	case diff < 48*time.Hour:
+	case diff < 2*hourInDay*time.Hour:
 		return "yesterday"
-	case diff < 30*24*time.Hour:
-		return fmt.Sprintf("%d days ago", int(diff.Hours()/24))
-	case diff < 60*24*time.Hour:
+	case diff < 30*hourInDay*time.Hour:
+		return fmt.Sprintf("%d days ago", int(diff.Hours()/hourInDay))
+	case diff < 60*hourInDay*time.Hour:
 		return "1 month ago"
-	case diff < 365*24*time.Hour:
-		return fmt.Sprintf("%d months ago", int(diff.Hours()/(24*30)))
+	case diff < daysInYear*hourInDay*time.Hour:
+		return fmt.Sprintf("%d months ago", int(diff.Hours()/(hourInDay*daysInMonth)))
 	default:
-		years := int(diff.Hours() / (24 * 365))
+		years := int(diff.Hours() / (hourInDay * daysInYear))
 		if years == 1 {
 			return "1 year ago"
 		}
