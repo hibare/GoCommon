@@ -5,12 +5,12 @@ go 1.25.1
 require (
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/aws/aws-sdk-go-v2 v1.41.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.5
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.5
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.93.2
+	github.com/aws/aws-sdk-go-v2/config v1.32.6
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.6
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.94.0
 	github.com/distribution/reference v0.6.0
 	github.com/docker/docker v28.5.2+incompatible
-	github.com/go-playground/validator/v10 v10.28.0
+	github.com/go-playground/validator/v10 v10.29.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a
 	github.com/joho/godotenv v1.5.1
@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.30.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.5 // indirect
 	github.com/aws/smithy-go v1.24.0 // indirect
@@ -45,7 +45,7 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.11 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
