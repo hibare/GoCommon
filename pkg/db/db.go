@@ -4,6 +4,11 @@ package db
 import (
 	"context"
 	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 
 	"gorm.io/gorm"
@@ -76,4 +81,96 @@ func NewClient(ctx context.Context, config DatabaseConfig) (*DB, error) {
 	}
 
 	return instance, nil
+}
+
+// RunSQLFromDirectory executes all .sql files found in the specified directory.
+// Files are executed in alphabetical order.
+func (d *DB) RunSQLFromDirectory(dir string) error {
+	var files []string
+
+	err := filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !entry.IsDir() && strings.HasSuffix(strings.ToLower(entry.Name()), ".sql") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Sort files alphabetically for consistent execution order
+	sort.Strings(files)
+
+	// Execute each SQL file
+	for _, file := range files {
+		if err := d.executeSQLFile(file); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// RunSQLFromFS executes all .sql files found in the embedded filesystem directory.
+// Files are executed in alphabetical order.
+func (d *DB) RunSQLFromFS(fsys fs.FS, dir string) error {
+	var files []string
+
+	err := fs.WalkDir(fsys, dir, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !entry.IsDir() && strings.HasSuffix(strings.ToLower(entry.Name()), ".sql") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Sort files alphabetically for consistent execution order
+	sort.Strings(files)
+
+	// Execute each SQL file
+	for _, file := range files {
+		if err := d.executeSQLFileFS(fsys, file); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// executeSQLFile reads and executes the SQL content from a filesystem file.
+func (d *DB) executeSQLFile(filePath string) error {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	sql := strings.TrimSpace(string(content))
+	if sql == "" {
+		return nil
+	}
+
+	return d.DB.Exec(sql).Error
+}
+
+// executeSQLFileFS reads and executes the SQL content from an embedded FS file.
+func (d *DB) executeSQLFileFS(fsys fs.FS, filePath string) error {
+	content, err := fs.ReadFile(fsys, filePath)
+	if err != nil {
+		return err
+	}
+
+	sql := strings.TrimSpace(string(content))
+	if sql == "" {
+		return nil
+	}
+
+	return d.DB.Exec(sql).Error
 }
