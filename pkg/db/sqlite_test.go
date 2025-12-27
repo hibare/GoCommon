@@ -116,14 +116,6 @@ func TestSQLiteDatabase_Migrate(t *testing.T) {
 }
 
 func TestSQLiteDatabase_Integration(t *testing.T) {
-	// Create test table migration
-	const createTableSQL = `
-    CREATE TABLE IF NOT EXISTS tests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );`
-
 	db := &SQLiteDatabase{}
 	config := DatabaseConfig{
 		DSN: "file::memory:?cache=shared",
@@ -133,9 +125,19 @@ func TestSQLiteDatabase_Integration(t *testing.T) {
 	gormDB, err := db.Open(config)
 	require.NoError(t, err)
 
-	// Execute test migration
+	// Drop table if exists and create fresh
 	sqlDB, err := gormDB.DB()
 	require.NoError(t, err)
+	_, err = sqlDB.Exec(`DROP TABLE IF EXISTS tests`)
+	require.NoError(t, err)
+
+	// Create test table
+	const createTableSQL = `
+    CREATE TABLE tests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );`
 	_, err = sqlDB.Exec(createTableSQL)
 	require.NoError(t, err)
 

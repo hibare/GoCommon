@@ -273,10 +273,11 @@ func TestSHA256Hasher_EdgeCases(t *testing.T) {
 
 	// Test with very long string.
 	t.Run("very long string", func(t *testing.T) {
-		longString := ""
+		var builder strings.Builder
 		for range 10000 {
-			longString += "a"
+			builder.WriteString("a")
 		}
+		longString := builder.String()
 
 		hash, err := hasher.HashString(longString)
 		require.NoError(t, err, "HashString() should not return error")

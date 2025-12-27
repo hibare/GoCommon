@@ -20,12 +20,16 @@ The `db` package provides database abstraction and utilities, supporting both Po
 - **NewClient(ctx, config) (\*DB, error)**: Returns a singleton instance of the database connection.
 - **(\*DB) Migrate() error**: Runs database migrations.
 - **(\*DB) Close() error**: Closes the database connection.
+- **(\*DB) RunSQLFromDirectory(dir string) error**: Executes all `.sql` files found in the specified directory in alphabetical order.
+- **(\*DB) RunSQLFromFS(fsys fs.FS, dir string) error**: Executes all `.sql` files from an embedded filesystem directory in alphabetical order.
 - **SetupMockPostgresDB()**: Sets up a mock PostgreSQL database for testing.
 - **UnsetMockPostgresDB(container)**: Tears down the mock PostgreSQL database.
 
 ---
 
 ## Example Usage
+
+### Basic Database Setup
 
 ```go
 import (
@@ -42,6 +46,22 @@ if err != nil {
     panic(err)
 }
 err = client.Migrate()
+```
+
+### Running SQL Scripts from Directory
+
+```go
+// Execute all .sql files from a directory (e.g., for views, initial data, etc.)
+err = client.RunSQLFromDirectory("path/to/sql/scripts")
+if err != nil {
+    panic(err)
+}
+
+// Or from embedded filesystem
+//go:embed sql/scripts/*.sql
+var sqlScripts embed.FS
+
+err = client.RunSQLFromFS(sqlScripts, "sql/scripts")
 ```
 
 ---
