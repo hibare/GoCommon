@@ -36,3 +36,20 @@ updates:
       go:
         patterns:
           - "*"
+
+  # Maintain dependencies for pre-commit
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "friday"
+      time: "00:30"
+    target-branch: "main"
+    cooldown:
+      default-days: 10
+    assignees:
+      - "hibare"
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
