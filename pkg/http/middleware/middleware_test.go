@@ -188,7 +188,7 @@ func TestBasicSecurity(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}), requestSizeLimit)
 
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	response := httptest.NewRecorder()
 	mw.ServeHTTP(response, request)
 

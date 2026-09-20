@@ -31,6 +31,7 @@ type Exec struct{}
 
 // Command creates a new command with the given context, name, and arguments.
 func (Exec) Command(ctx context.Context, name string, args ...string) CmdIface {
+	// #nosec G204 -- command execution is intentionally abstracted behind this API.
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Env = os.Environ() // default to system env
 	return &Cmd{cmd: cmd}

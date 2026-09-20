@@ -100,6 +100,8 @@ func ArchiveDir(dirPath string, exclude []*regexp.Regexp) (ArchiveDirResponse, e
 			return nil
 		}
 
+		// #nosec G122 -- archive traversal is confined to the input directory and the
+		// file path is selected from the walk callback itself.
 		file, err := os.Open(path)
 		if err != nil {
 			failedFiles[path] = fmt.Errorf("failed to open file: %w", err)

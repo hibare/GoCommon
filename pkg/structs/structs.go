@@ -11,7 +11,7 @@ func Copy(src, dst any) error {
 	srcVal := reflect.ValueOf(src)
 	dstVal := reflect.ValueOf(dst)
 
-	if srcVal.Kind() != reflect.Ptr || dstVal.Kind() != reflect.Ptr {
+	if srcVal.Kind() != reflect.Pointer || dstVal.Kind() != reflect.Pointer {
 		return errors.New("both src and dst must be pointers to structs")
 	}
 
