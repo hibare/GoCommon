@@ -4,14 +4,14 @@
 version: 'v0.0.3'
 workflows:
     '.github/workflows/release-drafter.yml':
-        - 'release-drafter/release-drafter@v7.7.0'
-        - 'step-security/harden-runner@v2.21.1'
+        - 'release-drafter/release-drafter@v7.10.0'
+        - 'step-security/harden-runner@v2.22.2'
     '.github/workflows/tests.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.0.0'
         - 'actions/setup-python@v7.0.0'
         - 'golangci/golangci-lint-action@v9.3.0'
-        - 'hibare/.github@v0.16.0'
+        - 'hibare/.github@v0.17.0'
 dependencies:
     'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9':
         ref: 'v6.1.0'
@@ -38,20 +38,20 @@ dependencies:
         commit: 'sha1-ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a'
         owner_id: 35628013
         repo_id: 232539879
-    'hibare/.github@v0.16.0':
-        ref: 'v0.16.0'
-        commit: 'sha1-f2ff32dea70db639092f5927623f59ed83099cec'
+    'hibare/.github@v0.17.0':
+        ref: 'v0.17.0'
+        commit: 'sha1-a81e8dcdc53e857e36124dd49644fc02e948dcf8'
         owner_id: 20609766
         repo_id: 728721363
         uses:
             - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
-    'release-drafter/release-drafter@v7.7.0':
-        ref: 'v7.7.0'
-        commit: 'sha1-34d80673e067bdc0c24568d3af899c216adcfaa9'
+    'release-drafter/release-drafter@v7.10.0':
+        ref: 'v7.10.0'
+        commit: 'sha1-978bb0b30c5ee8cdd332ced253758157150d43f0'
         owner_id: 58292376
         repo_id: 139022359
-    'step-security/harden-runner@v2.21.1':
-        ref: 'v2.21.1'
-        commit: 'sha1-e14015d583714f6e62063499dc959a02595150a1'
+    'step-security/harden-runner@v2.22.2':
+        ref: 'v2.22.2'
+        commit: 'sha1-dc2769abcc0fcfbadfc1df54081c1608579ef6b2'
         owner_id: 88700172
         repo_id: 422287306
