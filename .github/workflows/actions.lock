@@ -9,9 +9,9 @@ workflows:
     '.github/workflows/tests.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.0.0'
-        - 'actions/setup-python@v7.0.0'
+        - 'actions/setup-python@v7.1.0'
         - 'golangci/golangci-lint-action@v9.3.0'
-        - 'hibare/.github@v0.17.0'
+        - 'hibare/.github@v0.18.0'
 dependencies:
     'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9':
         ref: 'v6.1.0'
@@ -28,9 +28,9 @@ dependencies:
         commit: 'sha1-b7ad1dad31e06c5925ef5d2fc7ad053ef454303e'
         owner_id: 44036562
         repo_id: 192624594
-    'actions/setup-python@v7.0.0':
-        ref: 'v7.0.0'
-        commit: 'sha1-5fda3b95a4ea91299a34e894583c3862153e4b97'
+    'actions/setup-python@v7.1.0':
+        ref: 'v7.1.0'
+        commit: 'sha1-6d4fd22b20465ccc0f7354476588e8df7c9ca0e0'
         owner_id: 44036562
         repo_id: 192625525
     'golangci/golangci-lint-action@v9.3.0':
@@ -38,9 +38,9 @@ dependencies:
         commit: 'sha1-ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a'
         owner_id: 35628013
         repo_id: 232539879
-    'hibare/.github@v0.17.0':
-        ref: 'v0.17.0'
-        commit: 'sha1-a81e8dcdc53e857e36124dd49644fc02e948dcf8'
+    'hibare/.github@v0.18.0':
+        ref: 'v0.18.0'
+        commit: 'sha1-d7beb850128a3af50913656d9126a8aeb9f6c427'
         owner_id: 20609766
         repo_id: 728721363
         uses:
