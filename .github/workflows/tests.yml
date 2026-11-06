@@ -38,4 +38,4 @@ jobs:
           version: v2.15.0
 
       - name: Run pre-commit hooks
-        uses: hibare/.github/github/shared-workflows/pre-commit@v0.18.0
+        uses: hibare/.github/github/shared-workflows/pre-commit@v0.19.0
