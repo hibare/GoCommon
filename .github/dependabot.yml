@@ -1,3 +1,4 @@
+# Managed by Axon; manual edits will be overwritten.
 version: 2
 updates:
   # Maintain dependencies for GitHub Actions
@@ -7,6 +8,7 @@ updates:
       interval: "weekly"
       day: "friday"
       time: "00:30"
+      timezone: "UTC"
     target-branch: "main"
     cooldown:
       default-days: 5
@@ -24,13 +26,13 @@ updates:
       interval: "weekly"
       day: "friday"
       time: "00:30"
+      timezone: "UTC"
     target-branch: "main"
     cooldown:
       default-days: 5
     assignees:
       - "hibare"
     allow:
-      # Allow only direct updates for
       - dependency-type: "direct"
     groups:
       go:
@@ -44,6 +46,7 @@ updates:
       interval: "weekly"
       day: "friday"
       time: "00:30"
+      timezone: "UTC"
     target-branch: "main"
     cooldown:
       default-days: 5
