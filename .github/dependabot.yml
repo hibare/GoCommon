@@ -5,7 +5,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "friday"
       time: "00:30"
       timezone: "UTC"
@@ -23,7 +23,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "friday"
       time: "00:30"
       timezone: "UTC"
@@ -43,7 +43,7 @@ updates:
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "friday"
       time: "00:30"
       timezone: "UTC"
